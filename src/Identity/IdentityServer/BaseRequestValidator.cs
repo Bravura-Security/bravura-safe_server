@@ -32,12 +32,11 @@ public abstract class BaseRequestValidator<T> where T : class
     private readonly IOrganizationUserRepository _organizationUserRepository;
     private readonly IApplicationCacheService _applicationCacheService;
     private readonly IMailService _mailService;
-    private readonly ILogger<ResourceOwnerPasswordValidator> _logger;
+    private readonly ILogger _logger;
     private readonly ICurrentContext _currentContext;
     private readonly GlobalSettings _globalSettings;
     private readonly IPolicyRepository _policyRepository;
     private readonly IUserRepository _userRepository;
-    private readonly ICaptchaValidationService _captchaValidationService;
 
     public BaseRequestValidator(
         UserManager<User> userManager,
@@ -51,12 +50,11 @@ public abstract class BaseRequestValidator<T> where T : class
         IOrganizationUserRepository organizationUserRepository,
         IApplicationCacheService applicationCacheService,
         IMailService mailService,
-        ILogger<ResourceOwnerPasswordValidator> logger,
+        ILogger logger,
         ICurrentContext currentContext,
         GlobalSettings globalSettings,
         IPolicyRepository policyRepository,
-        IUserRepository userRepository,
-        ICaptchaValidationService captchaValidationService)
+        IUserRepository userRepository)
     {
         _userManager = userManager;
         _deviceRepository = deviceRepository;
@@ -74,7 +72,6 @@ public abstract class BaseRequestValidator<T> where T : class
         _globalSettings = globalSettings;
         _policyRepository = policyRepository;
         _userRepository = userRepository;
-        _captchaValidationService = captchaValidationService;
     }
 
     protected async Task ValidateAsync(T context, ValidatedTokenRequest request,
@@ -106,23 +103,19 @@ public abstract class BaseRequestValidator<T> where T : class
             return;
         }
 
-        var (isTwoFactorRequired, requires2FABecauseNewDevice, twoFactorOrganization) = await RequiresTwoFactorAsync(user, request);
+        var (isTwoFactorRequired, twoFactorOrganization) = await RequiresTwoFactorAsync(user, request);
         if (isTwoFactorRequired)
         {
             // Just defaulting it
             var twoFactorProviderType = TwoFactorProviderType.Authenticator;
             if (!twoFactorRequest || !Enum.TryParse(twoFactorProvider, out twoFactorProviderType))
             {
-                await BuildTwoFactorResultAsync(user, twoFactorOrganization, context, requires2FABecauseNewDevice);
+                await BuildTwoFactorResultAsync(user, twoFactorOrganization, context);
                 return;
             }
 
-            BeforeVerifyTwoFactor(user, twoFactorProviderType, requires2FABecauseNewDevice);
-
             var verified = await VerifyTwoFactor(user, twoFactorOrganization,
                 twoFactorProviderType, twoFactorToken);
-
-            AfterVerifyTwoFactor(user, twoFactorProviderType, requires2FABecauseNewDevice);
 
             if ((!verified || isBot) && twoFactorProviderType != TwoFactorProviderType.Remember)
             {
@@ -134,7 +127,7 @@ public abstract class BaseRequestValidator<T> where T : class
             {
                 // Delay for brute force.
                 await Task.Delay(2000);
-                await BuildTwoFactorResultAsync(user, twoFactorOrganization, context, requires2FABecauseNewDevice);
+                await BuildTwoFactorResultAsync(user, twoFactorOrganization, context);
                 return;
             }
         }
@@ -175,7 +168,7 @@ public abstract class BaseRequestValidator<T> where T : class
 
         if (device != null)
         {
-            claims.Add(new Claim("device", device.Identifier));
+            claims.Add(new Claim(Claims.Device, device.Identifier));
         }
 
         var customResponse = new Dictionary<string, object>();
@@ -193,6 +186,8 @@ public abstract class BaseRequestValidator<T> where T : class
         customResponse.Add("ResetMasterPassword", string.IsNullOrWhiteSpace(user.MasterPassword));
         customResponse.Add("Kdf", (byte)user.Kdf);
         customResponse.Add("KdfIterations", user.KdfIterations);
+        customResponse.Add("KdfMemory", user.KdfMemory);
+        customResponse.Add("KdfParallelism", user.KdfParallelism);
 
         if (sendRememberToken)
         {
@@ -205,7 +200,7 @@ public abstract class BaseRequestValidator<T> where T : class
         await SetSuccessResult(context, user, claims, customResponse);
     }
 
-    protected async Task BuildTwoFactorResultAsync(User user, Organization organization, T context, bool requires2FABecauseNewDevice)
+    protected async Task BuildTwoFactorResultAsync(User user, Organization organization, T context)
     {
         var providerKeys = new List<byte>();
         var providers = new Dictionary<string, Dictionary<string, object>>();
@@ -230,23 +225,8 @@ public abstract class BaseRequestValidator<T> where T : class
 
         if (!enabledProviders.Any())
         {
-            if (!requires2FABecauseNewDevice)
-            {
-                await BuildErrorResultAsync("No two-step providers enabled.", false, context, user);
-                return;
-            }
-
-            var emailProvider = new TwoFactorProvider
-            {
-                MetaData = new Dictionary<string, object> { ["Email"] = user.Email.ToLowerInvariant() },
-                Enabled = true
-            };
-            enabledProviders.Add(new KeyValuePair<TwoFactorProviderType, TwoFactorProvider>(
-                TwoFactorProviderType.Email, emailProvider));
-            user.SetTwoFactorProviders(new Dictionary<TwoFactorProviderType, TwoFactorProvider>
-            {
-                [TwoFactorProviderType.Email] = emailProvider
-            });
+            await BuildErrorResultAsync("No two-step providers enabled.", false, context, user);
+            return;
         }
 
         foreach (var provider in enabledProviders)
@@ -266,7 +246,7 @@ public abstract class BaseRequestValidator<T> where T : class
         if (enabledProviders.Count() == 1 && enabledProviders.First().Key == TwoFactorProviderType.Email)
         {
             // Send email now if this is their only 2FA method
-            await _userService.SendTwoFactorEmailAsync(user, requires2FABecauseNewDevice);
+            await _userService.SendTwoFactorEmailAsync(user);
         }
     }
 
@@ -302,12 +282,12 @@ public abstract class BaseRequestValidator<T> where T : class
 
     protected abstract void SetErrorResult(T context, Dictionary<string, object> customResponse);
 
-    private async Task<Tuple<bool, bool, Organization>> RequiresTwoFactorAsync(User user, ValidatedTokenRequest request)
+    private async Task<Tuple<bool, Organization>> RequiresTwoFactorAsync(User user, ValidatedTokenRequest request)
     {
         if (request.GrantType == "client_credentials")
         {
             // Do not require MFA for api key logins
-            return new Tuple<bool, bool, Organization>(false, false, null);
+            return new Tuple<bool, Organization>(false, null);
         }
 
         var individualRequired = _userManager.SupportsUserTwoFactor &&
@@ -319,6 +299,7 @@ public abstract class BaseRequestValidator<T> where T : class
             .ToList();
         if (orgs.Any())
         {
+            await _applicationCacheService.VoidCaches();
             var orgAbilities = await _applicationCacheService.GetOrganizationAbilitiesAsync();
             var twoFactorOrgs = orgs.Where(o => OrgUsing2fa(orgAbilities, o.Id));
             if (twoFactorOrgs.Any())
@@ -329,17 +310,7 @@ public abstract class BaseRequestValidator<T> where T : class
             }
         }
 
-        var requires2FA = individualRequired || firstEnabledOrg != null;
-        var requires2FABecauseNewDevice = !requires2FA
-                                          &&
-                                          await _userService.Needs2FABecauseNewDeviceAsync(
-                                                user,
-                                                GetDeviceFromRequest(request)?.Identifier,
-                                                request.GrantType);
-
-        requires2FA = requires2FA || requires2FABecauseNewDevice;
-
-        return new Tuple<bool, bool, Organization>(requires2FA, requires2FABecauseNewDevice, firstEnabledOrg);
+        return new Tuple<bool, Organization>(individualRequired || firstEnabledOrg != null, firstEnabledOrg);
     }
 
     private async Task<bool> IsValidAuthTypeAsync(User user, string grantType)
@@ -371,7 +342,7 @@ public abstract class BaseRequestValidator<T> where T : class
                         PolicyType.RequireSso);
                     // Owners and Admins are exempt from this policy
                     if (orgPolicy != null && orgPolicy.Enabled &&
-                        userOrg.Type != OrganizationUserType.Owner && userOrg.Type != OrganizationUserType.Admin)
+                        (_globalSettings.Sso.EnforceSsoPolicyForAllUsers || (userOrg.Type != OrganizationUserType.Owner && userOrg.Type != OrganizationUserType.Admin)))
                     {
                         return false;
                     }
@@ -415,29 +386,6 @@ public abstract class BaseRequestValidator<T> where T : class
             Type = type,
             PushToken = string.IsNullOrWhiteSpace(devicePushToken) ? null : devicePushToken
         };
-    }
-
-    private void BeforeVerifyTwoFactor(User user, TwoFactorProviderType type, bool requires2FABecauseNewDevice)
-    {
-        if (type == TwoFactorProviderType.Email && requires2FABecauseNewDevice)
-        {
-            user.SetTwoFactorProviders(new Dictionary<TwoFactorProviderType, TwoFactorProvider>
-            {
-                [TwoFactorProviderType.Email] = new TwoFactorProvider
-                {
-                    MetaData = new Dictionary<string, object> { ["Email"] = user.Email.ToLowerInvariant() },
-                    Enabled = true
-                }
-            });
-        }
-    }
-
-    private void AfterVerifyTwoFactor(User user, TwoFactorProviderType type, bool requires2FABecauseNewDevice)
-    {
-        if (type == TwoFactorProviderType.Email && requires2FABecauseNewDevice)
-        {
-            user.ClearTwoFactorProviders();
-        }
     }
 
     private async Task<bool> VerifyTwoFactor(User user, Organization organization, TwoFactorProviderType type,

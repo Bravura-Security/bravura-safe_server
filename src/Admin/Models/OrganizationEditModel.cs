@@ -5,6 +5,7 @@ using Bit.Core.Models.Business;
 using Bit.Core.Models.Data.Organizations.OrganizationUsers;
 using Bit.Core.Settings;
 using Bit.Core.Utilities;
+using Bit.Core.Vault.Entities;
 
 namespace Bit.Admin.Models;
 
@@ -39,6 +40,7 @@ public class OrganizationEditModel : OrganizationViewModel
         UseTotp = org.UseTotp;
         Use2fa = org.Use2fa;
         UseApi = org.UseApi;
+        UseSecretsManager = org.UseSecretsManager;
         UseResetPassword = org.UseResetPassword;
         SelfHost = org.SelfHost;
         UsersGetPremium = org.UsersGetPremium;
@@ -98,6 +100,8 @@ public class OrganizationEditModel : OrganizationViewModel
     public bool UseResetPassword { get; set; }
     [Display(Name = "SCIM")]
     public bool UseScim { get; set; }
+    [Display(Name = "Secrets Manager")]
+    public bool UseSecretsManager { get; set; }
     [Display(Name = "Self Host")]
     public bool SelfHost { get; set; }
     [Display(Name = "Users Get Premium")]
@@ -139,6 +143,7 @@ public class OrganizationEditModel : OrganizationViewModel
         existingOrganization.UseTotp = UseTotp;
         existingOrganization.Use2fa = Use2fa;
         existingOrganization.UseApi = UseApi;
+        existingOrganization.UseSecretsManager = UseSecretsManager;
         existingOrganization.UseResetPassword = UseResetPassword;
         existingOrganization.SelfHost = SelfHost;
         existingOrganization.UsersGetPremium = UsersGetPremium;
