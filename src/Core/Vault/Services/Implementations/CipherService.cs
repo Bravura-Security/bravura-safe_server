@@ -938,7 +938,7 @@ namespace Bit.Core.Vault.Services;
 
             if (storageBytesRemaining < requestLength)
             {
-                throw new BadRequestException("Not enough storage available.");
+                throw new BadRequestException("Not enough storage available for attachment.");
             }
         }
 
@@ -1017,7 +1017,7 @@ namespace Bit.Core.Vault.Services;
             var storageAdjustment = attachments?.Sum(a => a.Value.Size) ?? 0;
             if (org.StorageBytesRemaining() < storageAdjustment)
             {
-                throw new BadRequestException("Not enough storage available for this tean.");
+                throw new BadRequestException("Not enough storage available for this team.");
             }
 
             ValidateCipherLastKnownRevisionDateAsync(cipher, lastKnownRevisionDate);
