@@ -3,10 +3,12 @@ using Bit.Core.Context;
 using Bit.Core.Entities;
 using Bit.Core.Enums;
 using Bit.Core.Exceptions;
-using Bit.Core.Models.Business;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
 using Bit.Core.Settings;
+using Bit.Core.Tools.Enums;
+using Bit.Core.Tools.Models.Business;
+using Bit.Core.Tools.Services;
 using Bit.Core.Utilities;
 using Bit.Core.Vault.Entities;
 using Bit.Core.Vault.Models.Data;
@@ -648,11 +650,19 @@ namespace Bit.Core.Vault.Services;
                 }
             }
 
-            // Init. ids for folders
+        var userfoldersIds = (await _folderRepository.GetManyByUserIdAsync(userId ?? Guid.Empty)).Select(f => f.Id).ToList();
+
+        //Assign id to the ones that don't exist in DB
+        //Need to keep the list order to create the relationships
+        List<Folder> newFolders = new List<Folder>();
             foreach (var folder in folders)
             {
+            if (!userfoldersIds.Contains(folder.Id))
+            {
                 folder.SetNewId();
+                newFolders.Add(folder);
             }
+        }
 
             // Create the folder associations based on the newly created folder ids
             foreach (var relationship in folderRelationships)
@@ -670,7 +680,7 @@ namespace Bit.Core.Vault.Services;
             }
 
             // Create it all
-            await _cipherRepository.CreateAsync(ciphers, folders);
+        await _cipherRepository.CreateAsync(ciphers, newFolders);
 
             // push
             if (userId.HasValue)
@@ -705,11 +715,20 @@ namespace Bit.Core.Vault.Services;
                 cipher.SetNewId();
             }
 
-            // Init. ids for collections
+        var userCollectionsIds = (await _collectionRepository.GetManyByOrganizationIdAsync(org.Id)).Select(c => c.Id).ToList();
+
+        //Assign id to the ones that don't exist in DB
+        //Need to keep the list order to create the relationships
+        List<Collection> newCollections = new List<Collection>();
+
             foreach (var collection in collections)
             {
+            if (!userCollectionsIds.Contains(collection.Id))
+            {
                 collection.SetNewId();
+                newCollections.Add(collection);
             }
+        }
 
             // Create associations based on the newly assigned ids
             var collectionCiphers = new List<CollectionCipher>();
@@ -731,7 +750,7 @@ namespace Bit.Core.Vault.Services;
             }
 
             // Create it all
-            await _cipherRepository.CreateAsync(ciphers, collections, collectionCiphers);
+        await _cipherRepository.CreateAsync(ciphers, newCollections, collectionCiphers);
 
             // push
             await _pushService.PushSyncVaultAsync(importingUserId);

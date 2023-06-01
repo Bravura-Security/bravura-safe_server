@@ -62,7 +62,7 @@ public class CipherRepositoryTests
 
         var organization = await organizationRepository.CreateAsync(new Organization
         {
-            Name = "Test Organization",
+            Name = "Test Team",
         });
 
         await organizationUserRepository.CreateAsync(new OrganizationUser

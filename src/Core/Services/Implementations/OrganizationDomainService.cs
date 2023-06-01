@@ -123,7 +123,7 @@ public class OrganizationDomainService : IOrganizationDomainService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Organization domain maintenance failed");
+            _logger.LogError(ex, "Team domain maintenance failed");
         }
     }
 

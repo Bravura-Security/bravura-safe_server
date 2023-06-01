@@ -194,7 +194,7 @@ public class CollectionCipherRepository : BaseEntityFrameworkRepository, ICollec
                                        join gu in dbContext.GroupUsers
                                            on ou.Id equals gu.OrganizationUserId into gu_g
                                        from gu in gu_g.DefaultIfEmpty()
-                                       where cu.CollectionId == null && !ou.AccessAll
+                                       where cu.CollectionId == Guid.Empty && !ou.AccessAll
                                        join g in dbContext.Groups
                                            on gu.GroupId equals g.Id into g_g
                                        from g in g_g.DefaultIfEmpty()

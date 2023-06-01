@@ -1,4 +1,5 @@
-﻿using Bit.Core.Enums;
+﻿using Bit.Core.Auth.Enums;
+using Bit.Core.Enums;
 using Bit.Core.Enums.Provider;
 using Bit.Infrastructure.EntityFramework.Repositories.Queries;
 using Microsoft.EntityFrameworkCore;
@@ -63,7 +64,7 @@ public static class DatabaseContextExtensions
                     from cg in cg_g.DefaultIfEmpty()
                     where ou.OrganizationId == organizationId &&
                       ou.Status == OrganizationUserStatusType.Confirmed &&
-                      cg.CollectionId != null &&
+                      cg.CollectionId != Guid.Empty &&
                       ou.AccessAll == true &&
                       g.AccessAll == true
                     select u;

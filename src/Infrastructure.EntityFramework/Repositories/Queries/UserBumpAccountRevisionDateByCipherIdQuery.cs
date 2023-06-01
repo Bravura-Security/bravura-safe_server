@@ -46,8 +46,8 @@ public class UserBumpAccountRevisionDateByCipherIdQuery : IQuery<User>
 
                     where ou.OrganizationId == _organizationId &&
                             ou.Status == OrganizationUserStatusType.Confirmed &&
-                            (cu.CollectionId != null ||
-                            cg.CollectionId != null ||
+                            (cu.CollectionId != Guid.Empty ||
+                            cg.CollectionId != Guid.Empty ||
                             ou.AccessAll ||
                             g.AccessAll)
                     select u;

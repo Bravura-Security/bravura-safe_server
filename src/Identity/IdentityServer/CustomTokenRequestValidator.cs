@@ -1,7 +1,8 @@
 ﻿using System.Security.Claims;
+using Bit.Core.Auth.Identity;
+using Bit.Core.Auth.Repositories;
 using Bit.Core.Context;
 using Bit.Core.Entities;
-using Bit.Core.Identity;
 using Bit.Core.IdentityServer;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
@@ -36,11 +37,12 @@ public class CustomTokenRequestValidator : BaseRequestValidator<CustomTokenReque
         GlobalSettings globalSettings,
         IPolicyRepository policyRepository,
         ISsoConfigRepository ssoConfigRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        IPolicyService policyService)
         : base(userManager, deviceRepository, deviceService, userService, eventService,
               organizationDuoWebTokenProvider, organizationHyprWebTokenProvider, organizationRepository, organizationUserRepository,
               applicationCacheService, mailService, logger, currentContext, globalSettings, policyRepository,
-              userRepository)
+              userRepository, policyService)
     {
         _userManager = userManager;
         _ssoConfigRepository = ssoConfigRepository;

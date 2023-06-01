@@ -3,12 +3,15 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Text.Json;
 using Bit.Core;
+using Bit.Core.Auth.Enums;
+using Bit.Core.Auth.Identity;
+using Bit.Core.Auth.Models;
 using Bit.Core.Context;
 using Bit.Core.Entities;
 using Bit.Core.Enums;
 using Bit.Core.Identity;
-using Bit.Core.Models;
 using Bit.Core.Models.Api;
+using Bit.Core.Models.Api.Response;
 using Bit.Core.Models.Data.Organizations;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
@@ -37,6 +40,7 @@ public abstract class BaseRequestValidator<T> where T : class
     private readonly GlobalSettings _globalSettings;
     private readonly IPolicyRepository _policyRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IPolicyService _policyService;
 
     public BaseRequestValidator(
         UserManager<User> userManager,
@@ -54,7 +58,8 @@ public abstract class BaseRequestValidator<T> where T : class
         ICurrentContext currentContext,
         GlobalSettings globalSettings,
         IPolicyRepository policyRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        IPolicyService policyService)
     {
         _userManager = userManager;
         _deviceRepository = deviceRepository;
@@ -72,6 +77,7 @@ public abstract class BaseRequestValidator<T> where T : class
         _globalSettings = globalSettings;
         _policyRepository = policyRepository;
         _userRepository = userRepository;
+        _policyService = policyService;
     }
 
     protected async Task ValidateAsync(T context, ValidatedTokenRequest request,
@@ -182,6 +188,7 @@ public abstract class BaseRequestValidator<T> where T : class
             customResponse.Add("Key", user.Key);
         }
 
+        customResponse.Add("MasterPasswordPolicy", await GetMasterPasswordPolicy(user));
         customResponse.Add("ForcePasswordReset", user.ForcePasswordReset);
         customResponse.Add("ResetMasterPassword", string.IsNullOrWhiteSpace(user.MasterPassword));
         customResponse.Add("Kdf", (byte)user.Kdf);
@@ -240,7 +247,8 @@ public abstract class BaseRequestValidator<T> where T : class
             new Dictionary<string, object>
             {
                 { "TwoFactorProviders", providers.Keys },
-                { "TwoFactorProviders2", providers }
+                { "TwoFactorProviders2", providers },
+                { "MasterPasswordPolicy", await GetMasterPasswordPolicy(user) }
             });
 
         if (enabledProviders.Count() == 1 && enabledProviders.First().Key == TwoFactorProviderType.Email)
@@ -585,5 +593,19 @@ public abstract class BaseRequestValidator<T> where T : class
         var failedLoginCeiling = _globalSettings.Captcha.MaximumFailedLoginAttempts;
         var failedLoginCount = user?.FailedLoginCount ?? 0;
         return unknownDevice && failedLoginCeiling > 0 && failedLoginCount == failedLoginCeiling;
+    }
+
+    private async Task<MasterPasswordPolicyResponseModel> GetMasterPasswordPolicy(User user)
+    {
+        // Check current context/cache to see if user is in any organizations, avoids extra DB call if not
+        var orgs = (await _currentContext.OrganizationMembershipAsync(_organizationUserRepository, user.Id))
+            .ToList();
+
+        if (!orgs.Any())
+        {
+            return null;
+        }
+
+        return new MasterPasswordPolicyResponseModel(await _policyService.GetMasterPasswordPolicyForUserAsync(user));
     }
 }

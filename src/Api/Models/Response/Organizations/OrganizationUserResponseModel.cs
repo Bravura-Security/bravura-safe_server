@@ -6,6 +6,8 @@ using Bit.Core.Models.Data;
 using Bit.Core.Models.Data.Organizations.OrganizationUsers;
 using Bit.Core.Utilities;
 using Bit.Core.Models;
+using Bit.Core.Auth.Enums;
+using Bit.Core.Auth.Models;
 
 namespace Bit.Api.Models.Response.Organizations;
 
