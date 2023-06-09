@@ -333,7 +333,7 @@ public class UserService : UserManager<User>, IUserService, IDisposable
         user.ApiKey = CoreHelpers.SecureRandomString(30);
         user.Premium = true;
         user.EmailVerified = true;
-        user.MaxStorageGb = 2;
+        user.MaxStorageGb = 10; //used to be 2GB
         var result = await base.CreateAsync(user, masterPassword);
         if (result == IdentityResult.Success)
         {
@@ -1057,7 +1057,7 @@ public class UserService : UserManager<User>, IUserService, IDisposable
 
         if (_globalSettings.SelfHosted)
         {
-            user.MaxStorageGb = 2; // 2 TB
+            user.MaxStorageGb = 10; // used to be 2 GB
             user.LicenseKey = license.LicenseKey;
             user.PremiumExpirationDate = license.Expires;
         }

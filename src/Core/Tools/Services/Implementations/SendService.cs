@@ -19,8 +19,8 @@ namespace Bit.Core.Tools.Services;
 
 public class SendService : ISendService
 {
-    public const long MAX_FILE_SIZE = Constants.FileSize501mb;
-    public const string MAX_FILE_SIZE_READABLE = "500 MB";
+    public const long MAX_FILE_SIZE = Constants.FileSize2gb;
+    public const string MAX_FILE_SIZE_READABLE = "1.8 MB";
     private readonly ISendRepository _sendRepository;
     private readonly IUserRepository _userRepository;
     private readonly IPolicyRepository _policyRepository;

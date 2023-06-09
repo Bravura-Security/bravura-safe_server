@@ -245,7 +245,7 @@ public class SendsController : Controller
 
     [HttpPost("{id}/file/{fileId}")]
     [SelfHosted(SelfHostedOnly = true)]
-    [RequestSizeLimit(Constants.FileSize501mb)]
+    [RequestSizeLimit(Constants.FileSize2gb)]
     [DisableFormValueModelBinding]
     public async Task PostFileForExistingSend(string id, string fileId)
     {
