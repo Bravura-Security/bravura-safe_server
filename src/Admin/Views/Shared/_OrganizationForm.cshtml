@@ -1,8 +1,26 @@
 @using Bit.SharedWeb.Utilities
+@using Bit.Admin.Enums;
+@inject Bit.Admin.Services.IAccessControlService AccessControlService;
+
 @model OrganizationEditModel
+
+@{
+    var canViewGeneralDetails = AccessControlService.UserHasPermission(Permission.Org_GeneralDetails_View);
+    var canViewBilling = AccessControlService.UserHasPermission(Permission.Org_Billing_View);
+    var canViewBusinessInformation = AccessControlService.UserHasPermission(Permission.Org_BusinessInformation_View);
+    var canViewPlan = AccessControlService.UserHasPermission(Permission.Org_Plan_View);
+    var canViewLicensing = AccessControlService.UserHasPermission(Permission.Org_Licensing_View);
+    var canCheckEnabled = AccessControlService.UserHasPermission(Permission.Org_CheckEnabledBox);
+    var canEditPlan = AccessControlService.UserHasPermission(Permission.Org_Plan_Edit);
+    var canEditLicensing = AccessControlService.UserHasPermission(Permission.Org_Licensing_Edit);
+    var canEditBilling = AccessControlService.UserHasPermission(Permission.Org_Billing_Edit);
+    var canLaunchGateway = AccessControlService.UserHasPermission(Permission.Org_Billing_LaunchGateway);
+}
 
 <form method="post" id="edit-form" asp-route-providerId="@Model.Provider?.Id">
     <input asp-for="SalesAssistedTrialStarted" type="hidden">
+    @if (canViewGeneralDetails)
+    {
     <h2>General</h2>
     <div class="row">
         <div class="col-sm">
@@ -12,6 +30,7 @@
             </div>
         </div>
     </div>
+    }
 
     @if (Model.Provider?.Type == ProviderType.Reseller)
     {
@@ -35,12 +54,14 @@
     @if (Model.Organization != null)
     {
         <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" asp-for="Enabled">
+            <input type="checkbox" class="form-check-input" asp-for="Enabled" disabled='@(canCheckEnabled ? null : "disabled")'>
             <label class="form-check-label" asp-for="Enabled"></label>
         </div>
     }
 
-    <div class="d-none">
+<div class="d-none">
+    @if (canViewBusinessInformation)
+    {
         <h2>Business Information</h2>
         <div class="row">
             <div class="col-sm">
@@ -50,6 +71,10 @@
                 </div>
             </div>
         </div>
+    }
+
+    @if (canViewPlan)
+    {
         <h2>Plan</h2>
         <div class="row">
             <div class="col-sm">
@@ -65,13 +90,13 @@
                             })
                             .ToList();
                     }
-                    <select class="form-control" asp-for="PlanType" asp-items="planTypes"></select>
+                    <select class="form-control" asp-for="PlanType" asp-items="planTypes" disabled='@(canEditPlan ? null : "disabled")'></select>
                 </div>
             </div>
             <div class="col-sm">
                 <div class="form-group">
                     <label asp-for="Plan"></label>
-                    <input type="text" class="form-control" asp-for="Plan" required>
+                    <input type="text" class="form-control" asp-for="Plan" required readonly='@(!canEditPlan)'>
                 </div>
             </div>
         </div>
@@ -79,19 +104,19 @@
             <div class="col-sm">
                 <div class="form-group">
                     <label asp-for="Seats"></label>
-                    <input type="number" class="form-control" asp-for="Seats" min="1">
+                    <input type="number" class="form-control" asp-for="Seats" min="1" readonly='@(!canEditPlan)'>
                 </div>
             </div>
             <div class="col-sm">
                 <div class="form-group">
                     <label asp-for="MaxCollections"></label>
-                    <input type="number" class="form-control" asp-for="MaxCollections" min="1">
+                    <input type="number" class="form-control" asp-for="MaxCollections" min="1" readonly='@(!canEditPlan)'>
                 </div>
             </div>
             <div class="col-sm">
                 <div class="form-group">
                     <label asp-for="MaxStorageGb"></label>
-                    <input type="number" class="form-control" asp-for="MaxStorageGb" min="1">
+                    <input type="number" class="form-control" asp-for="MaxStorageGb" min="1" readonly='@(!canEditPlan)'>
                 </div>
             </div>
         </div>
@@ -99,11 +124,12 @@
             <div class="col-4">
                 <div class="form-group">
                     <label asp-for="MaxAutoscaleSeats"></label>
-                    <input type="number" class="form-control" asp-for="MaxAutoscaleSeats" min="1">
+                    <input type="number" class="form-control" asp-for="MaxAutoscaleSeats" min="1" readonly='@(!canEditPlan)'>
                 </div>
             </div>
         </div>
-    </div>
+    }
+</div>
 
     @if (Model.PlanType == Bit.Core.Enums.PlanType.BravuraEnterprise || Model.PlanType == Bit.Core.Enums.PlanType.BravuraTeams)
     {
@@ -115,64 +141,64 @@
                 </div>
                 <div class="d-none">
                     <div class="form-check mb-2">
-                        <input type="checkbox" class="form-check-input" asp-for="SelfHost">
+                        <input type="checkbox" class="form-check-input" asp-for="SelfHost" disabled='@(canEditPlan ? null : "disabled")'>
                         <label class="form-check-label" asp-for="SelfHost"></label>
                     </div>
                 </div>
                 @if (Model.PlanType == Bit.Core.Enums.PlanType.BravuraEnterprise)
                 {
                     <div class="form-check">
-                        <input type="checkbox" class="form-check-input" asp-for="Use2fa">
+                        <input type="checkbox" class="form-check-input" asp-for="Use2fa" disabled='@(canEditPlan ? null : "disabled")'>
                         <label class="form-check-label" asp-for="Use2fa"></label>
                     </div>
                 }
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" asp-for="UseApi">
+                    <input type="checkbox" class="form-check-input" asp-for="UseApi" disabled='@(canEditPlan ? null : "disabled")'>
                     <label class="form-check-label" asp-for="UseApi"></label>
                 </div>
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" asp-for="UseGroups">
+                    <input type="checkbox" class="form-check-input" asp-for="UseGroups" disabled='@(canEditPlan ? null : "disabled")'>
                     <label class="form-check-label" asp-for="UseGroups"></label>
                 </div>
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" asp-for="UsePolicies">
+                    <input type="checkbox" class="form-check-input" asp-for="UsePolicies" disabled='@(canEditPlan ? null : "disabled")'>
                     <label class="form-check-label" asp-for="UsePolicies"></label>
                 </div>
                 @if (Model.PlanType == Bit.Core.Enums.PlanType.BravuraEnterprise)
                 {
                     <div class="form-check">
-                        <input type="checkbox" class="form-check-input" asp-for="UseSso">
+                        <input type="checkbox" class="form-check-input" asp-for="UseSso" disabled='@(canEditPlan ? null : "disabled")'>
                         <label class="form-check-label" asp-for="UseSso"></label>
                     </div>
                 }
                 <div class="d-none">
                     <div class="form-check">
-                        <input type="checkbox" class="form-check-input" asp-for="UseKeyConnector">
+                        <input type="checkbox" class="form-check-input" asp-for="UseKeyConnector" disabled='@(canEditPlan ? null : "disabled")'>
                         <label class="form-check-label" asp-for="UseKeyConnector"></label>
                     </div>
                     <div class="form-check">
-                        <input type="checkbox" class="form-check-input" asp-for="UseScim">
+                        <input type="checkbox" class="form-check-input" asp-for="UseScim" disabled='@(canEditPlan ? null : "disabled")'>
                         <label class="form-check-label" asp-for="UseScim"></label>
                     </div>
                 </div>
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" asp-for="UseDirectory">
+                    <input type="checkbox" class="form-check-input" asp-for="UseDirectory" disabled='@(canEditPlan ? null : "disabled")'>
                     <label class="form-check-label" asp-for="UseDirectory"></label>
                 </div>
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" asp-for="UseEvents">
+                    <input type="checkbox" class="form-check-input" asp-for="UseEvents" disabled='@(canEditPlan ? null : "disabled")'>
                     <label class="form-check-label" asp-for="UseEvents"></label>
                 </div>
                 @if (Model.PlanType == Bit.Core.Enums.PlanType.BravuraEnterprise)
                 {
                     <div class="form-check">
-                        <input type="checkbox" class="form-check-input" asp-for="UseResetPassword">
+                        <input type="checkbox" class="form-check-input" asp-for="UseResetPassword" disabled='@(canEditPlan ? null : "disabled")'>
                         <label class="form-check-label" asp-for="UseResetPassword"></label>
                     </div>
                 }
                 <div class="d-none">
                     <div class="form-check">
-                        <input type="checkbox" class="form-check-input" asp-for="UseCustomPermissions">
+                        <input type="checkbox" class="form-check-input" asp-for="UseCustomPermissions" disabled='@(canEditPlan ? null : "disabled")'>
                         <label class="form-check-label" asp-for="UseCustomPermissions"></label>
                     </div>
                 </div>
@@ -182,18 +208,18 @@
                 <div class="col-4">
                     <h3>Password Manager</h3>
                     <div class="form-check">
-                        <input type="checkbox" class="form-check-input" asp-for="UseTotp">
+                        <input type="checkbox" class="form-check-input" asp-for="UseTotp" disabled='@(canEditPlan ? null : "disabled")'>
                         <label class="form-check-label" asp-for="UseTotp"></label>
                     </div>
                     <div class="form-check">
-                        <input type="checkbox" class="form-check-input" asp-for="UsersGetPremium">
+                        <input type="checkbox" class="form-check-input" asp-for="UsersGetPremium" disabled='@(canEditPlan ? null : "disabled")'>
                         <label class="form-check-label" asp-for="UsersGetPremium"></label>
                     </div>
                 </div>
                 <div class="col-4">
                     <h3>Secrets Manager</h3>
                     <div class="form-check">
-                        <input type="checkbox" class="form-check-input" asp-for="UseSecretsManager">
+                        <input type="checkbox" class="form-check-input" asp-for="UseSecretsManager" disabled='@(canEditPlan ? null : "disabled")'>
                         <label class="form-check-label" asp-for="UseSecretsManager"></label>
                     </div>
                 </div>
@@ -201,22 +227,28 @@
         </div>
     }
 
-    <div class="d-none">
+<div class="d-none">
+    @if(canViewLicensing)
+    {
         <h2>Licensing</h2>
         <div class="row">
             <div class="col-sm">
                 <div class="form-group">
                     <label asp-for="LicenseKey"></label>
-                    <input type="text" class="form-control" asp-for="LicenseKey">
+                    <input type="text" class="form-control" asp-for="LicenseKey" readonly='@(!canEditLicensing)'>
                 </div>
             </div>
             <div class="col-sm">
                 <div class="form-group">
                     <label asp-for="ExpirationDate"></label>
-                    <input type="datetime-local" class="form-control" asp-for="ExpirationDate">
+                    <input type="datetime-local" class="form-control" asp-for="ExpirationDate" readonly='@(!canEditLicensing)'>
                 </div>
             </div>
         </div>
+    }
+
+    @if (canViewBilling)
+    {
         <h2>Billing</h2>
         <div class="row">
             <div class="col-sm">
@@ -228,7 +260,7 @@
                     }
                     else
                     {
-                        <input type="email" class="form-control" asp-for="BillingEmail">
+                        <input type="email" class="form-control" asp-for="BillingEmail" readonly='@(!canEditBilling)'>
                     }
                 </div>
             </div>
@@ -236,7 +268,7 @@
                 <div class="form-group">
                     <div class="form-group">
                         <label asp-for="Gateway"></label>
-                        <select class="form-control" asp-for="Gateway"
+                        <select class="form-control" asp-for="Gateway" disabled='@(canEditBilling ? null : "disabled")'
                                 asp-items="Html.GetEnumSelectList<Bit.Core.Enums.GatewayType>()">
                             <option value="">--</option>
                         </select>
@@ -249,12 +281,15 @@
                 <div class="form-group">
                     <label asp-for="GatewayCustomerId"></label>
                     <div class="input-group">
-                        <input type="text" class="form-control" asp-for="GatewayCustomerId">
+                        <input type="text" class="form-control" asp-for="GatewayCustomerId" readonly='@(!canEditBilling)'>
+                        @if(canLaunchGateway)
+                        {
                         <div class="input-group-append">
                             <button class="btn btn-secondary" type="button" id="gateway-customer-link">
                                 <i class="fa fa-external-link"></i>
                             </button>
                         </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -262,15 +297,19 @@
                 <div class="form-group">
                     <label asp-for="GatewaySubscriptionId"></label>
                     <div class="input-group">
-                        <input type="text" class="form-control" asp-for="GatewaySubscriptionId">
+                        <input type="text" class="form-control" asp-for="GatewaySubscriptionId" readonly='@(!canEditBilling)'>
+                        @if (canLaunchGateway) 
+                        {
                         <div class="input-group-append">
                             <button class="btn btn-secondary" type="button" id="gateway-subscription-link">
                                 <i class="fa fa-external-link"></i>
                             </button>
                         </div>
+                        }
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    }
+</div>
 </form>

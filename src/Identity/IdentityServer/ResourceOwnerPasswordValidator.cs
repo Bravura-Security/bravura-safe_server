@@ -1,11 +1,13 @@
 ﻿using System.Security.Claims;
 using Bit.Core.Auth.Identity;
+using Bit.Core.Auth.Models.Business.Tokenables;
 using Bit.Core.Auth.Services;
 using Bit.Core.Context;
 using Bit.Core.Entities;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
 using Bit.Core.Settings;
+using Bit.Core.Tokens;
 using Bit.Core.Utilities;
 using IdentityServer4.Models;
 using IdentityServer4.Validation;
@@ -40,11 +42,12 @@ public class ResourceOwnerPasswordValidator : BaseRequestValidator<ResourceOwner
         ICaptchaValidationService captchaValidationService,
         IAuthRequestRepository authRequestRepository,
         IUserRepository userRepository,
-        IPolicyService policyService)
+        IPolicyService policyService,
+        IDataProtectorTokenFactory<SsoEmail2faSessionTokenable> tokenDataFactory)
         : base(userManager, deviceRepository, deviceService, userService, eventService,
               organizationDuoWebTokenProvider, organizationHyprWebTokenProvider, organizationRepository, organizationUserRepository,
               applicationCacheService, mailService, logger, currentContext, globalSettings, policyRepository,
-              userRepository, policyService)
+              userRepository, policyService, tokenDataFactory)
     {
         _userManager = userManager;
         _userService = userService;

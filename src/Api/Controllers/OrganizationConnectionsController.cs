@@ -101,7 +101,7 @@ public class OrganizationConnectionsController : Controller
             case OrganizationConnectionType.Scim:
                 return await CreateOrUpdateOrganizationConnectionAsync<ScimConfig>(organizationConnectionId, model);
             default:
-                throw new BadRequestException($"Unkown Team connection Type: {model.Type}");
+                throw new BadRequestException($"Unknown Team connection Type: {model.Type}");
         }
     }
 
@@ -127,7 +127,7 @@ public class OrganizationConnectionsController : Controller
             case OrganizationConnectionType.Scim:
                 return new OrganizationConnectionResponseModel(connection, typeof(ScimConfig));
             default:
-                throw new BadRequestException($"Unkown Team connection Type: {type}");
+                throw new BadRequestException($"Unknown Team connection Type: {type}");
         }
     }
 

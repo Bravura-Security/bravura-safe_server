@@ -64,9 +64,10 @@ public static class DatabaseContextExtensions
                     from cg in cg_g.DefaultIfEmpty()
                     where ou.OrganizationId == organizationId &&
                       ou.Status == OrganizationUserStatusType.Confirmed &&
-                      cg.CollectionId != Guid.Empty &&
-                      ou.AccessAll == true &&
-                      g.AccessAll == true
+                        (cu.CollectionId != Guid.Empty ||
+                        cg.CollectionId != Guid.Empty ||
+                        ou.AccessAll == true ||
+                        g.AccessAll == true)
                     select u;
 
         var users = await query.ToListAsync();
