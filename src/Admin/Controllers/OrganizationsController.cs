@@ -181,6 +181,7 @@ public class OrganizationsController : Controller
     public async Task<IActionResult> Edit(Guid id, OrganizationEditModel model)
     {
         var organization = await GetOrganization(id, model);
+        model.ToOrganization(organization);
 
         await _organizationRepository.ReplaceAsync(organization);
         await _applicationCacheService.UpsertOrganizationAbilityAsync(organization);
@@ -295,14 +296,15 @@ public class OrganizationsController : Controller
             }
 
             // Master password requirements
-            Dictionary<string, string> Data2 = new Dictionary<string, string>
+            Dictionary<string, object> Data2 = new Dictionary<string, object>
             {
-                {"minComplexity", "null"},
-                {"minLength", "9"},
-                {"requireUpper", "true"},
-                {"requireLower", "true"},
-                {"requireNumbers", "true"},
-                {"requireSpecial", "true"}
+                {"minComplexity", null},
+                {"minLength", 9},
+                {"requireUpper", true},
+                {"requireLower", true},
+                {"requireNumbers", true},
+                {"requireSpecial", true},
+                {"enforceOnLogin", false}
             };
             var existingPolicyMasterPassword = await _policyRepository.GetByOrganizationIdTypeAsync(id, PolicyType.MasterPassword);
             if (existingPolicyMasterPassword != null)
@@ -365,7 +367,7 @@ public class OrganizationsController : Controller
         if (organization == null)
         {
             return RedirectToAction("Index");
-    }
+        }
         var connection = (await _organizationConnectionRepository.GetEnabledByOrganizationIdTypeAsync(id, OrganizationConnectionType.CloudBillingSync)).FirstOrDefault();
         if (connection != null)
         {
@@ -375,7 +377,7 @@ public class OrganizationsController : Controller
                 await _syncSponsorshipsCommand.SyncOrganization(id, config.CloudOrganizationId, connection);
                 TempData["ConnectionActivated"] = id;
                 TempData["ConnectionError"] = null;
-        }
+            }
             catch (Exception ex)
             {
                 TempData["ConnectionError"] = ex.Message;
@@ -401,7 +403,7 @@ public class OrganizationsController : Controller
         if (organization == null)
         {
             return RedirectToAction("Index");
-}
+    }
 
         var organizationUsers = await _organizationUserRepository.GetManyByOrganizationAsync(id, OrganizationUserType.Owner);
         foreach (var organizationUser in organizationUsers)
@@ -411,6 +413,7 @@ public class OrganizationsController : Controller
 
         return Json(null);
     }
+
     private async Task<Organization> GetOrganization(Guid id, OrganizationEditModel model)
     {
         var organization = await _organizationRepository.GetByIdAsync(id);
@@ -463,5 +466,4 @@ public class OrganizationsController : Controller
 
         return organization;
     }
-
 }

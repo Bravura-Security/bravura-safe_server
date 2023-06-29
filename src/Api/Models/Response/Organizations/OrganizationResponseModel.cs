@@ -18,7 +18,6 @@ public class OrganizationResponseModel : ResponseModel
         }
 
         Id = organization.Id.ToString();
-        Identifier = organization.Identifier;
         Name = organization.Name;
         BusinessName = organization.BusinessName;
         BusinessAddress1 = organization.BusinessAddress1;
@@ -52,7 +51,6 @@ public class OrganizationResponseModel : ResponseModel
     }
 
     public string Id { get; set; }
-    public string Identifier { get; set; }
     public string Name { get; set; }
     public string BusinessName { get; set; }
     public string BusinessAddress1 { get; set; }

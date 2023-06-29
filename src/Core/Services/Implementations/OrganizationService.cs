@@ -833,14 +833,15 @@ public class OrganizationService : IOrganizationService
                     await _policyRepository.CreateAsync(policyMasterPasswordReset);
 
                     // Master password requirements
-                    Dictionary<string, string> Data2 = new Dictionary<string, string>
+                    Dictionary<string, object> Data2 = new Dictionary<string, object>
                     {
-                        {"minComplexity", "null"},
-                        {"minLength", "9"},
-                        {"requireUpper", "true"},
-                        {"requireLower", "true"},
-                        {"requireNumbers", "true"},
-                        {"requireSpecial", "true"}
+                        {"minComplexity", null},
+                        {"minLength", 9},
+                        {"requireUpper", true},
+                        {"requireLower", true},
+                        {"requireNumbers", true},
+                        {"requireSpecial", true},
+                        {"enforceOnLogin", false}
                     };
                     Policy policyMasterPassword = new Policy
                     {

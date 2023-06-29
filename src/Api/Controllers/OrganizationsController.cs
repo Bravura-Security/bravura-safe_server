@@ -257,7 +257,7 @@ public class OrganizationsController : Controller
             throw new NotFoundException();
         }
 
-/*            var updateBilling = !_globalSettings.SelfHosted && (model.BusinessName != organization.BusinessName ||
+        var updateBilling = !_globalSettings.SelfHosted && (model.BusinessName != organization.BusinessName ||
             model.BillingEmail != organization.BillingEmail);
 
         var hasRequiredPermissions = updateBilling
@@ -269,8 +269,7 @@ public class OrganizationsController : Controller
             throw new NotFoundException();
         }
 
-        await _organizationService.UpdateAsync(model.ToOrganization(organization, _globalSettings), updateBilling);*/
-        await _organizationService.UpdateAsync(model.ToOrganization(organization), true);
+        await _organizationService.UpdateAsync(model.ToOrganization(organization, _globalSettings), updateBilling);
 
         return new OrganizationResponseModel(organization);
     }

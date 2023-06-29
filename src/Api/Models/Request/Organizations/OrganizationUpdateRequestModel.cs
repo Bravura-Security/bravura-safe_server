@@ -12,9 +12,6 @@ public class OrganizationUpdateRequestModel
     public string Name { get; set; }
     [StringLength(50)]
     public string BusinessName { get; set; }
-    [Obsolete("2022-08-03 Moved to Org SSO request model, left for backwards compatability. Remove with EC-489.")]
-    [StringLength(50)]
-    public string Identifier { get; set; }
     [EmailAddress]
     [Required]
     [StringLength(256)]
@@ -22,14 +19,13 @@ public class OrganizationUpdateRequestModel
     public Permissions Permissions { get; set; }
     public OrganizationKeysRequestModel Keys { get; set; }
 
-    public virtual Organization ToOrganization(Organization existingOrganization)
+    public virtual Organization ToOrganization(Organization existingOrganization, GlobalSettings globalSettings)
     {
         // These items come from the license file
         existingOrganization.Name = Name;
         existingOrganization.BusinessName = BusinessName;
         existingOrganization.BillingEmail = BillingEmail?.ToLowerInvariant()?.Trim();
 
-        existingOrganization.Identifier = Identifier;
         Keys?.ToOrganization(existingOrganization);
         return existingOrganization;
     }

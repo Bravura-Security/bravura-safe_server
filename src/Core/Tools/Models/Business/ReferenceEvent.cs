@@ -69,5 +69,8 @@ public class ReferenceEvent
     public bool? SalesAssistedTrialStarted { get; set; }
 
     public string ClientId { get; set; }
+#nullable enable annotations
     public Version? ClientVersion { get; set; }
+#nullable disable annotations
+
 }
