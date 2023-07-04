@@ -1,4 +1,5 @@
-﻿using Bit.Core.Settings.LoggingSettings;
+﻿using Bit.Core.Auth.Settings;
+using Bit.Core.Settings.LoggingSettings;
 
 namespace Bit.Core.Settings;
 
@@ -393,7 +394,7 @@ public class GlobalSettings : IGlobalSettings
         /// </summary>
         /// <remarks>
         /// The certificate path and <see cref="CertificatePassword"/> are passed into the <see cref="System.Security.Cryptography.X509Certificates.X509Certificate2.X509Certificate2(string, string)" />.
-        /// The file format of the certificate may be binary encded (DER) or base64. If the private key is encrypted, provide the password in <see cref="CertificatePassword"/>,
+        /// The file format of the certificate may be binary encoded (DER) or base64. If the private key is encrypted, provide the password in <see cref="CertificatePassword"/>,
         /// </remarks>
         public string CertificatePath { get; set; }
         /// <summary>
@@ -552,5 +553,6 @@ public class GlobalSettings : IGlobalSettings
     {
         public string SdkKey { get; set; }
         public string FlagDataFilePath { get; set; } = "flags.json";
+        public Dictionary<string, string> FlagValues { get; set; } = new Dictionary<string, string>();
     }
 }

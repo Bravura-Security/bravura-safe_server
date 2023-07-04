@@ -112,6 +112,8 @@ public class CipherRepository : Repository<Core.Vault.Entities.Cipher, Cipher, G
             var entity = Mapper.Map<Cipher>((Core.Vault.Entities.Cipher)cipher);
             await dbContext.AddAsync(entity);
 
+            await dbContext.SaveChangesAsync();
+
             if (cipher.OrganizationId.HasValue)
             {
                 await dbContext.UserBumpAccountRevisionDateByCipherIdAsync(cipher.Id, cipher.OrganizationId.Value);
@@ -168,16 +170,17 @@ public class CipherRepository : Repository<Core.Vault.Entities.Cipher, Cipher, G
             var dbContext = GetDatabaseContext(scope);
             var cipherEntities = Mapper.Map<List<Cipher>>(ciphers);
             await dbContext.BulkCopyAsync(base.DefaultBulkCopyOptions, cipherEntities);
+
             if (collections.Any())
             {
                 var collectionEntities = Mapper.Map<List<Collection>>(collections);
                 await dbContext.BulkCopyAsync(base.DefaultBulkCopyOptions, collectionEntities);
+            }
 
-                if (collectionCiphers.Any())
-                {
-                    var collectionCipherEntities = Mapper.Map<List<CollectionCipher>>(collectionCiphers);
-                    await dbContext.BulkCopyAsync(base.DefaultBulkCopyOptions, collectionCipherEntities);
-                }
+            if (collectionCiphers.Any())
+            {
+                var collectionCipherEntities = Mapper.Map<List<CollectionCipher>>(collectionCiphers);
+                await dbContext.BulkCopyAsync(base.DefaultBulkCopyOptions, collectionCipherEntities);
             }
             await dbContext.UserBumpAccountRevisionDateByOrganizationIdAsync(ciphers.First().OrganizationId.Value);
             await dbContext.SaveChangesAsync();
@@ -770,7 +773,7 @@ public class CipherRepository : Repository<Core.Vault.Entities.Cipher, Cipher, G
         }
     }
 
-    public async Task UpdateUserKeysAndCiphersAsync(User user, IEnumerable<Core.Vault.Entities.Cipher> ciphers, IEnumerable<Core.Vault.Entities.Folder> folders, IEnumerable<Core.Entities.Send> sends)
+    public async Task UpdateUserKeysAndCiphersAsync(User user, IEnumerable<Core.Vault.Entities.Cipher> ciphers, IEnumerable<Core.Vault.Entities.Folder> folders, IEnumerable<Core.Tools.Entities.Send> sends)
     {
         using (var scope = ServiceScopeFactory.CreateScope())
         {

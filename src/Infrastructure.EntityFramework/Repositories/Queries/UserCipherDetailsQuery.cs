@@ -48,7 +48,7 @@ public class UserCipherDetailsQuery : IQuery<CipherDetails>
                            new { AccessAll = false, cg.CollectionId, cg.GroupId } into cg_g
                     from cg in cg_g.DefaultIfEmpty()
 
-                    where ou.AccessAll || cu.CollectionId != null || g.AccessAll || cg.CollectionId != null
+                    where ou.AccessAll || cu.CollectionId != Guid.Empty || g.AccessAll || cg.CollectionId != Guid.Empty
 
                     select new { c, ou, o, cc, cu, gu, g, cg }.c;
 

@@ -43,7 +43,7 @@ public class UserCollectionDetailsQuery : IQuery<CollectionDetails>
                     where ou.UserId == _userId &&
                         ou.Status == OrganizationUserStatusType.Confirmed &&
                         o.Enabled &&
-                        (ou.AccessAll || cu.CollectionId != null || g.AccessAll || cg.CollectionId != null)
+                        (ou.AccessAll || cu.CollectionId != Guid.Empty || g.AccessAll || cg.CollectionId != Guid.Empty)
                     select new { c, ou, o, cu, gu, g, cg };
 
         return query.Select(x => new CollectionDetails

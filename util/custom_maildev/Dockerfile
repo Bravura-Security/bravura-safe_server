@@ -19,6 +19,7 @@ COPY --chown=node:node --from=build /root/node_modules /home/node/node_modules
 EXPOSE 1080 1025
 ENV MAILDEV_WEB_PORT 1080
 ENV MAILDEV_SMTP_PORT 1025
+RUN chmod +x bin/maildev
 ENTRYPOINT ["bin/maildev"]
 HEALTHCHECK --interval=10s --timeout=1s \
   CMD wget -O - http://localhost:1080/healthz || exit 1

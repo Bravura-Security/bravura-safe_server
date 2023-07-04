@@ -3,10 +3,12 @@ using Bit.Core.Context;
 using Bit.Core.Entities;
 using Bit.Core.Enums;
 using Bit.Core.Exceptions;
-using Bit.Core.Models.Business;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
 using Bit.Core.Settings;
+using Bit.Core.Tools.Enums;
+using Bit.Core.Tools.Models.Business;
+using Bit.Core.Tools.Services;
 using Bit.Core.Utilities;
 using Bit.Core.Vault.Entities;
 using Bit.Core.Vault.Models.Data;
@@ -28,7 +30,7 @@ namespace Bit.Core.Vault.Services;
         private readonly IAttachmentStorageService _attachmentStorageService;
         private readonly IEventService _eventService;
         private readonly IUserService _userService;
-        private readonly IPolicyRepository _policyRepository;
+    private readonly IPolicyService _policyService;
         private readonly GlobalSettings _globalSettings;
         private const long _fileSizeLeeway = 1024L * 1024L; // 1MB 
         private readonly IReferenceEventService _referenceEventService;
@@ -45,7 +47,7 @@ namespace Bit.Core.Vault.Services;
             IAttachmentStorageService attachmentStorageService,
             IEventService eventService,
             IUserService userService,
-            IPolicyRepository policyRepository,
+        IPolicyService policyService,
             GlobalSettings globalSettings,
             IReferenceEventService referenceEventService,
             ICurrentContext currentContext)
@@ -60,7 +62,7 @@ namespace Bit.Core.Vault.Services;
             _attachmentStorageService = attachmentStorageService;
             _eventService = eventService;
             _userService = userService;
-            _policyRepository = policyRepository;
+        _policyService = policyService;
             _globalSettings = globalSettings;
             _referenceEventService = referenceEventService;
             _currentContext = currentContext;
@@ -86,7 +88,7 @@ namespace Bit.Core.Vault.Services;
                     await _cipherRepository.CreateAsync(cipher, collectionIds);
 
                     await _referenceEventService.RaiseEventAsync(
-                        new ReferenceEvent(ReferenceEventType.CipherCreated, await _organizationRepository.GetByIdAsync(cipher.OrganizationId.Value)));
+                    new ReferenceEvent(ReferenceEventType.CipherCreated, await _organizationRepository.GetByIdAsync(cipher.OrganizationId.Value), _currentContext));
                 }
                 else
                 {
@@ -132,9 +134,8 @@ namespace Bit.Core.Vault.Services;
                 else
                 {
                     // Make sure the user can save new ciphers to their personal vault
-                    var personalOwnershipPolicyCount = await _policyRepository.GetCountByTypeApplicableToUserIdAsync(savingUserId,
-                        PolicyType.PersonalOwnership);
-                    if (personalOwnershipPolicyCount > 0)
+                var anyPersonalOwnershipPolicies = await _policyService.AnyPoliciesApplicableToUserAsync(savingUserId, PolicyType.PersonalOwnership);
+                if (anyPersonalOwnershipPolicies)
                     {
                         throw new BadRequestException("Due to an Enterprise Policy, you are restricted from saving items to your personal vault.");
                     }
@@ -630,9 +631,8 @@ namespace Bit.Core.Vault.Services;
             var userId = folders.FirstOrDefault()?.UserId ?? ciphers.FirstOrDefault()?.UserId;
 
             // Make sure the user can save new ciphers to their personal vault
-            var personalOwnershipPolicyCount = await _policyRepository.GetCountByTypeApplicableToUserIdAsync(userId.Value,
-                PolicyType.PersonalOwnership);
-            if (personalOwnershipPolicyCount > 0)
+        var anyPersonalOwnershipPolicies = await _policyService.AnyPoliciesApplicableToUserAsync(userId.Value, PolicyType.PersonalOwnership);
+        if (anyPersonalOwnershipPolicies)
             {
                 throw new BadRequestException("You cannot import items into your personal vault because you are " +
                     "a member of a team which forbids it.");
@@ -648,11 +648,19 @@ namespace Bit.Core.Vault.Services;
                 }
             }
 
-            // Init. ids for folders
+        var userfoldersIds = (await _folderRepository.GetManyByUserIdAsync(userId ?? Guid.Empty)).Select(f => f.Id).ToList();
+
+        //Assign id to the ones that don't exist in DB
+        //Need to keep the list order to create the relationships
+        List<Folder> newFolders = new List<Folder>();
             foreach (var folder in folders)
             {
+            if (!userfoldersIds.Contains(folder.Id))
+            {
                 folder.SetNewId();
+                newFolders.Add(folder);
             }
+        }
 
             // Create the folder associations based on the newly created folder ids
             foreach (var relationship in folderRelationships)
@@ -670,7 +678,7 @@ namespace Bit.Core.Vault.Services;
             }
 
             // Create it all
-            await _cipherRepository.CreateAsync(ciphers, folders);
+        await _cipherRepository.CreateAsync(ciphers, newFolders);
 
             // push
             if (userId.HasValue)
@@ -705,11 +713,20 @@ namespace Bit.Core.Vault.Services;
                 cipher.SetNewId();
             }
 
-            // Init. ids for collections
+        var userCollectionsIds = (await _collectionRepository.GetManyByOrganizationIdAsync(org.Id)).Select(c => c.Id).ToList();
+
+        //Assign id to the ones that don't exist in DB
+        //Need to keep the list order to create the relationships
+        List<Collection> newCollections = new List<Collection>();
+
             foreach (var collection in collections)
             {
+            if (!userCollectionsIds.Contains(collection.Id))
+            {
                 collection.SetNewId();
+                newCollections.Add(collection);
             }
+        }
 
             // Create associations based on the newly assigned ids
             var collectionCiphers = new List<CollectionCipher>();
@@ -731,7 +748,7 @@ namespace Bit.Core.Vault.Services;
             }
 
             // Create it all
-            await _cipherRepository.CreateAsync(ciphers, collections, collectionCiphers);
+        await _cipherRepository.CreateAsync(ciphers, newCollections, collectionCiphers);
 
             // push
             await _pushService.PushSyncVaultAsync(importingUserId);
@@ -740,7 +757,7 @@ namespace Bit.Core.Vault.Services;
             if (org != null)
             {
                 await _referenceEventService.RaiseEventAsync(
-                    new ReferenceEvent(ReferenceEventType.VaultImported, org));
+                new ReferenceEvent(ReferenceEventType.VaultImported, org, _currentContext));
             }
         }
 

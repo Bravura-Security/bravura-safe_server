@@ -8,6 +8,7 @@ namespace Bit.Core.Services;
 public class LaunchDarklyFeatureService : IFeatureService, IDisposable
 {
     private readonly LdClient _client;
+    private const string _anonymousUser = "25a15cac-58cf-4ac0-ad0f-b17c4bd92294";
 
     public LaunchDarklyFeatureService(
         IGlobalSettings globalSettings)
@@ -24,15 +25,37 @@ public class LaunchDarklyFeatureService : IFeatureService, IDisposable
                         .FilePaths(globalSettings.LaunchDarkly?.FlagDataFilePath)
                         .AutoUpdate(true)
                 );
+            }
+            // support configuration directly from settings
+            else if (globalSettings.LaunchDarkly?.FlagValues?.Any() is true)
+            {
+                var source = TestData.DataSource();
+                foreach (var kvp in globalSettings.LaunchDarkly.FlagValues)
+                {
+                    if (bool.TryParse(kvp.Value, out bool boolValue))
+                    {
+                        source.Update(source.Flag(kvp.Key).ValueForAll(LaunchDarkly.Sdk.LdValue.Of(boolValue)));
+                    }
+                    else if (int.TryParse(kvp.Value, out int intValue))
+                    {
+                        source.Update(source.Flag(kvp.Key).ValueForAll(LaunchDarkly.Sdk.LdValue.Of(intValue)));
+                    }
+                    else
+                    {
+                        source.Update(source.Flag(kvp.Key).ValueForAll(LaunchDarkly.Sdk.LdValue.Of(kvp.Value)));
+                    }
+                }
 
-                // do not provide analytics events
-                ldConfig.Events(Components.NoEvents);
+                ldConfig.DataSource(source);
             }
             else
             {
-                // when a file-based fallback isn't available, work offline
+                // when fallbacks aren't available, work offline
                 ldConfig.Offline(true);
             }
+
+            // do not provide analytics events
+            ldConfig.Events(Components.NoEvents);
         }
         else if (globalSettings.SelfHosted)
         {
@@ -108,7 +131,18 @@ public class LaunchDarklyFeatureService : IFeatureService, IDisposable
         {
             case Identity.ClientType.User:
                 {
-                    var ldUser = LaunchDarkly.Sdk.Context.Builder(currentContext.UserId.Value.ToString());
+                    LaunchDarkly.Sdk.ContextBuilder ldUser;
+                    if (currentContext.UserId.HasValue)
+                    {
+                        ldUser = LaunchDarkly.Sdk.Context.Builder(currentContext.UserId.Value.ToString());
+                    }
+                    else
+                    {
+                        // group all unauthenticated activity under one anonymous user key and mark as such
+                        ldUser = LaunchDarkly.Sdk.Context.Builder(_anonymousUser);
+                        ldUser.Anonymous(true);
+                    }
+
                     ldUser.Kind(LaunchDarkly.Sdk.ContextKind.Default);
 
                     if (currentContext.Organizations?.Any() ?? false)
@@ -123,21 +157,30 @@ public class LaunchDarklyFeatureService : IFeatureService, IDisposable
 
             case Identity.ClientType.Organization:
                 {
-                    var ldOrg = LaunchDarkly.Sdk.Context.Builder(currentContext.OrganizationId.Value.ToString());
-                    ldOrg.Kind("organization");
-                    builder.Add(ldOrg.Build());
+                    if (currentContext.OrganizationId.HasValue)
+                    {
+                        var ldOrg = LaunchDarkly.Sdk.Context.Builder(currentContext.OrganizationId.Value.ToString());
+                        ldOrg.Kind("organization");
+                        builder.Add(ldOrg.Build());
+                    }
                 }
                 break;
 
             case Identity.ClientType.ServiceAccount:
                 {
-                    var ldServiceAccount = LaunchDarkly.Sdk.Context.Builder(currentContext.UserId.Value.ToString());
-                    ldServiceAccount.Kind("service-account");
-                    builder.Add(ldServiceAccount.Build());
+                    if (currentContext.UserId.HasValue)
+                    {
+                        var ldServiceAccount = LaunchDarkly.Sdk.Context.Builder(currentContext.UserId.Value.ToString());
+                        ldServiceAccount.Kind("service-account");
+                        builder.Add(ldServiceAccount.Build());
+                    }
 
-                    var ldOrg = LaunchDarkly.Sdk.Context.Builder(currentContext.OrganizationId.Value.ToString());
-                    ldOrg.Kind("organization");
-                    builder.Add(ldOrg.Build());
+                    if (currentContext.OrganizationId.HasValue)
+                    {
+                        var ldOrg = LaunchDarkly.Sdk.Context.Builder(currentContext.OrganizationId.Value.ToString());
+                        ldOrg.Kind("organization");
+                        builder.Add(ldOrg.Build());
+                    }
                 }
                 break;
         }
