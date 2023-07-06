@@ -244,6 +244,15 @@ public static class ServiceCollectionExtensions
         {
             services.AddSingleton<IPushRegistrationService, RelayPushRegistrationService>();
         }
+        else if (globalSettings.SelfHosted && 
+                CoreHelpers.SettingHasValue(globalSettings.Amazon.AccessKeyId) &&
+                (
+                    CoreHelpers.SettingHasValue(globalSettings.Amazon.SNSPlatformARNAndroid) || 
+                    CoreHelpers.SettingHasValue(globalSettings.Amazon.SNSPlatformARNIOS)
+                ))
+        {
+            services.AddSingleton<IPushRegistrationService, AmazonSNSPushRegistrationService>();
+        }
         else if (!globalSettings.SelfHosted)
         {
             services.AddSingleton<IPushRegistrationService, NotificationHubPushRegistrationService>();
