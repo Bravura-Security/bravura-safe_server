@@ -488,6 +488,7 @@ public class GlobalSettings : IGlobalSettings
         public string SNSPlatformARNAndroid { get; set; }
         public string SNSPlatformARNIOS { get; set; }
         public string SNSTopicARN { get; set; }
+        public bool UseAmazonMail { get; set; } = false;
     }
 
     public class ServiceBusSettings : ConnectionStringSettings

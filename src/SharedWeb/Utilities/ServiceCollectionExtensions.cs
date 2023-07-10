@@ -219,11 +219,12 @@ public static class ServiceCollectionExtensions
         }
 
         var awsConfigured = CoreHelpers.SettingHasValue(globalSettings.Amazon?.AccessKeySecret);
-        if (awsConfigured && CoreHelpers.SettingHasValue(globalSettings.Mail?.SendGridApiKey))
+        var awsMail = globalSettings.Amazon?.UseSESNativeEmail ?? false;
+        if (awsConfigured && awsMail && CoreHelpers.SettingHasValue(globalSettings.Mail?.SendGridApiKey))
         {
             services.AddSingleton<IMailDeliveryService, MultiServiceMailDeliveryService>();
         }
-        else if (awsConfigured)
+        else if (awsConfigured && awsMail)
         {
             services.AddSingleton<IMailDeliveryService, AmazonSesMailDeliveryService>();
         }
@@ -245,10 +246,10 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IPushRegistrationService, RelayPushRegistrationService>();
         }
         else if (globalSettings.SelfHosted && 
-                CoreHelpers.SettingHasValue(globalSettings.Amazon.AccessKeyId) &&
+                CoreHelpers.SettingHasValue(globalSettings.Amazon?.AccessKeyId) &&
                 (
-                    CoreHelpers.SettingHasValue(globalSettings.Amazon.SNSPlatformARNAndroid) || 
-                    CoreHelpers.SettingHasValue(globalSettings.Amazon.SNSPlatformARNIOS)
+                    CoreHelpers.SettingHasValue(globalSettings.Amazon?.SNSPlatformARNAndroid) || 
+                    CoreHelpers.SettingHasValue(globalSettings.Amazon?.SNSPlatformARNIOS)
                 ))
         {
             services.AddSingleton<IPushRegistrationService, AmazonSNSPushRegistrationService>();
