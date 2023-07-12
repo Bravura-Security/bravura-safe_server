@@ -183,6 +183,15 @@ public static class ServiceCollectionExtensions
                         };
                     });
 
+        services.AddHttpClient("client")
+                .ConfigureHttpMessageHandlerBuilder(builder =>
+                {
+                    builder.PrimaryHandler = new System.Net.Http.HttpClientHandler
+                    {
+                        ServerCertificateCustomValidationCallback = (m, c, ch, e) => true
+                    };
+                });
+
         services.AddSingleton<IStripeAdapter, StripeAdapter>();
         services.AddSingleton<Braintree.IBraintreeGateway>((serviceProvider) =>
         {

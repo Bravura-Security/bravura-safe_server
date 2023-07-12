@@ -48,8 +48,6 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
 
     public async Task CreateOrUpdateRegistrationAsync(string pushToken, string deviceId, string userId, string identifier, DeviceType type)
     {
-        //TODO: pushToken? What for?
-        //TODO: Must strip Prefix from userId and identifier for filter policy, must strip Prefix off DeviceID for registration
         string platformARN = null;
         switch (type)
         {
@@ -69,7 +67,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
             new CreatePlatformEndpointRequest
             {
                 PlatformApplicationArn = platformARN,
-                Token = StripPrefix(deviceId),
+                Token = pushToken,
             }
         );
         var endpointARN = response.EndpointArn;

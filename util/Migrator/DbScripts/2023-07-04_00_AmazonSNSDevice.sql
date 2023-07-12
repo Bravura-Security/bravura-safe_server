@@ -1,5 +1,3 @@
-IF OBJECT_ID('[dbo].[AmazonSNSDevice]') IS NULL
-BEGIN
 CREATE TABLE [dbo].[AmazonSNSDevice] (
     [Id]                BIGINT           IDENTITY (1, 1) NOT NULL,
     [DeviceId]          UNIQUEIDENTIFIER NOT NULL,
@@ -9,16 +7,9 @@ CREATE TABLE [dbo].[AmazonSNSDevice] (
     CONSTRAINT [PK_AmazonSNSDevice] PRIMARY KEY CLUSTERED ([Id] ASC),
     CONSTRAINT [FK_AmazonSNSDevice_Device] FOREIGN KEY ([DeviceId]) REFERENCES [dbo].[Device] ([Id]),
 );
-END
 GO
 
-IF EXISTS(SELECT * FROM sys.views WHERE [Name] = 'AmazonSNSDeviceView')
-BEGIN
-    DROP VIEW [dbo].[AmazonSNSDeviceView]
-END
-GO
-
-CREATE VIEW [dbo].[AmazonSNSDeviceView]
+CREATE OR ALTER VIEW [dbo].[AmazonSNSDeviceView]
 AS
 SELECT
     *
@@ -26,13 +17,8 @@ FROM
     [dbo].[AmazonSNSDevice]
 GO
 
-IF OBJECT_ID('[dbo].[AmazonSNSDevice_Create]') IS NULL
-BEGIN
-    DROP PROCEDURE [dbo].[AmazonSNSDevice_Create]
-END
-GO
 
-CREATE PROCEDURE [dbo].[AmazonSNSDevice_Create]
+CREATE OR ALTER PROCEDURE [dbo].[AmazonSNSDevice_Create]
     @Id BIGINT OUTPUT,
     @DeviceId UNIQUEIDENTIFIER,
     @EndpointARN NVARCHAR (2048),
@@ -61,13 +47,7 @@ BEGIN
 END
 GO
 
-IF OBJECT_ID('[dbo].[AmazonSNSDevice_Update]') IS NULL
-BEGIN
-    DROP PROCEDURE [dbo].[AmazonSNSDevice_Update]
-END
-GO
-
-CREATE PROCEDURE [dbo].[AmazonSNSDevice_Update]
+CREATE OR ALTER PROCEDURE [dbo].[AmazonSNSDevice_Update]
     @Id BIGINT OUTPUT,
     @DeviceId UNIQUEIDENTIFIER,
     @EndpointARN NVARCHAR (2048),
@@ -89,13 +69,7 @@ BEGIN
 END
 GO
 
-IF OBJECT_ID('[dbo].[AmazonSNSDevice_Delete]') IS NULL
-BEGIN
-    DROP PROCEDURE [dbo].[AmazonSNSDevice_Delete]
-END
-GO
-
-CREATE PROCEDURE [dbo].[AmazonSNSDevice_Delete]
+CREATE OR ALTER PROCEDURE [dbo].[AmazonSNSDevice_Delete]
     @DeviceId UNIQUEIDENTIFIER
 AS
 BEGIN
@@ -109,13 +83,7 @@ BEGIN
 END
 GO
 
-IF OBJECT_ID('[dbo].[AmazonSNSDevice_ReadByDeviceId]') IS NULL
-BEGIN
-    DROP PROCEDURE [dbo].[AmazonSNSDevice_ReadByDeviceId]
-END
-GO
-
-CREATE PROCEDURE [dbo].[AmazonSNSDevice_ReadByDeviceId]
+CREATE OR ALTER PROCEDURE [dbo].[AmazonSNSDevice_ReadByDeviceId]
     @DeviceId UNIQUEIDENTIFIER
 AS
 BEGIN

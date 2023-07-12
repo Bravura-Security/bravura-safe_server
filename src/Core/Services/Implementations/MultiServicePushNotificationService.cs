@@ -44,7 +44,7 @@ public class MultiServicePushNotificationService : IPushNotificationService
                 CoreHelpers.SettingHasValue(globalSettings.Amazon.AccessKeyId))
             {
                 _services.Add(new AmazonSNSPushNotificationService(
-                    installationDeviceRepository, globalSettings, httpContextAccessor, hubLogger));
+                    installationDeviceRepository, deviceRepository, globalSettings, httpContextAccessor, hubLogger));
             }
         }
         else

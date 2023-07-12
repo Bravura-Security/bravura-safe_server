@@ -13,6 +13,7 @@ using Bit.Core.Tools.Entities;
 using Bit.Core.Auth.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System.Collections;
 
 namespace Bit.Core.Services;
 
@@ -20,6 +21,7 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
 {
 
     private readonly IInstallationDeviceRepository _installationDeviceRepository;
+    private readonly IDeviceRepository _deviceRepository;
     private readonly GlobalSettings _globalSettings;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private AmazonSimpleNotificationServiceClient _client = null;
@@ -27,12 +29,14 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
 
     public AmazonSNSPushNotificationService(
         IInstallationDeviceRepository installationDeviceRepository,
+        IDeviceRepository deviceRepository,
         GlobalSettings globalSettings,
         IHttpContextAccessor httpContextAccessor,
         ILogger<NotificationsApiPushNotificationService> logger)
     {
 
         _installationDeviceRepository = installationDeviceRepository;
+        _deviceRepository = deviceRepository;
         _globalSettings = globalSettings;
         _httpContextAccessor = httpContextAccessor;
         _client = new AmazonSimpleNotificationServiceClient(
@@ -219,29 +223,42 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
 
     private async Task SendPayloadAsync(string Id, PushType type, object payload, string identifier, string deviceId = null)
     {
-        var message = new Dictionary<string, string>
+        IDictionary message = new Dictionary<string, Dictionary<string, string>>
             {
-                { "type",  ((byte)type).ToString() },
-                { "payload", JsonSerializer.Serialize(payload) }
+                {"data", new Dictionary<string, string>
+                    {
+                        { "type",  ((byte)type).ToString() },
+                        { "payload", JsonSerializer.Serialize(payload) }
+                    }
+                }
             };
+        //Google Android devices need an extra nested data key:
+        var device = await _deviceRepository.GetByIdentifierAsync(identifier);
+        if (device.Type == DeviceType.Android)
+        {
+            message = new Dictionary<string, IDictionary>
+                {
+                    {"data", message }
+                };
+        }
         await _client.PublishAsync(new PublishRequest
         {
             Message = JsonSerializer.Serialize(message),
             MessageAttributes = new Dictionary<string, MessageAttributeValue>
-                    {
-                        { "recipientId", new MessageAttributeValue
-                            {
-                                DataType = "string",
-                                StringValue = Id
-                            }
-                        },
-                        { "deviceIdentifier", new MessageAttributeValue
-                            {
-                                DataType = "string",
-                                StringValue = identifier
-                            }
+                {
+                    { "recipientId", new MessageAttributeValue
+                        {
+                            DataType = "string",
+                            StringValue = Id
                         }
                     },
+                    { "deviceIdentifier", new MessageAttributeValue
+                        {
+                            DataType = "string",
+                            StringValue = identifier
+                        }
+                    }
+                },
         }
         );
         if (InstallationDeviceEntity.IsInstallationDeviceId(deviceId))
