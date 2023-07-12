@@ -223,7 +223,7 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
 
     private async Task SendPayloadAsync(string Id, PushType type, object payload, string identifier, string deviceId = null)
     {
-        IDictionary message = new Dictionary<string, Dictionary<string, string>>
+        var message = new Dictionary<string, Dictionary<string, string>>
             {
                 {"data", new Dictionary<string, string>
                     {
@@ -233,18 +233,12 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
                 }
             };
         //Google Android devices need an extra nested data key:
-        var device = await _deviceRepository.GetByIdentifierAsync(identifier);
-        if (device.Type == DeviceType.Android)
-        {
-            message = new Dictionary<string, IDictionary>
-                {
-                    {"data", message }
-                };
-        }
-        await _client.PublishAsync(new PublishRequest
-        {
-            Message = JsonSerializer.Serialize(message),
-            MessageAttributes = new Dictionary<string, MessageAttributeValue>
+        var messageAndroid = new Dictionary<string, IDictionary>
+            {
+                {"data", message }
+            };
+
+        var messageAttributes = new Dictionary<string, MessageAttributeValue>
                 {
                     { "recipientId", new MessageAttributeValue
                         {
@@ -258,7 +252,20 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
                             StringValue = identifier
                         }
                     }
-                },
+                };
+        await _client.PublishAsync(new PublishRequest
+        {
+            TopicArn = _globalSettings.Amazon.SNSTopicGeneric,
+            Message = JsonSerializer.Serialize(message),
+            MessageAttributes = messageAttributes
+        }
+        );
+
+        await _client.PublishAsync(new PublishRequest
+        {
+            TopicArn = _globalSettings.Amazon.SNSTopicGoogle,
+            Message = JsonSerializer.Serialize(messageAndroid),
+            MessageAttributes = messageAttributes
         }
         );
         if (InstallationDeviceEntity.IsInstallationDeviceId(deviceId))

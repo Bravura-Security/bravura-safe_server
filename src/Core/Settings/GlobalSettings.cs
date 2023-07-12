@@ -487,7 +487,8 @@ public class GlobalSettings : IGlobalSettings
         public string Region { get; set; }
         public string SNSPlatformARNAndroid { get; set; }
         public string SNSPlatformARNIOS { get; set; }
-        public string SNSTopicARN { get; set; }
+        public string SNSTopicGoogle { get; set; }
+        public string SNSTopicGeneric { get; set; }
         public bool UseSESNativeEmail { get; set; } = false;
     }
 
