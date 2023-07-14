@@ -229,7 +229,8 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
                 {"data", new Dictionary<string, string>
                     {
                         { "type",  ((byte)type).ToString() },
-                        { "payload", JsonSerializer.Serialize(payload) }
+                        { "payload", JsonSerializer.Serialize(payload) },
+                        { "contextId", identifier }
                     }
                 }
             };
