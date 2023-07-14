@@ -262,6 +262,12 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
                             DataType = "String",
                             StringValue = Id
                         }
+                    },
+                    { "deviceIdentifier", new MessageAttributeValue
+                        {
+                            DataType = "String",
+                            StringValue = !identifier.IsNullOrEmpty() ? identifier : "_NO_IDENTIFIER_"
+                        }
                     }
                 };
         if(!identifier.IsNullOrEmpty())
