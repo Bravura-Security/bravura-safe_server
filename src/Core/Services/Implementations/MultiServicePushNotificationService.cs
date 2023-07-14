@@ -40,7 +40,7 @@ public class MultiServicePushNotificationService : IPushNotificationService
                 _services.Add(new NotificationsApiPushNotificationService(
                     httpFactory, globalSettings, httpContextAccessor, hubLogger));
             }
-            if (CoreHelpers.SettingHasValue(globalSettings.Amazon.SNSTopicGeneric) &&
+            if (CoreHelpers.SettingHasValue(globalSettings.Amazon.SNSTopicARN) &&
                 CoreHelpers.SettingHasValue(globalSettings.Amazon.AccessKeyId))
             {
                 _services.Add(new AmazonSNSPushNotificationService(

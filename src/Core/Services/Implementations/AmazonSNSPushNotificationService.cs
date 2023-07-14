@@ -14,6 +14,7 @@ using Bit.Core.Auth.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections;
+using IdentityServer4.Extensions;
 
 namespace Bit.Core.Services;
 
@@ -223,7 +224,7 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
 
     private async Task SendPayloadAsync(string Id, PushType type, object payload, string identifier, string deviceId = null)
     {
-        var message = new Dictionary<string, Dictionary<string, string>>
+        var messageData = new Dictionary<string, IDictionary>
             {
                 {"data", new Dictionary<string, string>
                     {
@@ -232,42 +233,54 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
                     }
                 }
             };
+        var messageStr = JsonSerializer.Serialize(messageData);
         //Google Android devices need an extra nested data key:
         var messageAndroid = new Dictionary<string, IDictionary>
             {
-                {"data", message }
+                {"data", messageData }
             };
+        var messageStrAndroid = JsonSerializer.Serialize(messageAndroid);
+        //IOS devices need the aps key:
+        var messageIOS = new Dictionary<string, IDictionary>(messageData)
+        {
+            { "aps", new Dictionary<string, int> { { "content-available", 1 } } }
+        };
+        var messageStrIOS = JsonSerializer.Serialize(messageIOS);
+        var message = new Dictionary<string, string>
+        {
+            {"GCM", messageStrAndroid },
+            {"APNS", messageStrIOS },
+            {"ADM", messageStr },
+            {"default", messageStr }
+        };
 
         var messageAttributes = new Dictionary<string, MessageAttributeValue>
                 {
                     { "recipientId", new MessageAttributeValue
                         {
-                            DataType = "string",
+                            DataType = "String",
                             StringValue = Id
-                        }
-                    },
-                    { "deviceIdentifier", new MessageAttributeValue
-                        {
-                            DataType = "string",
-                            StringValue = identifier
                         }
                     }
                 };
+        if(!identifier.IsNullOrEmpty())
+        {
+            messageAttributes.Add("deviceIdentifier", new MessageAttributeValue
+            {
+                DataType = "String",
+                StringValue = identifier
+            }
+            );
+        };
         await _client.PublishAsync(new PublishRequest
         {
-            TopicArn = _globalSettings.Amazon.SNSTopicGeneric,
+            TopicArn = _globalSettings.Amazon.SNSTopicARN,
+            MessageStructure = "json",
             Message = JsonSerializer.Serialize(message),
             MessageAttributes = messageAttributes
         }
         );
 
-        await _client.PublishAsync(new PublishRequest
-        {
-            TopicArn = _globalSettings.Amazon.SNSTopicGoogle,
-            Message = JsonSerializer.Serialize(messageAndroid),
-            MessageAttributes = messageAttributes
-        }
-        );
         if (InstallationDeviceEntity.IsInstallationDeviceId(deviceId))
         {
             await _installationDeviceRepository.UpsertAsync(new InstallationDeviceEntity(deviceId));

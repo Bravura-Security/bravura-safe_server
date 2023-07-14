@@ -49,20 +49,17 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
     public async Task CreateOrUpdateRegistrationAsync(string pushToken, string deviceId, string userId, string identifier, DeviceType type)
     {
         string platformARN = null;
-        string topicARN = null;
+        string topicARN = _globalSettings.Amazon.SNSTopicARN;
         switch (type)
         {
             case DeviceType.Android:
                 platformARN = _globalSettings.Amazon.SNSPlatformARNAndroid;
-                topicARN = _globalSettings.Amazon.SNSTopicGoogle;
                 break;
             case DeviceType.iOS:
                 platformARN = _globalSettings.Amazon.SNSPlatformARNIOS;
-                topicARN = _globalSettings.Amazon.SNSTopicGeneric;
                 break;
             case DeviceType.AndroidAmazon:
                 platformARN = _globalSettings.Amazon.SNSPlatformARNAndroid;
-                topicARN = _globalSettings.Amazon.SNSTopicGeneric;
                 break;
             default:
                 break;
