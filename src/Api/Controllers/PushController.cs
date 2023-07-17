@@ -104,7 +104,7 @@ public class PushController : Controller
 
     private bool CanUse()
     {
-        if (_environment.IsDevelopment())
+        if (_environment.IsDevelopment() || _globalSettings.SelfHosted )
         {
             return true;
         }
