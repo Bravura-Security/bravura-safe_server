@@ -270,15 +270,6 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
                         }
                     }
                 };
-        if(!identifier.IsNullOrEmpty())
-        {
-            messageAttributes.Add("deviceIdentifier", new MessageAttributeValue
-            {
-                DataType = "String",
-                StringValue = identifier
-            }
-            );
-        };
         await _client.PublishAsync(new PublishRequest
         {
             TopicArn = _globalSettings.Amazon.SNSTopicARN,
