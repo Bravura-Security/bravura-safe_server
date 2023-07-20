@@ -222,7 +222,7 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
     public async Task SendPayloadToOrganizationAsync(string orgId, PushType type, object payload, string identifier, string deviceId = null) => await SendPayloadAsync(orgId, type, payload, identifier, deviceId);
     public async Task SendPayloadToUserAsync(string userId, PushType type, object payload, string identifier, string deviceId = null) => await SendPayloadAsync(userId, type, payload, identifier, deviceId);
 
-    private async Task SendPayloadAsync(string Id, PushType type, object payload, string identifier, string deviceId = null)
+    private async Task SendPayloadAsync(string userId, PushType type, object payload, string ctxIdentifier, string deviceId = null)
     {
         var messageData = new Dictionary<string, IDictionary>
             {
@@ -230,21 +230,21 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
                     {
                         { "type",  ((byte)type).ToString() },
                         { "payload", JsonSerializer.Serialize(payload) },
-                        { "contextId", identifier }
+                        { "contextId", ctxIdentifier }
                     }
                 }
             };
-        var messageStr = JsonSerializer.Serialize(messageData);
+        var messageStr = JsonSerializer.Serialize(messageData, new JsonSerializerOptions { WriteIndented = false });
         //Google Android devices need an extra nested data key:
         var messageAndroid = new Dictionary<string, IDictionary>
             {
                 {"data", messageData }
             };
-        var messageStrAndroid = JsonSerializer.Serialize(messageAndroid);
+        var messageStrAndroid = JsonSerializer.Serialize(messageAndroid, new JsonSerializerOptions { WriteIndented = false });
         //IOS devices need the aps key:
         var messageIOS = new Dictionary<string, IDictionary>(messageData)
         {
-            { "aps", new Dictionary<string, int> { { "content-available", 1 } } }
+            { "aps", new Dictionary<string, object> { { "content-available", 1 }, { "sound", "default" } } }
         };
         var messageStrIOS = JsonSerializer.Serialize(messageIOS);
         var message = new Dictionary<string, string>
@@ -260,17 +260,18 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
                     { "recipientId", new MessageAttributeValue
                         {
                             DataType = "String",
-                            StringValue = Id
+                            StringValue = userId.ToLower()
                         }
                     },
                     { "deviceIdentifier", new MessageAttributeValue
                         {
                             DataType = "String",
-                            StringValue = !identifier.IsNullOrEmpty() ? identifier : "_NO_IDENTIFIER_"
+                            StringValue = !ctxIdentifier.IsNullOrEmpty() ? ctxIdentifier.ToLower() : "_NO_IDENTIFIER_"
                         }
                     }
                 };
-        await _client.PublishAsync(new PublishRequest
+
+        var response = await _client.PublishAsync( new PublishRequest
         {
             TopicArn = _globalSettings.Amazon.SNSTopicARN,
             MessageStructure = "json",
@@ -278,6 +279,15 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
             MessageAttributes = messageAttributes
         }
         );
+
+        _logger.LogInformation("\nMessage published. Message ID: " + response.MessageId);
+        _logger.LogInformation("\nMessage published. Message Body: " + JsonSerializer.Serialize(message));
+        // Print the dictionary to the console
+        foreach (var kvp in messageAttributes)
+        {
+            _logger.LogInformation($"\nMessage published. { kvp.Key}: {kvp.Value.StringValue}");
+        }
+
 
         if (InstallationDeviceEntity.IsInstallationDeviceId(deviceId))
         {

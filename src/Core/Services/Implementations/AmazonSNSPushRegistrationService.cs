@@ -35,6 +35,77 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
                 _globalSettings.Amazon.AccessKeySecret, 
                 RegionEndpoint.GetBySystemName(_globalSettings.Amazon.Region)
             );
+
+        try
+        {
+            // List topics
+            var listTopicsRequest = new ListTopicsRequest();
+            var listTopicsResponse = _client.ListTopicsAsync(listTopicsRequest).Result;
+
+            bool topicFound = false;
+            // Check if listing topics was successful
+            if (listTopicsResponse.HttpStatusCode == System.Net.HttpStatusCode.OK)
+            {
+                // Iterate over the topics and print their ARNs
+                foreach (var topic in listTopicsResponse.Topics)
+                {
+                    Console.WriteLine("AWS SNS: Topic ARN: " + topic.TopicArn);
+                    if (topic.TopicArn.Equals(_globalSettings.Amazon.SNSTopicARN))
+                    {
+                        Console.WriteLine("AWS SNS: Found topic as specified in settings: " + topic.TopicArn);
+                        topicFound = true;
+                        break;
+                    }
+                }
+
+                /* ****
+                // this is POC code that proves we can create a topic, but we should not
+                // be autocreating imo.
+                if (!topicFound)
+                {
+                    try
+                    {
+                        CreateSNSTopic();
+                    }
+                    catch (System.Exception)
+                    {
+
+                    }
+                }
+                *** */
+            }
+            else
+            {
+                Console.WriteLine("AWS SNS: Failed to list topics.");
+            }
+        }
+        catch (System.Exception)
+        {
+            Console.WriteLine("AWS SNS: Failed to list topics in AWS SNS.");
+        }
+	}
+
+    private bool CreateSNSTopic()
+    {
+        // Create a new topic
+        // topic creation can fail if insufficient permission within AWS console
+        var createTopicRequest = new CreateTopicRequest
+        {
+            Name = "_SNS_BSAFE_AUTOCREATED_"
+        };
+
+        var createTopicResponse = _client.CreateTopicAsync(createTopicRequest).Result;
+
+        // Check if creating the new topic was successful
+        if (createTopicResponse.HttpStatusCode == System.Net.HttpStatusCode.OK)
+        {
+            Console.WriteLine("AWS SNS: New topic created: " + createTopicResponse.TopicArn);
+            return true;
+        }
+
+        
+        Console.WriteLine("AWS SNS: Failed to create the new topic.");
+        return false;
     }
 
     internal static string StripPrefix(string prefixedValue)
@@ -97,6 +168,17 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
                 }
             }
         );
+
+        // Check if the subscription was successful
+        if (subscribeResponse.HttpStatusCode == System.Net.HttpStatusCode.OK)
+        {
+            Console.WriteLine("AWS SNS: Subscription successful. Endpoint subscribed to the topic.");
+        }
+        else
+        {
+            Console.WriteLine("AWS SNS: Failed to subscribe the endpoint to the topic.");
+        }
+
         var subscriptionARN = subscribeResponse.SubscriptionArn;
         if (InstallationDeviceEntity.IsInstallationDeviceId(deviceId))
         {
@@ -144,12 +226,22 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
             if (!filterPolicy.recipientId.Contains(organizationId))
             {
                 filterPolicy.recipientId.Add(organizationId);
-                await _client.SetSubscriptionAttributesAsync(new SetSubscriptionAttributesRequest
+                var setSubscriptionAttributesResponse = await _client.SetSubscriptionAttributesAsync(new SetSubscriptionAttributesRequest
                 {
                     SubscriptionArn = snsDevice.SubscriptionARN,
                     AttributeName = "FilterPolicy",
                     AttributeValue = JsonSerializer.Serialize<SafeFilterPolicy>(filterPolicy)
                 });
+
+                // Check if setting the filter policy was successful
+                if (setSubscriptionAttributesResponse.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    Console.WriteLine("AWS SNS: Filter policy set successfully for the subscription.");
+                }
+                else
+                {
+                    Console.WriteLine("AWS SNS: Failed to set the filter policy for the subscription.");
+                }
             }
         }
         if (deviceIds.Any() && InstallationDeviceEntity.IsInstallationDeviceId(deviceIds.First()))
