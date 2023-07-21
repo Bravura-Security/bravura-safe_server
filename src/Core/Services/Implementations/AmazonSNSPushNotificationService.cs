@@ -244,7 +244,9 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
         //IOS devices need the aps key:
         var messageIOS = new Dictionary<string, IDictionary>(messageData)
         {
-            { "aps", new Dictionary<string, object> { { "content-available", 1 }, { "sound", "default" } } }
+            // sound:default works for login auth request but might break background refresh of ciphers
+            //{ "aps", new Dictionary<string, object> { { "content-available", 1 }, { "sound", "default" } } }
+            { "aps", new Dictionary<string, int> { { "content-available", 1 } } }
         };
         var messageStrIOS = JsonSerializer.Serialize(messageIOS);
         var message = new Dictionary<string, string>
