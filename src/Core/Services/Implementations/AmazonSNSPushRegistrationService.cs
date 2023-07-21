@@ -184,9 +184,23 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
         {
             await _installationDeviceRepository.UpsertAsync(new InstallationDeviceEntity(deviceId));
         }
-        await _amazonSNSDeviceRepository.UpsertAsync(
-            new Entities.AmazonSNSDevice { DeviceID = new Guid(StripPrefix(deviceId)), EndpointARN = endpointARN, SubscriptionARN = subscriptionARN }
-            );
+        var strippedDeviceId = new Guid(StripPrefix(deviceId));
+        var deviceRegistration = await _amazonSNSDeviceRepository.GetByDeviceIDAsync(strippedDeviceId);
+        if (deviceRegistration == null)
+        {
+            deviceRegistration = new Entities.AmazonSNSDevice
+            {
+                DeviceID = strippedDeviceId,
+                EndpointARN = endpointARN,
+                SubscriptionARN = subscriptionARN
+            };
+        }
+        else
+        {
+            deviceRegistration.EndpointARN = endpointARN;
+            deviceRegistration.SubscriptionARN = subscriptionARN;
+        }
+        await _amazonSNSDeviceRepository.UpsertAsync(deviceRegistration);
     }
 
     public async Task DeleteRegistrationAsync(string deviceId)
