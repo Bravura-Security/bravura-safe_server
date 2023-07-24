@@ -51,7 +51,7 @@ public class ProfileOrganizationResponseModel : ResponseModel
         ProviderType = organization.ProviderType;
         FamilySponsorshipFriendlyName = organization.FamilySponsorshipFriendlyName;
         FamilySponsorshipAvailable = false;
-        PlanProductType = StaticStore.GetPlan(organization.PlanType).Product;
+        PlanProductType = StaticStore.GetPasswordManagerPlan(organization.PlanType).Product;
         PlanType = organization.PlanType;
         FamilySponsorshipLastSyncDate = organization.FamilySponsorshipLastSyncDate;
         FamilySponsorshipToDelete = organization.FamilySponsorshipToDelete;

@@ -76,6 +76,13 @@ public class PolicyService : IPolicyService
                 }
                 break;
 
+            case PolicyType.ResetPassword:
+                if (!policy.Enabled || policy.GetDataModel<ResetPasswordDataModel>()?.AutoEnrollEnabled == false)
+                {
+                    await RequiredBySsoTrustedDeviceEncryptionAsync(org);
+                }
+                break;
+
             case PolicyType.MaximumVaultTimeout:
                 if (policy.Enabled)
                 {
@@ -223,7 +230,6 @@ public class PolicyService : IPolicyService
 
     private async Task RequiredByKeyConnectorAsync(Organization org)
     {
-
         var ssoConfig = await _ssoConfigRepository.GetByOrganizationIdAsync(org.Id);
         if (ssoConfig?.GetData()?.MemberDecryptionType == MemberDecryptionType.KeyConnector)
         {
@@ -270,6 +276,15 @@ public class PolicyService : IPolicyService
         if (org.PlanType != PlanType.EnterpriseAnnually && org.PlanType != PlanType.EnterpriseMonthly)
         {
             throw new BadRequestException("This policy is only available to 2020 Enterprise plans.");
+        }
+    }
+
+    private async Task RequiredBySsoTrustedDeviceEncryptionAsync(Organization org)
+    {
+        var ssoConfig = await _ssoConfigRepository.GetByOrganizationIdAsync(org.Id);
+        if (ssoConfig?.GetData()?.MemberDecryptionType == MemberDecryptionType.TrustedDeviceEncryption)
+        {
+            throw new BadRequestException("Trusted device encryption is on and requires this policy.");
         }
     }
 }

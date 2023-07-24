@@ -17,6 +17,7 @@ namespace Bit.Core.Services;
 public class HandlebarsMailService : IMailService
 {
     private const string Namespace = "Bit.Core.MailTemplates.Handlebars";
+    private const string _utcTimeZoneDisplay = "UTC";
 
     private readonly GlobalSettings _globalSettings;
     private readonly IMailDeliveryService _mailDeliveryService;
@@ -355,7 +356,7 @@ public class HandlebarsMailService : IMailService
             DeviceType = deviceType,
             TheDate = timestamp.ToLongDateString(),
             TheTime = timestamp.ToShortTimeString(),
-            TimeZone = "UTC",
+            TimeZone = _utcTimeZoneDisplay,
             IpAddress = ip
         };
         await AddMessageContentAsync(message, "NewDeviceLoggedIn", model);
@@ -372,7 +373,7 @@ public class HandlebarsMailService : IMailService
             SiteName = _globalSettings.SiteName,
             TheDate = timestamp.ToLongDateString(),
             TheTime = timestamp.ToShortTimeString(),
-            TimeZone = "UTC",
+            TimeZone = _utcTimeZoneDisplay,
             IpAddress = ip
         };
         await AddMessageContentAsync(message, "Auth.RecoverTwoFactor", model);
@@ -405,7 +406,7 @@ public class HandlebarsMailService : IMailService
 
     public async Task SendAdminResetPasswordEmailAsync(string email, string userName, string orgName)
     {
-        var message = CreateDefaultMessage("Master Password Has Been Changed", email);
+        var message = CreateDefaultMessage("Your admin has initiated account recovery", email);
         var model = new AdminResetPasswordViewModel()
         {
             UserName = GetUserIdentifier(email, userName),
@@ -858,7 +859,7 @@ public class HandlebarsMailService : IMailService
         {
             TheDate = utcNow.ToLongDateString(),
             TheTime = utcNow.ToShortTimeString(),
-            TimeZone = "UTC",
+            TimeZone = _utcTimeZoneDisplay,
             IpAddress = ip,
             AffectedEmail = email
 
@@ -875,7 +876,7 @@ public class HandlebarsMailService : IMailService
         {
             TheDate = utcNow.ToLongDateString(),
             TheTime = utcNow.ToShortTimeString(),
-            TimeZone = "UTC",
+            TimeZone = _utcTimeZoneDisplay,
             IpAddress = ip,
             AffectedEmail = email
 
@@ -914,8 +915,26 @@ public class HandlebarsMailService : IMailService
         await _mailDeliveryService.SendEmailAsync(message);
     }
 
+    public async Task SendTrustedDeviceAdminApprovalEmailAsync(string email, DateTime utcNow, string ip,
+        string deviceTypeAndIdentifier)
+    {
+        var message = CreateDefaultMessage("Login request approved", email);
+        var model = new TrustedDeviceAdminApprovalViewModel
+        {
+            TheDate = utcNow.ToLongDateString(),
+            TheTime = utcNow.ToShortTimeString(),
+            TimeZone = _utcTimeZoneDisplay,
+            IpAddress = ip,
+            DeviceType = deviceTypeAndIdentifier,
+        };
+        await AddMessageContentAsync(message, "Auth.TrustedDeviceAdminApproval", model);
+        message.Category = "TrustedDeviceAdminApproval";
+        await _mailDeliveryService.SendEmailAsync(message);
+    }
+
     private static string GetUserIdentifier(string email, string userName)
     {
         return string.IsNullOrEmpty(userName) ? email : CoreHelpers.SanitizeForEmail(userName, false);
     }
 }
+

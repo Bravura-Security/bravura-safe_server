@@ -16,6 +16,7 @@
     },
     "Identity": {
       "commandName": "Project",
+      "applicationUrl": "http://localhost:33656",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
@@ -23,6 +24,7 @@
     },
     "Identity-SelfHost": {
       "commandName": "Project",
+      "applicationUrl": "http://localhost:33657",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "developSelfHosted": "true"
