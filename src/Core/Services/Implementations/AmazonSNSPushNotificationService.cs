@@ -73,6 +73,19 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
             // me to send "full sync" push to all org users, but that has the potential to DDOS the API in bursts.
 
             // await SendPayloadToOrganizationAsync(cipher.OrganizationId.Value, type, message, true);
+
+            // send only to user that has triggered the change.  Other org members are stuck refreshing 9ie syncing) their vault
+            // but better this than spamming a whole org and potentially all their registered devices.
+            var message = new SyncCipherPushNotification
+            {
+                Id = cipher.Id,
+                UserId = cipher.UserId,
+                OrganizationId = cipher.OrganizationId,
+                RevisionDate = cipher.RevisionDate,
+                CollectionIds = collectionIds,
+            };
+
+            await SendPayloadToUserAsync(cipher.UserId.Value, type, message, true);
         }
         else if (cipher.UserId.HasValue)
         {
@@ -242,12 +255,25 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
             };
         var messageStrAndroid = JsonSerializer.Serialize(messageAndroid, new JsonSerializerOptions { WriteIndented = false });
         //IOS devices need the aps key:
-        var messageIOS = new Dictionary<string, IDictionary>(messageData)
+        Dictionary<string, IDictionary> messageIOS = null;
+
+        if (type != PushType.AuthRequest)
         {
-            // sound:default works for login auth request but might break background refresh of ciphers
-            //{ "aps", new Dictionary<string, object> { { "content-available", 1 }, { "sound", "default" } } }
-            { "aps", new Dictionary<string, int> { { "content-available", 1 } } }
-        };
+            // note Only use "content-available": 1 for silent background updates.
+            messageIOS = new Dictionary<string, IDictionary>(messageData)
+            {
+              { "aps", new Dictionary<string, int> { { "content-available", 1 } } }
+            };
+        }
+        else
+        {
+            Console.WriteLine("******* An auth message");
+            messageIOS = new Dictionary<string, IDictionary>(messageData)
+            {
+                // sound:default works for login auth request but might break background refresh of ciphers
+                { "aps", new Dictionary<string, string> { { "sound", "default" } } }
+            };
+        }
         var messageStrIOS = JsonSerializer.Serialize(messageIOS);
         var message = new Dictionary<string, string>
         {
@@ -282,8 +308,10 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
         }
         );
 
-        _logger.LogInformation("\nMessage published. Message ID: " + response.MessageId);
-        _logger.LogInformation("\nMessage published. Message Body: " + JsonSerializer.Serialize(message));
+        _logger.LogWarning("\nMessage published. Message ID: " + response.MessageId);
+        _logger.LogWarning("\nMessage published. recipientId: " + userId.ToLower());
+        _logger.LogWarning("\nMessage published. deviceIdentifier: " + (!ctxIdentifier.IsNullOrEmpty() ? ctxIdentifier.ToLower() : "_NO_IDENTIFIER_") );
+        _logger.LogWarning("\nMessage published. Message Body: " + JsonSerializer.Serialize(message));
         // Print the dictionary to the console
         foreach (var kvp in messageAttributes)
         {
