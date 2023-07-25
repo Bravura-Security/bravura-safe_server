@@ -58,21 +58,24 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
                     }
                 }
 
-                /* ****
-                // this is POC code that proves we can create a topic, but we should not
-                // be autocreating imo.
+
                 if (!topicFound)
                 {
+                    Console.WriteLine("AWS SNS: Unable to find topic as configured: " + _globalSettings.Amazon.SNSTopicARN);
+                    /* **
                     try
                     {
+                        // this is POC code that proves we can create a topic, but we should not
+                        // be autocreating imo.
                         CreateSNSTopic();
                     }
                     catch (System.Exception)
                     {
 
                     }
+                    *** */
                 }
-                *** */
+                
             }
             else
             {
@@ -119,6 +122,11 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
 
     public async Task CreateOrUpdateRegistrationAsync(string pushToken, string deviceId, string userId, string identifier, DeviceType type)
     {
+        if (string.IsNullOrWhiteSpace(pushToken))
+        {
+            return;
+        }
+
         string platformARN = null;
         string topicARN = _globalSettings.Amazon.SNSTopicARN;
         switch (type)
@@ -135,6 +143,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
             default:
                 break;
         }
+        //this will fail when pushToken is null
         var response = await _client.CreatePlatformEndpointAsync(
             new CreatePlatformEndpointRequest
             {
@@ -184,6 +193,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
         {
             await _installationDeviceRepository.UpsertAsync(new InstallationDeviceEntity(deviceId));
         }
+
         var strippedDeviceId = new Guid(StripPrefix(deviceId));
         var deviceRegistration = await _amazonSNSDeviceRepository.GetByDeviceIDAsync(strippedDeviceId);
         if (deviceRegistration == null)

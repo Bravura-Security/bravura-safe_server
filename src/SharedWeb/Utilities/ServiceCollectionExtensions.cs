@@ -106,6 +106,7 @@ public static class ServiceCollectionExtensions
 
         if (globalSettings.SelfHosted)
         {
+            // the non noop version is for AzureCosmos which we don't use
             services.AddSingleton<IInstallationDeviceRepository, NoopRepos.InstallationDeviceRepository>();
             services.AddSingleton<IMetaDataRepository, NoopRepos.MetaDataRepository>();
         }
@@ -252,9 +253,11 @@ public static class ServiceCollectionExtensions
             globalSettings.Installation?.Id != null &&
             CoreHelpers.SettingHasValue(globalSettings.Installation?.Key))
         {
-            services.AddSingleton<IPushRegistrationService, RelayPushRegistrationService>();
+            //tttgh skip for now?
+            //services.AddSingleton<IPushRegistrationService, RelayPushRegistrationService>();
         }
-        else if (globalSettings.SelfHosted && 
+
+        if (globalSettings.SelfHosted && 
                 CoreHelpers.SettingHasValue(globalSettings.Amazon?.AccessKeyId) &&
                 (
                     CoreHelpers.SettingHasValue(globalSettings.Amazon?.SNSPlatformARNAndroid) || 
@@ -262,6 +265,9 @@ public static class ServiceCollectionExtensions
                 ))
         {
             services.AddSingleton<IPushRegistrationService, AmazonSNSPushRegistrationService>();
+			// next line was for testing only in order to see payloads
+			// if it gets uncommented it replaces the AmazonSNSPushRegistrationService since it is a singleton
+            //services.AddSingleton<IPushRegistrationService, NotificationHubPushRegistrationService>();
         }
         else if (!globalSettings.SelfHosted)
         {

@@ -31,8 +31,9 @@ public class MultiServicePushNotificationService : IPushNotificationService
                 globalSettings.Installation?.Id != null &&
                 CoreHelpers.SettingHasValue(globalSettings.Installation?.Key))
             {
-                _services.Add(new RelayPushNotificationService(httpFactory, deviceRepository, globalSettings,
-                    httpContextAccessor, relayLogger));
+                //tttgh skip for now?
+               // _services.Add(new RelayPushNotificationService(httpFactory, deviceRepository, globalSettings,
+               //     httpContextAccessor, relayLogger));
             }
             if (CoreHelpers.SettingHasValue(globalSettings.InternalIdentityKey) &&
                 CoreHelpers.SettingHasValue(globalSettings.BaseServiceUri.InternalNotifications))
