@@ -864,18 +864,29 @@ namespace Bit.Core.Vault.Services;
                 await _eventService.LogCipherEventsAsync(eventsBatch);
             }
 
-            // push
-            await _pushService.PushSyncCiphersAsync(restoringUserId);
+        // push
+        await _pushService.PushSyncCiphersAsync(restoringUserId);
+    }
+
+    public async Task<(IEnumerable<CipherOrganizationDetails>, Dictionary<Guid, IGrouping<Guid, CollectionCipher>>)> GetOrganizationCiphers(Guid userId, Guid organizationId)
+    {
+        if (!await _currentContext.ViewAllCollections(organizationId) && !await _currentContext.AccessReports(organizationId) && !await _currentContext.AccessImportExport(organizationId))
+        {
+            throw new NotFoundException();
         }
 
-        public async Task<(IEnumerable<CipherOrganizationDetails>, Dictionary<Guid, IGrouping<Guid, CollectionCipher>>)> GetOrganizationCiphers(Guid userId, Guid organizationId)
+        IEnumerable<CipherOrganizationDetails> orgCiphers;
+        if (await _currentContext.AccessImportExport(organizationId))
         {
-            if (!await _currentContext.ViewAllCollections(organizationId) && !await _currentContext.AccessReports(organizationId))
-            {
-                throw new NotFoundException();
-            }
+            // Admins, Owners, Providers and Custom (with import/export permission) can access all items even if not assigned to them
+            orgCiphers = await _cipherRepository.GetManyOrganizationDetailsByOrganizationIdAsync(organizationId);
+        }
+        else
+        {
+            var ciphers = await _cipherRepository.GetManyByUserIdAsync(userId, true);
+            orgCiphers = ciphers.Where(c => c.OrganizationId == organizationId);
+        }
 
-            IEnumerable<CipherOrganizationDetails> orgCiphers;
             if (await _currentContext.OrganizationAdmin(organizationId))
             {
                 // Admins, Owners and Providers can access all items even if not assigned to them

@@ -179,13 +179,13 @@ public class OrganizationService : IOrganizationService
             throw new BadRequestException("Your account has no payment method available.");
         }
 
-        var existingPlan = StaticStore.Plans.FirstOrDefault(p => p.Type == organization.PlanType);
+        var existingPlan = StaticStore.PasswordManagerPlans.FirstOrDefault(p => p.Type == organization.PlanType);
         if (existingPlan == null)
         {
             throw new BadRequestException("Existing plan not found.");
         }
 
-        var newPlan = StaticStore.Plans.FirstOrDefault(p => p.Type == upgrade.Plan && !p.Disabled);
+        var newPlan = StaticStore.PasswordManagerPlans.FirstOrDefault(p => p.Type == upgrade.Plan && !p.Disabled);
         if (newPlan == null)
         {
             throw new BadRequestException("Plan not found.");
@@ -379,7 +379,7 @@ public class OrganizationService : IOrganizationService
             throw new NotFoundException();
         }
 
-        var plan = StaticStore.Plans.FirstOrDefault(p => p.Type == organization.PlanType);
+        var plan = StaticStore.PasswordManagerPlans.FirstOrDefault(p => p.Type == organization.PlanType);
         if (plan == null)
         {
             throw new BadRequestException("Existing plan not found.");
@@ -437,7 +437,7 @@ public class OrganizationService : IOrganizationService
             throw new BadRequestException($"Cannot set max seat autoscaling below current seat count.");
         }
 
-        var plan = StaticStore.Plans.FirstOrDefault(p => p.Type == organization.PlanType);
+        var plan = StaticStore.PasswordManagerPlans.FirstOrDefault(p => p.Type == organization.PlanType);
         if (plan == null)
         {
             throw new BadRequestException("Existing plan not found.");
@@ -489,7 +489,7 @@ public class OrganizationService : IOrganizationService
             throw new BadRequestException("No subscription found.");
         }
 
-        var plan = StaticStore.Plans.FirstOrDefault(p => p.Type == organization.PlanType);
+        var plan = StaticStore.PasswordManagerPlans.FirstOrDefault(p => p.Type == organization.PlanType);
         if (plan == null)
         {
             throw new BadRequestException("Existing plan not found.");
@@ -609,7 +609,7 @@ public class OrganizationService : IOrganizationService
     {
         // Determine plan type
         var count = (await _organizationRepository.GetManyByEnabledAsync()).Count();
-        var plan = StaticStore.Plans.FirstOrDefault(p => p.Type == (count > 0 ? PlanType.BravuraTeams : PlanType.BravuraEnterprise) );
+        var plan = StaticStore.PasswordManagerPlans.FirstOrDefault(p => p.Type == (count > 0 ? PlanType.BravuraTeams : PlanType.BravuraEnterprise) );
 
         if (plan is not { LegacyYear: null })
         {
@@ -710,7 +710,7 @@ public class OrganizationService : IOrganizationService
         }
 
         if (license.PlanType != PlanType.Custom &&
-            StaticStore.Plans.FirstOrDefault(p => p.Type == license.PlanType && !p.Disabled) == null)
+            StaticStore.PasswordManagerPlans.FirstOrDefault(p => p.Type == license.PlanType && !p.Disabled) == null)
         {
             throw new BadRequestException("Plan not found.");
         }
@@ -2552,7 +2552,7 @@ private async Task CheckPoliciesBeforeRestoreAsync(OrganizationUser orgUser, IUs
 
     public async Task CreatePendingOrganization(Organization organization, string ownerEmail, ClaimsPrincipal user, IUserService userService, bool salesAssistedTrialStarted)
     {
-        var plan = StaticStore.Plans.FirstOrDefault(p => p.Type == organization.PlanType);
+        var plan = StaticStore.PasswordManagerPlans.FirstOrDefault(p => p.Type == organization.PlanType);
         if (plan is not { LegacyYear: null })
         {
             throw new BadRequestException("Invalid plan selected.");

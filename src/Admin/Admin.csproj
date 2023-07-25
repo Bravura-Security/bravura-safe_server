@@ -17,6 +17,8 @@
     <DefineConstants>$(DefineConstants);OSS</DefineConstants>
   </PropertyGroup>
   
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Admin' " />
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Admin-SelfHost' " />
   <ItemGroup>
     <ProjectReference Include="..\..\util\MySqlMigrations\MySqlMigrations.csproj" />
     <ProjectReference Include="..\..\util\PostgresMigrations\PostgresMigrations.csproj" />
