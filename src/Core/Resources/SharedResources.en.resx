@@ -436,6 +436,9 @@
   <data name="SsoError" xml:space="preserve">
     <value>There was an unexpected error during single sign-on.</value>
   </data>
+  <data name="SsoErrorContactAdmin" xml:space="preserve">
+    <value>An unexpected error has occurred. Please contact your Bravura Safe administrator.</value>
+  </data>
   <data name="SsoErrorWithRedirect" xml:space="preserve">
     <value>There was an unexpected error during single sign-on. Please go back to &lt;a href="{0}"&gt;{0}&lt;/a&gt;.</value>
   </data>
