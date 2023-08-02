@@ -259,7 +259,8 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
 
         if (type != PushType.AuthRequest)
         {
-            // note Only use "content-available": 1 for silent background updates.
+            // note: only use "content-available": 1 for silent background updates.
+            // and for non auth notifications
             messageIOS = new Dictionary<string, IDictionary>(messageData)
             {
               { "aps", new Dictionary<string, int> { { "content-available", 1 } } }
@@ -267,11 +268,12 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
         }
         else
         {
-            Console.WriteLine("******* An auth message");
+            //Console.WriteLine("******* An auth message");
             messageIOS = new Dictionary<string, IDictionary>(messageData)
             {
                 // sound:default works for login auth request but might break background refresh of ciphers
-                { "aps", new Dictionary<string, string> { { "sound", "default" } } }
+                // so only play sounds for alerts related to auth requests
+                { "aps", new Dictionary<string, dynamic> { { "sound", "default" }, { "alert", "🔐 " + _globalSettings.BaseServiceUri.Vault }, { "content-available", 1 } } }
             };
         }
         var messageStrIOS = JsonSerializer.Serialize(messageIOS);
@@ -308,6 +310,7 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
         }
         );
 
+        /* *****
         _logger.LogWarning("\nMessage published. Message ID: " + response.MessageId);
         _logger.LogWarning("\nMessage published. recipientId: " + userId.ToLower());
         _logger.LogWarning("\nMessage published. deviceIdentifier: " + (!ctxIdentifier.IsNullOrEmpty() ? ctxIdentifier.ToLower() : "_NO_IDENTIFIER_") );
@@ -317,6 +320,7 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
         {
             _logger.LogInformation($"\nMessage published. { kvp.Key}: {kvp.Value.StringValue}");
         }
+        *** */
 
 
         if (InstallationDeviceEntity.IsInstallationDeviceId(deviceId))
