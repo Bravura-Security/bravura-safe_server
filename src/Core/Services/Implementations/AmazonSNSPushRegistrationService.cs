@@ -6,6 +6,7 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using System.Text.Json;
 using Bit.Core.Models.Data;
+using IdentityServer4.Models;
 
 namespace Bit.Core.Services;
 
@@ -152,43 +153,54 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
             }
         );
         var endpointARN = response.EndpointArn;
-        var subscribeResponse = await _client.SubscribeAsync(
-            new SubscribeRequest
-            {
-                Protocol = "application",
-                Endpoint = endpointARN,
-                TopicArn = topicARN,
-                Attributes = new Dictionary<string, string>
-                {
-                    {"FilterPolicyScope", "MessageAttributes"},
-                    {"FilterPolicy", JsonSerializer.Serialize<SafeFilterPolicy>(
+        string subscriptionARN;
+        var subscriptionFilter = JsonSerializer.Serialize<SafeFilterPolicy>(
                         new SafeFilterPolicy
                         {
-                            deviceIdentifier = new List<Dictionary<string, string>> 
+                            deviceIdentifier = new List<Dictionary<string, string>>
                                 {
-                                    new Dictionary<string, string> 
+                                    new Dictionary<string, string>
                                     {
                                         {"anything-but", StripPrefix(identifier) }
                                     }
                                 },
-                            recipientId = new List<string> {StripPrefix(userId)}
+                            recipientId = new List<string> { StripPrefix(userId) }
                         }
-                    )}
+                    );
+        try
+        {
+            var subscribeResponse = await _client.SubscribeAsync(
+                new SubscribeRequest
+                {
+                    Protocol = "application",
+                    Endpoint = endpointARN,
+                    TopicArn = topicARN,
+                    Attributes = new Dictionary<string, string>
+                    {
+                        {"FilterPolicyScope", "MessageAttributes"},
+                        {"FilterPolicy", subscriptionFilter}
+                    }
                 }
-            }
-        );
-
-        // Check if the subscription was successful
-        if (subscribeResponse.HttpStatusCode == System.Net.HttpStatusCode.OK)
-        {
-            Console.WriteLine("AWS SNS: Subscription successful. Endpoint subscribed to the topic.");
+            );
+            subscriptionARN = subscribeResponse.SubscriptionArn;
         }
-        else
+        catch (InvalidParameterException)
         {
-            Console.WriteLine("AWS SNS: Failed to subscribe the endpoint to the topic.");
+            // Deals with case where only the filter policy has changed,
+            // note that if we ever get the organization registration hooked up, this'll need to be changed
+            // as right now it blindly overwrites the old policy.
+            var subscriptions = from sub in (await _client.ListSubscriptionsByTopicAsync(topicARN)).Subscriptions 
+                                where sub.Endpoint == endpointARN select sub;
+            subscriptionARN = subscriptions.First().SubscriptionArn;
+            await _client.SetSubscriptionAttributesAsync(
+                new SetSubscriptionAttributesRequest
+                {
+                    SubscriptionArn = subscriptionARN,
+                    AttributeName = "FilterPolicy",
+                    AttributeValue = subscriptionFilter
+                }
+            );
         }
-
-        var subscriptionARN = subscribeResponse.SubscriptionArn;
         if (InstallationDeviceEntity.IsInstallationDeviceId(deviceId))
         {
             await _installationDeviceRepository.UpsertAsync(new InstallationDeviceEntity(deviceId));
