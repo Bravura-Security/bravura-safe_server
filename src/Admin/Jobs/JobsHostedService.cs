@@ -72,7 +72,7 @@ public class JobsHostedService : BaseJobsHostedService
             .WithCronSchedule("0 0 2 ? * * *")
             .Build();
         var everyFridayAt11pmTrigger = TriggerBuilder.Create()
-            .WithIdentity("EveryFridayAt10pmTrigger")
+            .WithIdentity("EveryFridayAt11pmTrigger")
             .StartNow()
             .WithCronSchedule("0 0 23 ? * FRI", x => x.InTimeZone(timeZone))
             .Build();
