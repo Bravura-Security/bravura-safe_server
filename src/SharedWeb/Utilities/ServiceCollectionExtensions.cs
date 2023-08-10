@@ -106,6 +106,7 @@ public static class ServiceCollectionExtensions
 
         if (globalSettings.SelfHosted)
         {
+            // the non noop version is for AzureCosmos which we don't use
             services.AddSingleton<IInstallationDeviceRepository, NoopRepos.InstallationDeviceRepository>();
             services.AddSingleton<IMetaDataRepository, NoopRepos.MetaDataRepository>();
         }
@@ -183,6 +184,15 @@ public static class ServiceCollectionExtensions
                         };
                     });
 
+        services.AddHttpClient("client")
+                .ConfigureHttpMessageHandlerBuilder(builder =>
+                {
+                    builder.PrimaryHandler = new System.Net.Http.HttpClientHandler
+                    {
+                        ServerCertificateCustomValidationCallback = (m, c, ch, e) => true
+                    };
+                });
+
         services.AddSingleton<IStripeAdapter, StripeAdapter>();
         services.AddSingleton<Braintree.IBraintreeGateway>((serviceProvider) =>
         {
@@ -219,11 +229,12 @@ public static class ServiceCollectionExtensions
         }
 
         var awsConfigured = CoreHelpers.SettingHasValue(globalSettings.Amazon?.AccessKeySecret);
-        if (awsConfigured && CoreHelpers.SettingHasValue(globalSettings.Mail?.SendGridApiKey))
+        var awsMail = globalSettings.Amazon?.UseSESNativeEmail ?? false;
+        if (awsConfigured && awsMail && CoreHelpers.SettingHasValue(globalSettings.Mail?.SendGridApiKey))
         {
             services.AddSingleton<IMailDeliveryService, MultiServiceMailDeliveryService>();
         }
-        else if (awsConfigured)
+        else if (awsConfigured && awsMail)
         {
             services.AddSingleton<IMailDeliveryService, AmazonSesMailDeliveryService>();
         }
@@ -242,7 +253,21 @@ public static class ServiceCollectionExtensions
             globalSettings.Installation?.Id != null &&
             CoreHelpers.SettingHasValue(globalSettings.Installation?.Key))
         {
-            services.AddSingleton<IPushRegistrationService, RelayPushRegistrationService>();
+            //tttgh skip for now?
+            //services.AddSingleton<IPushRegistrationService, RelayPushRegistrationService>();
+        }
+
+        if (globalSettings.SelfHosted && 
+                CoreHelpers.SettingHasValue(globalSettings.Amazon?.AccessKeyId) &&
+                (
+                    CoreHelpers.SettingHasValue(globalSettings.Amazon?.SNSPlatformARNAndroid) || 
+                    CoreHelpers.SettingHasValue(globalSettings.Amazon?.SNSPlatformARNIOS)
+                ))
+        {
+            services.AddSingleton<IPushRegistrationService, AmazonSNSPushRegistrationService>();
+			// next line was for testing only in order to see payloads
+			// if it gets uncommented it replaces the AmazonSNSPushRegistrationService since it is a singleton
+            //services.AddSingleton<IPushRegistrationService, NotificationHubPushRegistrationService>();
         }
         else if (!globalSettings.SelfHosted)
         {

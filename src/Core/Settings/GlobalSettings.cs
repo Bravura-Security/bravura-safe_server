@@ -485,6 +485,10 @@ public class GlobalSettings : IGlobalSettings
         public string AccessKeyId { get; set; }
         public string AccessKeySecret { get; set; }
         public string Region { get; set; }
+        public string SNSPlatformARNAndroid { get; set; }
+        public string SNSPlatformARNIOS { get; set; }
+        public string SNSTopicARN { get; set; }
+        public bool UseSESNativeEmail { get; set; } = false;
     }
 
     public class ServiceBusSettings : ConnectionStringSettings

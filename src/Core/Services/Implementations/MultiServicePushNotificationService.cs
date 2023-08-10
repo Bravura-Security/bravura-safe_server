@@ -31,14 +31,21 @@ public class MultiServicePushNotificationService : IPushNotificationService
                 globalSettings.Installation?.Id != null &&
                 CoreHelpers.SettingHasValue(globalSettings.Installation?.Key))
             {
-                _services.Add(new RelayPushNotificationService(httpFactory, deviceRepository, globalSettings,
-                    httpContextAccessor, relayLogger));
+                //tttgh skip for now?
+               // _services.Add(new RelayPushNotificationService(httpFactory, deviceRepository, globalSettings,
+               //     httpContextAccessor, relayLogger));
             }
             if (CoreHelpers.SettingHasValue(globalSettings.InternalIdentityKey) &&
                 CoreHelpers.SettingHasValue(globalSettings.BaseServiceUri.InternalNotifications))
             {
                 _services.Add(new NotificationsApiPushNotificationService(
                     httpFactory, globalSettings, httpContextAccessor, hubLogger));
+            }
+            if (CoreHelpers.SettingHasValue(globalSettings.Amazon.SNSTopicARN) &&
+                CoreHelpers.SettingHasValue(globalSettings.Amazon.AccessKeyId))
+            {
+                _services.Add(new AmazonSNSPushNotificationService(
+                    installationDeviceRepository, deviceRepository, globalSettings, httpContextAccessor, hubLogger));
             }
         }
         else

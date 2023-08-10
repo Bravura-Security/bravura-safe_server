@@ -33,6 +33,15 @@
           "AWSSDK.Core": "[3.7.12.22, 4.0.0)"
         }
       },
+      "AWSSDK.SimpleNotificationService": {
+        "type": "Direct",
+        "requested": "[3.7.101.54, )",
+        "resolved": "3.7.101.54",
+        "contentHash": "zmtwp+7X1It46NFoQE72MZcusd+tnjwZiXSfXO/M8fvr6nRxAIMwhZ5rrvAJo7xVoTJ/pQ3FjQ3Zd7hn+udRLQ==",
+        "dependencies": {
+          "AWSSDK.Core": "[3.7.106.25, 4.0.0)"
+        }
+      },
       "AWSSDK.SQS": {
         "type": "Direct",
         "requested": "[3.7.2.47, )",
@@ -433,8 +442,8 @@
       },
       "AWSSDK.Core": {
         "type": "Transitive",
-        "resolved": "3.7.12.22",
-        "contentHash": "As+T46s4/7QqKicGCre+nXxYp+j4eoxs5Mz05Y7g55C/1+CiqSW3R8jM7stSpQKO00bjcAlSQILxDB2AjQiKug=="
+        "resolved": "3.7.106.25",
+        "contentHash": "Q7r4yy77azDZkvmaMQKjyYz4yOapEEhqrpHsEd8QGOsOZlvFLhpaa5AJ6yNBy0ngEOx4zzDZijKl+c3zFUa85A=="
       },
       "Azure.Core": {
         "type": "Transitive",
