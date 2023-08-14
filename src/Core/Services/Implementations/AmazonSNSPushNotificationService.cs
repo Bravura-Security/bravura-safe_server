@@ -40,11 +40,18 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
         _deviceRepository = deviceRepository;
         _globalSettings = globalSettings;
         _httpContextAccessor = httpContextAccessor;
-        _client = new AmazonSimpleNotificationServiceClient(
-                _globalSettings.Amazon.AccessKeyId,
-                _globalSettings.Amazon.AccessKeySecret,
-                RegionEndpoint.GetBySystemName(_globalSettings.Amazon.Region)
-            );
+        if (string.IsNullOrWhiteSpace(globalSettings.Amazon?.AccessKeyId))
+        {
+            _client = new AmazonSimpleNotificationServiceClient();
+        }
+        else
+        {
+            _client = new AmazonSimpleNotificationServiceClient(
+                    _globalSettings.Amazon.AccessKeyId,
+                    _globalSettings.Amazon.AccessKeySecret,
+                    RegionEndpoint.GetBySystemName(_globalSettings.Amazon.Region)
+                );
+        }
         _logger = logger;
     }
 

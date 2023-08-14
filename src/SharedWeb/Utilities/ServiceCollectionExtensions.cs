@@ -258,7 +258,7 @@ public static class ServiceCollectionExtensions
         }
 
         if (globalSettings.SelfHosted && 
-                CoreHelpers.SettingHasValue(globalSettings.Amazon?.AccessKeyId) &&
+                CoreHelpers.SettingHasValue(globalSettings.Amazon?.SNSTopicARN) &&
                 (
                     CoreHelpers.SettingHasValue(globalSettings.Amazon?.SNSPlatformARNAndroid) || 
                     CoreHelpers.SettingHasValue(globalSettings.Amazon?.SNSPlatformARNIOS)

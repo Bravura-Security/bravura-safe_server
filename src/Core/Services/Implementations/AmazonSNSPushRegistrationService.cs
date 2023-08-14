@@ -31,12 +31,18 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
         _installationDeviceRepository = installationDeviceRepository;
         _amazonSNSDeviceRepository = amazonSNSDeviceRepository;
         _globalSettings = globalSettings;
-        _client = new AmazonSimpleNotificationServiceClient(
-                _globalSettings.Amazon.AccessKeyId,
-                _globalSettings.Amazon.AccessKeySecret, 
-                RegionEndpoint.GetBySystemName(_globalSettings.Amazon.Region)
-            );
-
+        if (string.IsNullOrWhiteSpace(globalSettings.Amazon?.AccessKeyId))
+        {
+            _client = new AmazonSimpleNotificationServiceClient();
+        }
+        else
+        {
+            _client = new AmazonSimpleNotificationServiceClient(
+                    _globalSettings.Amazon.AccessKeyId,
+                    _globalSettings.Amazon.AccessKeySecret,
+                    RegionEndpoint.GetBySystemName(_globalSettings.Amazon.Region)
+                );
+        }
         try
         {
             // List topics
