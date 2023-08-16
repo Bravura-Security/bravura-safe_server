@@ -1182,11 +1182,6 @@
           "System.Xml.XDocument": "4.3.0"
         }
       },
-      "NewRelic.Agent": {
-        "type": "Transitive",
-        "resolved": "9.8.0",
-        "contentHash": "fPoKMXO52jv7wZ1QzcS7w1B2+NzrIGNVUrMc3NwDwnHQCCzV6n9DRx1YOl8V9SW4kddTGHCDDdnhPI9DrHwurQ=="
-      },
       "Newtonsoft.Json": {
         "type": "Transitive",
         "resolved": "13.0.1",

@@ -37,12 +37,6 @@
           "System.Security.Cryptography.X509Certificates": "4.3.0"
         }
       },
-      "NewRelic.Agent": {
-        "type": "Direct",
-        "requested": "[9.8.0, )",
-        "resolved": "9.8.0",
-        "contentHash": "fPoKMXO52jv7wZ1QzcS7w1B2+NzrIGNVUrMc3NwDwnHQCCzV6n9DRx1YOl8V9SW4kddTGHCDDdnhPI9DrHwurQ=="
-      },
       "System.Security.Cryptography.Xml": {
         "type": "Direct",
         "requested": "[6.0.1, )",
