@@ -11,6 +11,7 @@ public class EnvironmentFileBuilder
     private IDictionary<string, string> _globalOverrideValues;
     private IDictionary<string, string> _mssqlOverrideValues;
     private IDictionary<string, string> _keyConnectorOverrideValues;
+    //private IDictionary<string, string> _awsSNSOverrideValues;
 
     public EnvironmentFileBuilder(Context context)
     {
@@ -163,6 +164,18 @@ public class EnvironmentFileBuilder
             ["keyConnectorSettings__certificate__filesystemPath"] = "/etc/bitwarden/key-connector/bwkc.pfx",
             ["keyConnectorSettings__certificate__filesystemPassword"] = Helpers.SecureRandomString(32, alpha: true, numeric: true),
         };
+
+        //_awsSNSOverrideValues = new Dictionary<string, string>
+        {
+            _globalOverrideValues.Add("# globalSettings__amazon__useSESNativeEmail", "false");
+            _globalOverrideValues.Add("globalSettings__amazon__accessKeyId", "AWSKEYID");
+            _globalOverrideValues.Add("globalSettings__amazon__accessKeySecret", "AWSSECRET");
+            _globalOverrideValues.Add("globalSettings__amazon__region", "replaceme");
+            _globalOverrideValues.Add("globalSettings__amazon__sNSPlatformARNAndroid", "arn:aws:sns:us-east-1:1234567890:app/GCM/BravuraSafeAndroid_REPLACEWHOLELINE");
+            _globalOverrideValues.Add("globalSettings__amazon__sNSPlatformARNIOS", "arn:aws:sns:us-east-1:1234567890:app/APNS/BravuraSafe_iOSREPLACEWHOLELINE");
+            _globalOverrideValues.Add("globalSettings__amazon__sNSTopicARN", "arn:aws:sns:us-east-1:1234567890:BravuraSafeTestTope_ReplaceWholeLine");
+        }
+
     }
 
     private void LoadExistingValues(IDictionary<string, string> _values, string file)
