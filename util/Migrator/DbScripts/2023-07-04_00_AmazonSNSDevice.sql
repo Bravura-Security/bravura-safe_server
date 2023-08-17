@@ -1,3 +1,8 @@
+UPDATE [dbo].[Device]
+SET [PushToken] = NULL
+WHERE [PushToken] is not NULL
+GO
+
 CREATE TABLE [dbo].[AmazonSNSDevice] (
     [Id]                BIGINT           IDENTITY (1, 1) NOT NULL,
     [DeviceId]          UNIQUEIDENTIFIER NOT NULL,
