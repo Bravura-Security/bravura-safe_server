@@ -647,7 +647,7 @@ public class CiphersController : Controller
     }
 
     [HttpPost("{id}/attachment-admin")]
-    [RequestSizeLimit(Constants.FileSize101mb)]
+    [RequestSizeLimit(Constants.FileSize2gb)]
     [DisableFormValueModelBinding]
     public async Task<CipherMiniResponseModel> PostAttachmentAdmin(string id)
     {
@@ -681,7 +681,7 @@ public class CiphersController : Controller
     }
 
     [HttpPost("{id}/attachment/{attachmentId}/share")]
-    [RequestSizeLimit(Constants.FileSize101mb)]
+    [RequestSizeLimit(Constants.FileSize2gb)]
     [DisableFormValueModelBinding]
     public async Task PostAttachmentShare(string id, string attachmentId, Guid organizationId)
     {
