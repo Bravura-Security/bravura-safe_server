@@ -1,6 +1,5 @@
 ﻿using System.Net.Mail;
 using AutoMapper;
-using Bit.Core.Enums;
 using Bit.Core.Models.Data.Organizations;
 using Bit.Core.Repositories;
 using Bit.Infrastructure.EntityFramework.Models;
@@ -78,19 +77,14 @@ public class OrganizationDomainRepository : Repository<Core.Entities.Organizatio
                                 from od in o.Domains
                                 join s in dbContext.SsoConfigs on o.Id equals s.OrganizationId into sJoin
                                 from s in sJoin.DefaultIfEmpty()
-                                join p in dbContext.Policies.Where(p => p.Type == PolicyType.RequireSso) on o.Id
-                                    equals p.OrganizationId into pJoin
-                                from p in pJoin.DefaultIfEmpty()
                                 where od.DomainName == domainName && o.Enabled
                                 select new OrganizationDomainSsoDetailsData
                                 {
                                     OrganizationId = o.Id,
                                     OrganizationName = o.Name,
                                     SsoAvailable = o.SsoConfigs.Any(sc => sc.Enabled),
-                                    SsoRequired = p != null && p.Enabled,
                                     OrganizationIdentifier = o.Identifier,
                                     VerifiedDate = od.VerifiedDate,
-                                    PolicyType = p.Type,
                                     DomainName = od.DomainName
                                 })
             .AsNoTracking()
@@ -117,11 +111,11 @@ public class OrganizationDomainRepository : Repository<Core.Entities.Organizatio
         var dbContext = GetDatabaseContext(scope);
 
         //Get domains that have not been verified after 72 hours
-        var domains = dbContext.OrganizationDomains
-            .AsEnumerable()
+        var domains = await dbContext.OrganizationDomains
             .Where(x => (DateTime.UtcNow - x.CreationDate).Days == 4
                         && x.VerifiedDate == null)
-            .ToList();
+            .AsNoTracking()
+            .ToListAsync();
 
         return Mapper.Map<List<Core.Entities.OrganizationDomain>>(domains);
     }

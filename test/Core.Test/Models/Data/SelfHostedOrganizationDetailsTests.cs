@@ -1,9 +1,11 @@
-﻿using Bit.Core.Entities;
+﻿using Bit.Core.AdminConsole.Models.OrganizationConnectionConfigs;
+using Bit.Core.Auth.Entities;
+using Bit.Core.Auth.Enums;
+using Bit.Core.Auth.Models.Data;
+using Bit.Core.Entities;
 using Bit.Core.Enums;
 using Bit.Core.Models.Business;
-using Bit.Core.Models.Data;
 using Bit.Core.Models.Data.Organizations;
-using Bit.Core.Models.OrganizationConnectionConfigs;
 using Bit.Core.Test.AutoFixture;
 using Bit.Test.Common.AutoFixture.Attributes;
 using Xunit;
@@ -15,7 +17,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_Success(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_Success(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -29,7 +31,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_OccupiedSeatCount_ExceedsLicense_Fail(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_OccupiedSeatCount_ExceedsLicense_Fail(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -44,7 +46,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_MaxCollections_ExceedsLicense_Fail(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_MaxCollections_ExceedsLicense_Fail(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -59,7 +61,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_Groups_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_Groups_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -74,7 +76,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_Policies_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_Policies_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -89,7 +91,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_DisabledPolicies_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_DisabledPolicies_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -105,7 +107,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_Sso_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_Sso_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -120,7 +122,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_DisabledSso_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_DisabledSso_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -136,7 +138,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_NoSso_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_NoSso_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -152,7 +154,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_KeyConnector_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_KeyConnector_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -167,12 +169,12 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_DisabledKeyConnector_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_DisabledKeyConnector_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
         orgLicense.UseKeyConnector = false;
-        orgDetails.SsoConfig.SetData(new SsoConfigurationData() { KeyConnectorEnabled = false });
+        orgDetails.SsoConfig.SetData(new SsoConfigurationData() { MemberDecryptionType = MemberDecryptionType.MasterPassword });
 
         var result = orgDetails.CanUseLicense(license, out var exception);
 
@@ -183,7 +185,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_NoSsoKeyConnector_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_NoSsoKeyConnector_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -199,7 +201,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_Scim_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_Scim_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -214,7 +216,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_DisabledScim_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_DisabledScim_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -231,7 +233,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_NoScimConfig_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_NoScimConfig_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -247,7 +249,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_CustomPermissions_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_CustomPermissions_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -262,7 +264,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_NoCustomPermissions_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_NoCustomPermissions_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -278,7 +280,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_ResetPassword_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_ResetPassword_NotAllowedByLicense_Fail(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -293,7 +295,7 @@ public class SelfHostedOrganizationDetailsTests
     [Theory]
     [BitAutoData]
     [OrganizationLicenseCustomize]
-    public async Task ValidateForOrganization_DisabledResetPassword_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
+    public void ValidateForOrganization_DisabledResetPassword_NotAllowedByLicense_Success(List<OrganizationUser> orgUsers,
         List<Policy> policies, SsoConfig ssoConfig, List<OrganizationConnection<ScimConfig>> scimConnections, OrganizationLicense license)
     {
         var (orgDetails, orgLicense) = GetOrganizationAndLicense(orgUsers, policies, ssoConfig, scimConnections, license);
@@ -317,7 +319,7 @@ public class SelfHostedOrganizationDetailsTests
         ssoConfig.Enabled = true;
         ssoConfig.SetData(new SsoConfigurationData()
         {
-            KeyConnectorEnabled = true
+            MemberDecryptionType = MemberDecryptionType.KeyConnector,
         });
 
         var enabledScimConfig = new ScimConfig() { Enabled = true };

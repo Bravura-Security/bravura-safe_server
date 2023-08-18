@@ -1,6 +1,8 @@
 ﻿using AspNetCoreRateLimit;
+using Bit.Core.Auth.Services;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
+using Bit.Core.Tools.Services;
 using Bit.Infrastructure.EntityFramework.Repositories;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -10,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 using NoopRepos = Bit.Core.Repositories.Noop;
 
 namespace Bit.IntegrationTestCommon.Factories;
@@ -30,6 +33,23 @@ public abstract class WebApplicationFactoryBase<T> : WebApplicationFactory<T>
     /// This will need to be set BEFORE using the <c>Server</c> property
     /// </remarks>
     public string DatabaseName { get; set; } = Guid.NewGuid().ToString();
+
+    private readonly List<Action<IServiceCollection>> _configureTestServices = new();
+
+    public void SubstitueService<TService>(Action<TService> mockService)
+        where TService : class
+    {
+        _configureTestServices.Add(services =>
+        {
+            var foundServiceDescriptor = services.FirstOrDefault(sd => sd.ServiceType == typeof(TService))
+                ?? throw new InvalidOperationException($"Could not find service of type {typeof(TService).FullName} to substitute");
+            services.Remove(foundServiceDescriptor);
+
+            var substitutedService = Substitute.For<TService>();
+            mockService(substitutedService);
+            services.Add(ServiceDescriptor.Singleton(typeof(TService), substitutedService));
+        });
+    }
 
     /// <summary>
     /// Configure the web host to use an EF in memory database
@@ -144,6 +164,11 @@ public abstract class WebApplicationFactoryBase<T> : WebApplicationFactory<T>
             // Disable logs
             services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
         });
+
+        foreach (var configureTestService in _configureTestServices)
+        {
+            builder.ConfigureTestServices(configureTestService);
+        }
     }
 
     public DatabaseContext GetDatabaseContext()
@@ -152,9 +177,9 @@ public abstract class WebApplicationFactoryBase<T> : WebApplicationFactory<T>
         return scope.ServiceProvider.GetRequiredService<DatabaseContext>();
     }
 
-    public T GetService<T>()
+    public TS GetService<TS>()
     {
         var scope = Services.CreateScope();
-        return scope.ServiceProvider.GetRequiredService<T>();
+        return scope.ServiceProvider.GetRequiredService<TS>();
     }
 }

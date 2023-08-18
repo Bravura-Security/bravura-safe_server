@@ -1,23 +1,32 @@
-﻿using System.Reflection;
+﻿using System.Net;
+using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using AspNetCoreRateLimit;
+using Bit.Core.Auth.Enums;
+using Bit.Core.Auth.Identity;
+using Bit.Core.Auth.IdentityServer;
+using Bit.Core.Auth.LoginFeatures;
+using Bit.Core.Auth.Models.Business.Tokenables;
+using Bit.Core.Auth.Services;
+using Bit.Core.Auth.Services.Implementations;
 using Bit.Core.Entities;
 using Bit.Core.Enums;
 using Bit.Core.HostedServices;
 using Bit.Core.Identity;
 using Bit.Core.IdentityServer;
-using Bit.Core.LoginFeatures;
-using Bit.Core.Models.Business.Tokenables;
 using Bit.Core.OrganizationFeatures;
 using Bit.Core.Repositories;
 using Bit.Core.Resources;
 using Bit.Core.Services;
 using Bit.Core.Settings;
 using Bit.Core.Tokens;
+using Bit.Core.Tools.Services;
 using Bit.Core.Utilities;
 using Bit.Core.Vault.Services;
 using Bit.Infrastructure.Dapper;
+using Bit.Infrastructure.EntityFramework;
+using DnsClient;
 using IdentityModel;
 using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.Configuration;
@@ -97,6 +106,7 @@ public static class ServiceCollectionExtensions
 
         if (globalSettings.SelfHosted)
         {
+            // the non noop version is for AzureCosmos which we don't use
             services.AddSingleton<IInstallationDeviceRepository, NoopRepos.InstallationDeviceRepository>();
             services.AddSingleton<IMetaDataRepository, NoopRepos.MetaDataRepository>();
         }
@@ -123,6 +133,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IDeviceService, DeviceService>();
         services.AddSingleton<IAppleIapService, AppleIapService>();
         services.AddScoped<ISsoConfigService, SsoConfigService>();
+        services.AddScoped<IAuthRequestService, AuthRequestService>();
         services.AddScoped<ISendService, SendService>();
         services.AddLoginServices();
         services.AddScoped<IOrganizationDomainService, OrganizationDomainService>();
@@ -150,6 +161,12 @@ public static class ServiceCollectionExtensions
                 SsoTokenable.DataProtectorPurpose,
             serviceProvider.GetDataProtectionProvider(),
             serviceProvider.GetRequiredService<ILogger<DataProtectorTokenFactory<SsoTokenable>>>()));
+        services.AddSingleton<IDataProtectorTokenFactory<SsoEmail2faSessionTokenable>>(serviceProvider =>
+            new DataProtectorTokenFactory<SsoEmail2faSessionTokenable>(
+                SsoEmail2faSessionTokenable.ClearTextPrefix,
+                SsoEmail2faSessionTokenable.DataProtectorPurpose,
+                serviceProvider.GetDataProtectionProvider(),
+                serviceProvider.GetRequiredService<ILogger<DataProtectorTokenFactory<SsoEmail2faSessionTokenable>>>()));
     }
 
     public static void AddDefaultServices(this IServiceCollection services, GlobalSettings globalSettings)
@@ -167,6 +184,15 @@ public static class ServiceCollectionExtensions
                         };
                     });
 
+        services.AddHttpClient("client")
+                .ConfigureHttpMessageHandlerBuilder(builder =>
+                {
+                    builder.PrimaryHandler = new System.Net.Http.HttpClientHandler
+                    {
+                        ServerCertificateCustomValidationCallback = (m, c, ch, e) => true
+                    };
+                });
+
         services.AddSingleton<IStripeAdapter, StripeAdapter>();
         services.AddSingleton<Braintree.IBraintreeGateway>((serviceProvider) =>
         {
@@ -183,6 +209,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IStripeSyncService, StripeSyncService>();
         services.AddSingleton<IMailService, HandlebarsMailService>();
         services.AddSingleton<ILicensingService, NoopLicensingService>();
+        services.AddSingleton<ILookupClient>(_ =>
+        {
+            var options = new LookupClientOptions { Timeout = TimeSpan.FromSeconds(15), UseTcpOnly = true };
+            return new LookupClient(options);
+        });
         services.AddSingleton<IDnsResolverService, DnsResolverService>();
         services.AddSingleton<IFeatureService, LaunchDarklyFeatureService>();
         services.AddTokenizers();
@@ -198,11 +229,12 @@ public static class ServiceCollectionExtensions
         }
 
         var awsConfigured = CoreHelpers.SettingHasValue(globalSettings.Amazon?.AccessKeySecret);
-        if (awsConfigured && CoreHelpers.SettingHasValue(globalSettings.Mail?.SendGridApiKey))
+        var awsMail = globalSettings.Amazon?.UseSESNativeEmail ?? false;
+        if (awsConfigured && awsMail && CoreHelpers.SettingHasValue(globalSettings.Mail?.SendGridApiKey))
         {
             services.AddSingleton<IMailDeliveryService, MultiServiceMailDeliveryService>();
         }
-        else if (awsConfigured)
+        else if (awsConfigured && awsMail)
         {
             services.AddSingleton<IMailDeliveryService, AmazonSesMailDeliveryService>();
         }
@@ -221,7 +253,21 @@ public static class ServiceCollectionExtensions
             globalSettings.Installation?.Id != null &&
             CoreHelpers.SettingHasValue(globalSettings.Installation?.Key))
         {
-            services.AddSingleton<IPushRegistrationService, RelayPushRegistrationService>();
+            //tttgh skip for now?
+            //services.AddSingleton<IPushRegistrationService, RelayPushRegistrationService>();
+        }
+
+        if (globalSettings.SelfHosted && 
+                CoreHelpers.SettingHasValue(globalSettings.Amazon?.SNSTopicARN) &&
+                (
+                    CoreHelpers.SettingHasValue(globalSettings.Amazon?.SNSPlatformARNAndroid) || 
+                    CoreHelpers.SettingHasValue(globalSettings.Amazon?.SNSPlatformARNIOS)
+                ))
+        {
+            services.AddSingleton<IPushRegistrationService, AmazonSNSPushRegistrationService>();
+			// next line was for testing only in order to see payloads
+			// if it gets uncommented it replaces the AmazonSNSPushRegistrationService since it is a singleton
+            //services.AddSingleton<IPushRegistrationService, NotificationHubPushRegistrationService>();
         }
         else if (!globalSettings.SelfHosted)
         {
@@ -472,7 +518,7 @@ public static class ServiceCollectionExtensions
     }
 
     public static GlobalSettings AddGlobalSettingsServices(this IServiceCollection services,
-        IConfiguration configuration, IWebHostEnvironment environment)
+        IConfiguration configuration, IHostEnvironment environment)
     {
         var globalSettings = new GlobalSettings();
         ConfigurationBinder.Bind(configuration.GetSection("GlobalSettings"), globalSettings);
@@ -518,18 +564,36 @@ public static class ServiceCollectionExtensions
         });
     }
 
-    public static void UseForwardedHeaders(this IApplicationBuilder app, GlobalSettings globalSettings)
+    public static void UseForwardedHeaders(this IApplicationBuilder app, IGlobalSettings globalSettings)
     {
         var options = new ForwardedHeadersOptions
         {
             ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
         };
+
+        if (!globalSettings.UnifiedDeployment)
+        {
+            // Trust the X-Forwarded-Host header of the nginx docker container
+            try
+            {
+                var nginxIp = Dns.GetHostEntry("nginx")?.AddressList.FirstOrDefault();
+                if (nginxIp != null)
+                {
+                    options.KnownProxies.Add(nginxIp);
+                }
+            }
+            catch
+            {
+                // Ignore DNS errors
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(globalSettings.KnownProxies))
         {
             var proxies = globalSettings.KnownProxies.Split(',');
             foreach (var proxy in proxies)
             {
-                if (System.Net.IPAddress.TryParse(proxy.Trim(), out var ip))
+                if (IPAddress.TryParse(proxy.Trim(), out var ip))
                 {
                     options.KnownProxies.Add(ip);
                 }

@@ -60,7 +60,7 @@ public class CipherReadCanEditByIdUserIdQuery : IQuery<Cipher>
                         c.UserId == _userId ||
                         (
                             !c.UserId.HasValue && ou.Status == OrganizationUserStatusType.Confirmed && o.Enabled &&
-                            (ou.AccessAll || cu.CollectionId != null || g.AccessAll || cg.CollectionId != null)
+                            (ou.AccessAll || cu.CollectionId != Guid.Empty || g.AccessAll || cg.CollectionId != Guid.Empty)
                         )
                     ) &&
                     (c.UserId.HasValue || ou.AccessAll || !cu.ReadOnly || g.AccessAll || !cg.ReadOnly)

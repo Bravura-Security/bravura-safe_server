@@ -1,8 +1,12 @@
-﻿using Bit.Core.Repositories;
+﻿using Bit.Core.Auth.Repositories;
+using Bit.Core.Repositories;
 using Bit.Core.SecretsManager.Repositories;
+using Bit.Core.Tools.Repositories;
 using Bit.Core.Vault.Repositories;
+using Bit.Infrastructure.Dapper.Auth.Repositories;
 using Bit.Infrastructure.Dapper.Repositories;
 using Bit.Infrastructure.Dapper.SecretsManager.Repositories;
+using Bit.Infrastructure.Dapper.Tools.Repositories;
 using Bit.Infrastructure.Dapper.Vault.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -41,6 +45,7 @@ public static class DapperServiceCollectionExtensions
         services.AddSingleton<ITransactionRepository, TransactionRepository>();
         services.AddSingleton<IUserRepository, UserRepository>();
         services.AddSingleton<IOrganizationDomainRepository, OrganizationDomainRepository>();
+        services.AddSingleton<IAmazonSNSDeviceRepository, AmazonSNSDeviceRepository>();
 
         if (selfHosted)
         {

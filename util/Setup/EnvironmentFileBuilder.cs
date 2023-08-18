@@ -11,6 +11,7 @@ public class EnvironmentFileBuilder
     private IDictionary<string, string> _globalOverrideValues;
     private IDictionary<string, string> _mssqlOverrideValues;
     private IDictionary<string, string> _keyConnectorOverrideValues;
+    //private IDictionary<string, string> _awsSNSOverrideValues;
 
     public EnvironmentFileBuilder(Context context)
     {
@@ -109,6 +110,7 @@ public class EnvironmentFileBuilder
         _globalOverrideValues = new Dictionary<string, string>
         {
             ["globalSettings__baseServiceUri__vault"] = _context.Config.Url,
+            ["globalSettings__baseServiceUri__cloudVaultRegion"] = "US",
             ["globalSettings__sqlServer__connectionString"] = $"\"{dbConnectionString.Replace("\"", "\\\"")}\"",
             ["globalSettings__sqlServer__cryptKey"] = Convert.ToBase64String(Helpers.GenerateNewKey()),
             ["globalSettings__sqlServer__authKey"] = Convert.ToBase64String(Helpers.GenerateNewKey()),
@@ -148,6 +150,7 @@ public class EnvironmentFileBuilder
         _mssqlOverrideValues = new Dictionary<string, string>
         {
             ["SA_PASSWORD"] = dbPassword,
+            ["DATABASE"] = _context.Install?.Database ?? "vault"
         };
 
         _keyConnectorOverrideValues = new Dictionary<string, string>
@@ -161,6 +164,18 @@ public class EnvironmentFileBuilder
             ["keyConnectorSettings__certificate__filesystemPath"] = "/etc/bitwarden/key-connector/bwkc.pfx",
             ["keyConnectorSettings__certificate__filesystemPassword"] = Helpers.SecureRandomString(32, alpha: true, numeric: true),
         };
+
+        //_awsSNSOverrideValues = new Dictionary<string, string>
+        {
+            _globalOverrideValues.Add("# globalSettings__amazon__useSESNativeEmail", "false");
+            _globalOverrideValues.Add("globalSettings__amazon__accessKeyId", "AWSKEYID");
+            _globalOverrideValues.Add("globalSettings__amazon__accessKeySecret", "AWSSECRET");
+            _globalOverrideValues.Add("globalSettings__amazon__region", "replaceme");
+            _globalOverrideValues.Add("globalSettings__amazon__sNSPlatformARNAndroid", "arn:aws:sns:us-east-1:1234567890:app/GCM/BravuraSafeAndroid_REPLACEWHOLELINE");
+            _globalOverrideValues.Add("globalSettings__amazon__sNSPlatformARNIOS", "arn:aws:sns:us-east-1:1234567890:app/APNS/BravuraSafe_iOSREPLACEWHOLELINE");
+            _globalOverrideValues.Add("globalSettings__amazon__sNSTopicARN", "arn:aws:sns:us-east-1:1234567890:BravuraSafeTestTope_ReplaceWholeLine");
+        }
+
     }
 
     private void LoadExistingValues(IDictionary<string, string> _values, string file)

@@ -1,10 +1,11 @@
 ﻿using Bit.Core.Context;
 using Bit.Core.Entities;
-using Bit.Core.Enums;
 using Bit.Core.Exceptions;
-using Bit.Core.Models.Business;
 using Bit.Core.Models.Data;
 using Bit.Core.Repositories;
+using Bit.Core.Tools.Enums;
+using Bit.Core.Tools.Models.Business;
+using Bit.Core.Tools.Services;
 
 namespace Bit.Core.Services;
 
@@ -75,7 +76,7 @@ public class CollectionService : ICollectionService
             }
 
             await _eventService.LogCollectionEventAsync(collection, Enums.EventType.Collection_Created);
-            await _referenceEventService.RaiseEventAsync(new ReferenceEvent(ReferenceEventType.CollectionCreated, org));
+            await _referenceEventService.RaiseEventAsync(new ReferenceEvent(ReferenceEventType.CollectionCreated, org, _currentContext));
         }
         else
         {
@@ -97,15 +98,15 @@ public class CollectionService : ICollectionService
 
     public async Task<IEnumerable<Collection>> GetOrganizationCollections(Guid organizationId)
     {
-        if (!await _currentContext.ViewAllCollections(organizationId) && !await _currentContext.ManageUsers(organizationId) && !await _currentContext.ManageGroups(organizationId))
+        if (!await _currentContext.ViewAllCollections(organizationId) && !await _currentContext.ManageUsers(organizationId) && !await _currentContext.ManageGroups(organizationId) && !await _currentContext.AccessImportExport(organizationId))
         {
             throw new NotFoundException();
         }
 
         IEnumerable<Collection> orgCollections;
-        if (await _currentContext.OrganizationAdmin(organizationId) || await _currentContext.ViewAllCollections(organizationId))
+        if (await _currentContext.ViewAllCollections(organizationId) || await _currentContext.AccessImportExport(organizationId))
         {
-            // Admins, Owners, Providers and Custom (with collection management permissions) can access all items even if not assigned to them
+            // Admins, Owners, Providers and Custom (with collection management or import/export permissions) can access all items even if not assigned to them
             orgCollections = await _collectionRepository.GetManyByOrganizationIdAsync(organizationId);
         }
         else

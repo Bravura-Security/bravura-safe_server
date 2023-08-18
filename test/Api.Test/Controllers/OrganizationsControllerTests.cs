@@ -1,10 +1,14 @@
 ﻿using System.Security.Claims;
 using AutoFixture.Xunit2;
 using Bit.Api.Controllers;
+using Bit.Core.Auth.Entities;
+using Bit.Core.Auth.Enums;
+using Bit.Core.Auth.Models.Data;
+using Bit.Core.Auth.Repositories;
+using Bit.Core.Auth.Services;
 using Bit.Core.Context;
 using Bit.Core.Entities;
 using Bit.Core.Exceptions;
-using Bit.Core.Models.Data;
 using Bit.Core.OrganizationFeatures.OrganizationApiKeys.Interfaces;
 using Bit.Core.OrganizationFeatures.OrganizationLicenses.Interfaces;
 using Bit.Core.Repositories;
@@ -24,6 +28,7 @@ public class OrganizationsControllerTests : IDisposable
     private readonly IOrganizationUserRepository _organizationUserRepository;
     private readonly IPaymentService _paymentService;
     private readonly IPolicyRepository _policyRepository;
+    private readonly IProviderRepository _providerRepository;
     private readonly ISsoConfigRepository _ssoConfigRepository;
     private readonly ISsoConfigService _ssoConfigService;
     private readonly IUserService _userService;
@@ -33,7 +38,8 @@ public class OrganizationsControllerTests : IDisposable
     private readonly ICloudGetOrganizationLicenseQuery _cloudGetOrganizationLicenseQuery;
     private readonly ICreateOrganizationApiKeyCommand _createOrganizationApiKeyCommand;
     private readonly IUpdateOrganizationLicenseCommand _updateOrganizationLicenseCommand;
-    private readonly IOrganizationDomainRepository _organizationDomainRepository;
+    private readonly IFeatureService _featureService;
+    private readonly ILicensingService _licensingService;
 
     private readonly OrganizationsController _sut;
 
@@ -46,6 +52,7 @@ public class OrganizationsControllerTests : IDisposable
         _organizationUserRepository = Substitute.For<IOrganizationUserRepository>();
         _paymentService = Substitute.For<IPaymentService>();
         _policyRepository = Substitute.For<IPolicyRepository>();
+        _providerRepository = Substitute.For<IProviderRepository>();
         _ssoConfigRepository = Substitute.For<ISsoConfigRepository>();
         _ssoConfigService = Substitute.For<ISsoConfigService>();
         _getOrganizationApiKeyQuery = Substitute.For<IGetOrganizationApiKeyQuery>();
@@ -55,12 +62,14 @@ public class OrganizationsControllerTests : IDisposable
         _cloudGetOrganizationLicenseQuery = Substitute.For<ICloudGetOrganizationLicenseQuery>();
         _createOrganizationApiKeyCommand = Substitute.For<ICreateOrganizationApiKeyCommand>();
         _updateOrganizationLicenseCommand = Substitute.For<IUpdateOrganizationLicenseCommand>();
+        _featureService = Substitute.For<IFeatureService>();
+        _licensingService = Substitute.For<ILicensingService>();
 
         _sut = new OrganizationsController(_organizationRepository, _organizationUserRepository,
-            _policyRepository, _organizationService, _userService, _paymentService, _currentContext,
+            _policyRepository, _providerRepository, _organizationService, _userService, _paymentService, _currentContext,
             _ssoConfigRepository, _ssoConfigService, _getOrganizationApiKeyQuery, _rotateOrganizationApiKeyCommand,
             _createOrganizationApiKeyCommand, _organizationApiKeyRepository, _updateOrganizationLicenseCommand,
-            _cloudGetOrganizationLicenseQuery, _globalSettings);
+            _cloudGetOrganizationLicenseQuery, _featureService, _globalSettings, _licensingService);
     }
 
     public void Dispose()
@@ -77,7 +86,7 @@ public class OrganizationsControllerTests : IDisposable
             Id = default,
             Data = new SsoConfigurationData
             {
-                KeyConnectorEnabled = true,
+                MemberDecryptionType = MemberDecryptionType.KeyConnector
             }.Serialize(),
             Enabled = true,
             OrganizationId = orgId,
@@ -110,7 +119,9 @@ public class OrganizationsControllerTests : IDisposable
             Id = default,
             Data = new SsoConfigurationData
             {
-                KeyConnectorEnabled = keyConnectorEnabled,
+                MemberDecryptionType = keyConnectorEnabled
+                    ? MemberDecryptionType.KeyConnector
+                    : MemberDecryptionType.MasterPassword
             }.Serialize(),
             Enabled = true,
             OrganizationId = orgId,

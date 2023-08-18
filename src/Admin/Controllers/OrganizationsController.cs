@@ -1,12 +1,18 @@
-﻿using Bit.Admin.Models;
+﻿using Bit.Admin.Enums;
+using Bit.Admin.Models;
+using Bit.Admin.Services;
+using Bit.Admin.Utilities;
+using Bit.Core.Context;
 using Bit.Core.Entities;
 using Bit.Core.Enums;
-using Bit.Core.Models.Business;
 using Bit.Core.Models.OrganizationConnectionConfigs;
 using Bit.Core.OrganizationFeatures.OrganizationSponsorships.FamiliesForEnterprise.Interfaces;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
 using Bit.Core.Settings;
+using Bit.Core.Tools.Enums;
+using Bit.Core.Tools.Models.Business;
+using Bit.Core.Tools.Services;
 using Bit.Core.Utilities;
 using Bit.Core.Vault.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -18,6 +24,7 @@ namespace Bit.Admin.Controllers;
 [Authorize]
 public class OrganizationsController : Controller
 {
+    private readonly IOrganizationService _organizationService;
     private readonly IOrganizationRepository _organizationRepository;
     private readonly IOrganizationUserRepository _organizationUserRepository;
     private readonly IOrganizationConnectionRepository _organizationConnectionRepository;
@@ -36,9 +43,13 @@ public class OrganizationsController : Controller
     public string status { get; set; }
     [TempData]
     public string message { get; set; }
+    private readonly IProviderRepository _providerRepository;
     private readonly ILogger<OrganizationsController> _logger;
+    private readonly IAccessControlService _accessControlService;
+    private readonly ICurrentContext _currentContext;
 
     public OrganizationsController(
+        IOrganizationService organizationService,
         IOrganizationRepository organizationRepository,
         IOrganizationUserRepository organizationUserRepository,
         IOrganizationConnectionRepository organizationConnectionRepository,
@@ -53,8 +64,12 @@ public class OrganizationsController : Controller
         GlobalSettings globalSettings,
         IReferenceEventService referenceEventService,
         IUserService userService,
-        ILogger<OrganizationsController> logger)
+        IProviderRepository providerRepository,
+        ILogger<OrganizationsController> logger,
+        IAccessControlService accessControlService,
+        ICurrentContext currentContext)
     {
+        _organizationService = organizationService;
         _organizationRepository = organizationRepository;
         _organizationUserRepository = organizationUserRepository;
         _organizationConnectionRepository = organizationConnectionRepository;
@@ -69,9 +84,13 @@ public class OrganizationsController : Controller
         _globalSettings = globalSettings;
         _referenceEventService = referenceEventService;
         _userService = userService;
+        _providerRepository = providerRepository;
         _logger = logger;
+        _accessControlService = accessControlService;
+        _currentContext = currentContext;
     }
 
+    [RequirePermission(Permission.Org_List_View)]
     public async Task<IActionResult> Index(string name = null, string userEmail = null, bool? paid = null,
         int page = 1, int count = 25)
     {
@@ -109,6 +128,7 @@ public class OrganizationsController : Controller
             return RedirectToAction("Index");
         }
 
+        var provider = await _providerRepository.GetByOrganizationIdAsync(id);
         var ciphers = await _cipherRepository.GetManyByOrganizationIdAsync(id);
         var collections = await _collectionRepository.GetManyByOrganizationIdAsync(id);
         IEnumerable<Group> groups = null;
@@ -123,7 +143,7 @@ public class OrganizationsController : Controller
         }
         var users = await _organizationUserRepository.GetManyDetailsByOrganizationAsync(id);
         var billingSyncConnection = _globalSettings.EnableCloudCommunication ? await _organizationConnectionRepository.GetByOrganizationIdTypeAsync(id, OrganizationConnectionType.CloudBillingSync) : null;
-        return View(new OrganizationViewModel(organization, billingSyncConnection, users, ciphers, collections, groups, policies));
+        return View(new OrganizationViewModel(organization, provider, billingSyncConnection, users, ciphers, collections, groups, policies));
     }
 
     [SelfHosted(NotSelfHostedOnly = true)]
@@ -135,6 +155,7 @@ public class OrganizationsController : Controller
             return RedirectToAction("Index");
         }
 
+        var provider = await _providerRepository.GetByOrganizationIdAsync(id);
         var ciphers = await _cipherRepository.GetManyByOrganizationIdAsync(id);
         var collections = await _collectionRepository.GetManyByOrganizationIdAsync(id);
         IEnumerable<Group> groups = null;
@@ -150,7 +171,7 @@ public class OrganizationsController : Controller
         var users = await _organizationUserRepository.GetManyDetailsByOrganizationAsync(id);
         var billingInfo = await _paymentService.GetBillingAsync(organization);
         var billingSyncConnection = _globalSettings.EnableCloudCommunication ? await _organizationConnectionRepository.GetByOrganizationIdTypeAsync(id, OrganizationConnectionType.CloudBillingSync) : null;
-        return View(new OrganizationEditModel(organization, users, ciphers, collections, groups, policies,
+        return View(new OrganizationEditModel(organization, provider, users, ciphers, collections, groups, policies,
             billingInfo, billingSyncConnection, _globalSettings));
     }
 
@@ -159,11 +180,12 @@ public class OrganizationsController : Controller
     [SelfHosted(NotSelfHostedOnly = true)]
     public async Task<IActionResult> Edit(Guid id, OrganizationEditModel model)
     {
-        var organization = await _organizationRepository.GetByIdAsync(id);
+        var organization = await GetOrganization(id, model);
         model.ToOrganization(organization);
+
         await _organizationRepository.ReplaceAsync(organization);
         await _applicationCacheService.UpsertOrganizationAbilityAsync(organization);
-        await _referenceEventService.RaiseEventAsync(new ReferenceEvent(ReferenceEventType.OrganizationEditedByAdmin, organization)
+        await _referenceEventService.RaiseEventAsync(new ReferenceEvent(ReferenceEventType.OrganizationEditedByAdmin, organization, _currentContext)
         {
             EventRaisedByUser = _userService.GetUserName(User),
             SalesAssistedTrialStarted = model.SalesAssistedTrialStarted,
@@ -177,6 +199,7 @@ public class OrganizationsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequirePermission(Permission.Org_Delete)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var organization = await _organizationRepository.GetByIdAsync(id);
@@ -228,7 +251,7 @@ public class OrganizationsController : Controller
             organization = await _organizationRepository.GetByIdAsync(id);
             await _organizationRepository.ReplaceAsync(organization);
             await _applicationCacheService.UpsertOrganizationAbilityAsync(organization);
-            await _referenceEventService.RaiseEventAsync(new ReferenceEvent(ReferenceEventType.OrganizationEditedByAdmin, organization)
+            await _referenceEventService.RaiseEventAsync(new ReferenceEvent(ReferenceEventType.OrganizationEditedByAdmin, organization, _currentContext)
             {
                 EventRaisedByUser = _userService.GetUserName(User),
             });
@@ -273,14 +296,15 @@ public class OrganizationsController : Controller
             }
 
             // Master password requirements
-            Dictionary<string, string> Data2 = new Dictionary<string, string>
+            Dictionary<string, object> Data2 = new Dictionary<string, object>
             {
-                {"minComplexity", "null"},
-                {"minLength", "9"},
-                {"requireUpper", "true"},
-                {"requireLower", "true"},
-                {"requireNumbers", "true"},
-                {"requireSpecial", "true"}
+                {"minComplexity", null},
+                {"minLength", 9},
+                {"requireUpper", true},
+                {"requireLower", true},
+                {"requireNumbers", true},
+                {"requireSpecial", true},
+                {"enforceOnLogin", false}
             };
             var existingPolicyMasterPassword = await _policyRepository.GetByOrganizationIdTypeAsync(id, PolicyType.MasterPassword);
             if (existingPolicyMasterPassword != null)
@@ -325,7 +349,7 @@ public class OrganizationsController : Controller
             organization = await _organizationRepository.GetByIdAsync(id);
             await _organizationRepository.ReplaceAsync(organization);
             await _applicationCacheService.UpsertOrganizationAbilityAsync(organization);
-            await _referenceEventService.RaiseEventAsync(new ReferenceEvent(ReferenceEventType.OrganizationEditedByAdmin, organization)
+            await _referenceEventService.RaiseEventAsync(new ReferenceEvent(ReferenceEventType.OrganizationEditedByAdmin, organization, _currentContext)
             {
                 EventRaisedByUser = _userService.GetUserName(User),
             });
@@ -343,7 +367,7 @@ public class OrganizationsController : Controller
         if (organization == null)
         {
             return RedirectToAction("Index");
-    }
+        }
         var connection = (await _organizationConnectionRepository.GetEnabledByOrganizationIdTypeAsync(id, OrganizationConnectionType.CloudBillingSync)).FirstOrDefault();
         if (connection != null)
         {
@@ -353,7 +377,7 @@ public class OrganizationsController : Controller
                 await _syncSponsorshipsCommand.SyncOrganization(id, config.CloudOrganizationId, connection);
                 TempData["ConnectionActivated"] = id;
                 TempData["ConnectionError"] = null;
-        }
+            }
             catch (Exception ex)
             {
                 TempData["ConnectionError"] = ex.Message;
@@ -372,4 +396,80 @@ public class OrganizationsController : Controller
         return RedirectToAction("Index");
     }
 
+    [HttpPost]
+    public async Task<IActionResult> ResendOwnerInvite(Guid id)
+    {
+        var organization = await _organizationRepository.GetByIdAsync(id);
+        if (organization == null)
+        {
+            return RedirectToAction("Index");
+    }
+
+        var organizationUsers = await _organizationUserRepository.GetManyByOrganizationAsync(id, OrganizationUserType.Owner);
+        foreach (var organizationUser in organizationUsers)
+        {
+            await _organizationService.ResendInviteAsync(id, null, organizationUser.Id, true);
+        }
+
+        return Json(null);
+    }
+
+    private async Task<Organization> GetOrganization(Guid id, OrganizationEditModel model)
+    {
+        var organization = await _organizationRepository.GetByIdAsync(id);
+
+        if (_accessControlService.UserHasPermission(Permission.Org_CheckEnabledBox))
+        {
+            organization.Enabled = model.Enabled;
+        }
+
+        if (_accessControlService.UserHasPermission(Permission.Org_Plan_Edit))
+        {
+            organization.PlanType = model.PlanType.Value;
+            organization.Plan = model.Plan;
+            organization.Seats = model.Seats;
+            organization.MaxAutoscaleSeats = model.MaxAutoscaleSeats;
+            organization.MaxCollections = model.MaxCollections;
+            organization.MaxStorageGb = model.MaxStorageGb;
+
+            //features
+            organization.SelfHost = model.SelfHost;
+            organization.Use2fa = model.Use2fa;
+            organization.UseApi = model.UseApi;
+            organization.UseGroups = model.UseGroups;
+            organization.UsePolicies = model.UsePolicies;
+            organization.UseSso = model.UseSso;
+            organization.UseKeyConnector = model.UseKeyConnector;
+            organization.UseScim = model.UseScim;
+            organization.UseDirectory = model.UseDirectory;
+            organization.UseEvents = model.UseEvents;
+            organization.UseResetPassword = model.UseResetPassword;
+            organization.UseCustomPermissions = model.UseCustomPermissions;
+            organization.UseTotp = model.UseTotp;
+            organization.UsersGetPremium = model.UsersGetPremium;
+            organization.UseSecretsManager = model.UseSecretsManager;
+
+            //secrets
+            organization.SmSeats = model.SmSeats;
+            organization.MaxAutoscaleSmSeats = model.MaxAutoscaleSmSeats;
+            organization.SmServiceAccounts = model.SmServiceAccounts;
+            organization.MaxAutoscaleSmServiceAccounts = model.MaxAutoscaleSmServiceAccounts;
+        }
+
+        if (_accessControlService.UserHasPermission(Permission.Org_Licensing_Edit))
+        {
+            organization.LicenseKey = model.LicenseKey;
+            organization.ExpirationDate = model.ExpirationDate;
+        }
+
+        if (_accessControlService.UserHasPermission(Permission.Org_Billing_Edit))
+        {
+            organization.BillingEmail = model.BillingEmail?.ToLowerInvariant()?.Trim();
+            organization.Gateway = model.Gateway;
+            organization.GatewayCustomerId = model.GatewayCustomerId;
+            organization.GatewaySubscriptionId = model.GatewaySubscriptionId;
+        }
+
+        return organization;
+    }
 }

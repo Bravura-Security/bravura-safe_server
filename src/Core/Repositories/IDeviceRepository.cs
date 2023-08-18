@@ -8,5 +8,6 @@ public interface IDeviceRepository : IRepository<Device, Guid>
     Task<Device> GetByIdentifierAsync(string identifier);
     Task<Device> GetByIdentifierAsync(string identifier, Guid userId);
     Task<ICollection<Device>> GetManyByUserIdAsync(Guid userId);
+    Task<ICollection<Device>> GetUnusedDevicesAsync(DateTime olderThan);
     Task ClearPushTokenAsync(Guid id);
 }

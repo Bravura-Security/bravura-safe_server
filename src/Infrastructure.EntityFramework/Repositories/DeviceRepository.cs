@@ -67,4 +67,15 @@ public class DeviceRepository : Repository<Core.Entities.Device, Device, Guid>, 
             return Mapper.Map<List<Core.Entities.Device>>(devices);
         }
     }
+
+    public async Task<ICollection<Core.Entities.Device>> GetUnusedDevicesAsync(DateTime olderThan)
+    {
+        using (var scope = ServiceScopeFactory.CreateScope())
+        {
+            var dbContext = GetDatabaseContext(scope);
+            var query = dbContext.Devices.Where(d => d.RevisionDate < olderThan);
+            var devices = await query.ToListAsync();
+            return Mapper.Map<List<Core.Entities.Device>>(devices);
+        }
+    }
 }

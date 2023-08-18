@@ -84,4 +84,18 @@ public class DeviceRepository : Repository<Device, Guid>, IDeviceRepository
                 commandType: CommandType.StoredProcedure);
         }
     }
+
+    public async Task<ICollection<Device>> GetUnusedDevicesAsync(DateTime olderThan)
+    {
+        using (var connection = new SqlConnection(ConnectionString))
+        {
+            var results = await connection.QueryAsync<Device>(
+                $"[{Schema}].[{Table}_ReadByRevisionOlderThan]",
+                new { OlderThan = olderThan },
+                commandType: CommandType.StoredProcedure,
+                commandTimeout: 43200);
+
+            return results.ToList();
+        }
+    }
 }

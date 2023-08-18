@@ -17,6 +17,8 @@
     <DefineConstants>$(DefineConstants);OSS</DefineConstants>
   </PropertyGroup>
   
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Admin' " />
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Admin-SelfHost' " />
   <ItemGroup>
     <ProjectReference Include="..\..\util\MySqlMigrations\MySqlMigrations.csproj" />
     <ProjectReference Include="..\..\util\PostgresMigrations\PostgresMigrations.csproj" />
@@ -37,7 +39,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.29.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.8" />
-    <PackageReference Include="NewRelic.Agent" Version="9.8.0" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="6.0.1" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>

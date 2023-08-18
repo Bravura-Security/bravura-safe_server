@@ -23,4 +23,5 @@ public class BaseMailModel
             return DateTime.UtcNow.Year.ToString();
         }
     }
+    public string WebVaultUrlForImage { get; set; }
 }

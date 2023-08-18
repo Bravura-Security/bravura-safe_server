@@ -1,4 +1,6 @@
-﻿using Bit.Core.Enums;
+﻿using Bit.Core.Auth.Enums;
+using Bit.Core.Auth.Models;
+using Bit.Core.Enums;
 using Bit.Core.Utilities;
 
 namespace Bit.Core.Models.Data.Organizations.OrganizationUsers;
@@ -24,6 +26,7 @@ public class OrganizationUserUserDetails : IExternal, ITwoFactorProvidersUser
     public string Permissions { get; set; }
     public string ResetPasswordKey { get; set; }
     public bool UsesKeyConnector { get; set; }
+    public bool HasMasterPassword { get; set; }
 
     public ICollection<Guid> Groups { get; set; } = new List<Guid>();
     public ICollection<CollectionAccessSelection> Collections { get; set; } = new List<CollectionAccessSelection>();

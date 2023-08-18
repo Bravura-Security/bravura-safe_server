@@ -48,9 +48,9 @@ public class UserCipherDetailsQuery : IQuery<CipherDetails>
                            new { AccessAll = false, cg.CollectionId, cg.GroupId } into cg_g
                     from cg in cg_g.DefaultIfEmpty()
 
-                    where ou.AccessAll || cu.CollectionId != null || g.AccessAll || cg.CollectionId != null
+                    where ou.AccessAll || cu.CollectionId != Guid.Empty || g.AccessAll || cg.CollectionId != Guid.Empty
 
-                    select new { c, ou, o, cc, cu, gu, g, cg }.c;
+                    select c;
 
         var query2 = from c in dbContext.Ciphers
                      where c.UserId == _userId
@@ -79,14 +79,23 @@ public class UserCipherDetailsQuery : IQuery<CipherDetails>
 
     private static Guid? GetFolderId(Guid? userId, Cipher cipher)
     {
-        if (userId.HasValue && !string.IsNullOrWhiteSpace(cipher.Folders))
+        try
         {
-            var folders = JsonSerializer.Deserialize<Dictionary<Guid, Guid>>(cipher.Folders);
-            if (folders.TryGetValue(userId.Value, out var folder))
+            if (userId.HasValue && !string.IsNullOrWhiteSpace(cipher.Folders))
             {
-                return folder;
+                var folders = JsonSerializer.Deserialize<Dictionary<Guid, Guid>>(cipher.Folders);
+                if (folders.TryGetValue(userId.Value, out var folder))
+                {
+                    return folder;
+                }
             }
+
+            return null;
         }
-        return null;
+        catch
+        {
+            // Some Folders might be in an invalid format like: '{ "", "<ValidGuid>" }'
+            return null;
+        }
     }
 }

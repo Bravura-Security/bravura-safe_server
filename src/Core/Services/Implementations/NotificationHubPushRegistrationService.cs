@@ -19,9 +19,10 @@ public class NotificationHubPushRegistrationService : IPushRegistrationService
     {
         _installationDeviceRepository = installationDeviceRepository;
         _globalSettings = globalSettings;
-        _client = NotificationHubClient.CreateClientFromConnectionString(
-            _globalSettings.NotificationHub.ConnectionString,
-            _globalSettings.NotificationHub.HubName);
+        //_client = NotificationHubClient.CreateClientFromConnectionString(
+        //    _globalSettings.NotificationHub.ConnectionString,
+        //   _globalSettings.NotificationHub.HubName);
+        _client = null;
     }
 
     public async Task CreateOrUpdateRegistrationAsync(string pushToken, string deviceId, string userId,
@@ -84,7 +85,10 @@ public class NotificationHubPushRegistrationService : IPushRegistrationService
         BuildInstallationTemplate(installation, "badgeMessage", badgeMessageTemplate ?? messageTemplate,
             userId, identifier);
 
-        await _client.CreateOrUpdateInstallationAsync(installation);
+        if (_client != null)
+        {
+            await _client?.CreateOrUpdateInstallationAsync(installation);
+        }
         if (InstallationDeviceEntity.IsInstallationDeviceId(deviceId))
         {
             await _installationDeviceRepository.UpsertAsync(new InstallationDeviceEntity(deviceId));
@@ -123,7 +127,7 @@ public class NotificationHubPushRegistrationService : IPushRegistrationService
     {
         try
         {
-            await _client.DeleteInstallationAsync(deviceId);
+            await _client?.DeleteInstallationAsync(deviceId);
             if (InstallationDeviceEntity.IsInstallationDeviceId(deviceId))
             {
                 await _installationDeviceRepository.DeleteAsync(new InstallationDeviceEntity(deviceId));
@@ -183,7 +187,7 @@ public class NotificationHubPushRegistrationService : IPushRegistrationService
         {
             try
             {
-                await _client.PatchInstallationAsync(id, new List<PartialUpdateOperation> { operation });
+                await _client?.PatchInstallationAsync(id, new List<PartialUpdateOperation> { operation });
             }
             catch (Exception e) when (e.InnerException == null || !e.InnerException.Message.Contains("(404) Not Found"))
             {
