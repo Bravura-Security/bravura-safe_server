@@ -20,6 +20,8 @@ public class PolicyService : IPolicyService
     private readonly IMailService _mailService;
     private readonly GlobalSettings _globalSettings;
 
+    private IEnumerable<OrganizationUserPolicyDetails> _cachedOrganizationUserPolicyDetails;
+
     public PolicyService(
         IEventService eventService,
         IOrganizationRepository organizationRepository,
@@ -66,6 +68,7 @@ public class PolicyService : IPolicyService
                     await RequiredBySsoAsync(org);
                     await RequiredByVaultTimeoutAsync(org);
                     await RequiredByKeyConnectorAsync(org);
+                    await RequiredByAccountRecoveryAsync(org);
                 }
                 break;
 
@@ -80,6 +83,11 @@ public class PolicyService : IPolicyService
                 if (!policy.Enabled || policy.GetDataModel<ResetPasswordDataModel>()?.AutoEnrollEnabled == false)
                 {
                     await RequiredBySsoTrustedDeviceEncryptionAsync(org);
+                }
+
+                if (policy.Enabled)
+                {
+                    await DependsOnSingleOrgAsync(org);
                 }
                 break;
 
@@ -181,18 +189,25 @@ public class PolicyService : IPolicyService
         return result.Any();
     }
 
-    private async Task<IEnumerable<OrganizationUserPolicyDetails>> QueryOrganizationUserPolicyDetailsAsync(Guid userId, PolicyType policyType, OrganizationUserStatusType minStatus = OrganizationUserStatusType.Accepted)
+    private async Task<IEnumerable<OrganizationUserPolicyDetails>> QueryOrganizationUserPolicyDetailsAsync(Guid userId, PolicyType? policyType, OrganizationUserStatusType minStatus = OrganizationUserStatusType.Accepted)
     {
-        var organizationUserPolicyDetails = await _organizationUserRepository.GetByUserIdWithPolicyDetailsAsync(userId, policyType);
+        // Check if the cached policies are available
+        if (_cachedOrganizationUserPolicyDetails == null)
+        {
+            // Cached policies not available, retrieve from the repository
+            _cachedOrganizationUserPolicyDetails = await _organizationUserRepository.GetByUserIdWithPolicyDetailsAsync(userId);
+        }
+
         var excludedUserTypes = GetUserTypesExcludedFromPolicy(policyType);
-        return organizationUserPolicyDetails.Where(o =>
+        return _cachedOrganizationUserPolicyDetails.Where(o =>
+            (policyType == null || o.PolicyType == policyType) &&
             o.PolicyEnabled &&
             !excludedUserTypes.Contains(o.OrganizationUserType) &&
             o.OrganizationUserStatus >= minStatus &&
             !o.IsProvider);
     }
 
-    private OrganizationUserType[] GetUserTypesExcludedFromPolicy(PolicyType policyType)
+    private OrganizationUserType[] GetUserTypesExcludedFromPolicy(PolicyType? policyType)
     {
         switch (policyType)
         {
@@ -234,6 +249,15 @@ public class PolicyService : IPolicyService
         if (ssoConfig?.GetData()?.MemberDecryptionType == MemberDecryptionType.KeyConnector)
         {
             throw new BadRequestException("Key Connector is enabled.");
+        }
+    }
+
+    private async Task RequiredByAccountRecoveryAsync(Organization org)
+    {
+        var requireSso = await _policyRepository.GetByOrganizationIdTypeAsync(org.Id, PolicyType.ResetPassword);
+        if (requireSso?.Enabled == true)
+        {
+            throw new BadRequestException("Account recovery policy is enabled.");
         }
     }
 

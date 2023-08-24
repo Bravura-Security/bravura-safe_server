@@ -110,7 +110,7 @@ public class EnvironmentFileBuilder
         _globalOverrideValues = new Dictionary<string, string>
         {
             ["globalSettings__baseServiceUri__vault"] = _context.Config.Url,
-            ["globalSettings__baseServiceUri__cloudVaultRegion"] = "US",
+            ["globalSettings__baseServiceUri__cloudRegion"] = _context.Install?.CloudRegion.ToString(),
             ["globalSettings__sqlServer__connectionString"] = $"\"{dbConnectionString.Replace("\"", "\\\"")}\"",
             ["globalSettings__sqlServer__cryptKey"] = Convert.ToBase64String(Helpers.GenerateNewKey()),
             ["globalSettings__sqlServer__authKey"] = Convert.ToBase64String(Helpers.GenerateNewKey()),
