@@ -278,6 +278,26 @@ volumes:
 {{/if}}
 {{/if}}
 
+{{#if UseGrafanaDocker}}
+   # Grafana - Graphical data visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bravura_vault-grafana
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    networks:
+      - default
+      - public
+    
+    volumes:
+      - ../appdata/grafana:/var/lib/grafana
+      - ../appdata/datasources:/etc/grafana/provisioning/datasources
+      
+    env_file:
+      - ../env/grafana.override.env
+{{/if}}
+
 networks:
   default:
     internal: true

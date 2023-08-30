@@ -103,6 +103,9 @@ public class Program
         var dockerComposeBuilder = new DockerComposeBuilder(_context);
         dockerComposeBuilder.BuildForInstaller();
 
+        var grafanaDataSourceBuilder = new GrafanaDataSourceBuilder(_context);
+        grafanaDataSourceBuilder.Build();
+
         _context.SaveConfiguration();
 
         Console.WriteLine("\nInstallation complete");
@@ -182,7 +185,15 @@ public class Program
     {
         var vaultConnectionString = Helpers.GetValueFromEnvFile("global",
             "globalSettings__sqlServer__connectionString");
+
+        var grafanaDBUser = Helpers.GetValueFromEnvFile("grafana",
+            "GRAFANA_DB_USER");
+
+        var grafanaDBUserPwd = Helpers.GetValueFromEnvFile("grafana",
+            "GRAFANA_DB_PASSWORD");
         var migrator = new DbMigrator(vaultConnectionString, null);
+        migrator.GrafanaDBUser = grafanaDBUser;
+        migrator.GrafanaDBUserPWD = grafanaDBUserPwd;
         migrator.MigrateMsSqlDatabaseWithRetries(false);
     }
 

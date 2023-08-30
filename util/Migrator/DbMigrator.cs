@@ -13,6 +13,9 @@ public class DbMigrator
     private readonly ILogger<DbMigrator> _logger;
     private readonly string _masterConnectionString;
 
+    public string GrafanaDBUser { get; set; }
+    public string GrafanaDBUserPWD { get; set; }
+
     public DbMigrator(string connectionString, ILogger<DbMigrator> logger)
     {
         _connectionString = connectionString;
@@ -51,6 +54,39 @@ public class DbMigrator
             }
         }
         return false;
+    }
+
+    private bool CreateGrafanaUser(string userName, string userPWD, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        // create grafana user
+        using (var connection = new SqlConnection(_masterConnectionString))
+        {
+            var databaseName = new SqlConnectionStringBuilder(_connectionString).InitialCatalog;
+            if (string.IsNullOrWhiteSpace(databaseName))
+            {
+                databaseName = "vault";
+            }
+            var databaseNameQuoted = new SqlCommandBuilder().QuoteIdentifier(databaseName);
+            var grafanaUser = userName;
+            var command = new SqlCommand(
+                "USE " + databaseNameQuoted + "\n" +
+                //"GO\n"+
+                "IF SUSER_ID (N'" + grafanaUser + "') IS NULL\n" +
+                "BEGIN\n" +
+                "CREATE LOGIN " + grafanaUser + " WITH PASSWORD = '" + userPWD + "';\n" +
+                "CREATE USER " + grafanaUser + " FOR LOGIN " + grafanaUser  + " ;\n" +
+                "GRANT select ON Schema:: [DBO] TO " + grafanaUser + " ;\n" +
+                "END \n" +
+                "", connection);
+
+            command.Parameters.Add("@DatabaseName", SqlDbType.VarChar).Value = databaseNameQuoted;
+            command.Connection.Open();
+            command.ExecuteNonQuery();
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return true;
     }
 
     public bool MigrateDatabase(bool enableLogging = true,
@@ -132,6 +168,16 @@ public class DbMigrator
         }
 
         cancellationToken.ThrowIfCancellationRequested();
+
+        try
+        {
+            CreateGrafanaUser(GrafanaDBUser, GrafanaDBUserPWD, cancellationToken);
+        }
+        catch (Exception)
+        {
+            // eat the exception since don't necessarile care if the grafana user is not created.
+        }
+
         return result.Successful;
     }
 }

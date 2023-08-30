@@ -13,6 +13,8 @@ public class EnvironmentFileBuilder
     private IDictionary<string, string> _keyConnectorOverrideValues;
     //private IDictionary<string, string> _awsSNSOverrideValues;
 
+    private IDictionary<string, string> _grafanaOverrideValues;
+
     public EnvironmentFileBuilder(Context context)
     {
         _context = context;
@@ -62,6 +64,9 @@ public class EnvironmentFileBuilder
         var dbPassword = "";
         var dbCatalog = "";
 
+        var dbGrafanaDBUser = "";
+        var dbGrafanaDBUserPassword = "";
+
         if (forInstall)
         {
             dbSource = Helpers.ReadInput("Enter your Database Server name. Default will use a local mssql docker. [tcp:mssql,1433]");
@@ -92,9 +97,30 @@ public class EnvironmentFileBuilder
             if (mailDevPass.ToLower().StartsWith("y"))
                 _context.Config.MaildevWebUserPassword = true;
 
-        }
+            // for now always include grafana so don't bother to ask.
+            _context.Config.UseGrafanaDocker = true;
 
-        var dbConnectionString = new SqlConnectionStringBuilder
+            dbGrafanaDBUser = dbCatalog + "_grafana";
+            dbGrafanaDBUserPassword = Helpers.ReadInput("Enter your: " + dbGrafanaDBUser + " password otherwise default to [P@ssWord!!!]");
+            if (string.IsNullOrEmpty(dbGrafanaDBUserPassword))
+                dbGrafanaDBUserPassword = "P@ssWord!!!";
+
+        }
+        var grafanaDBSrc = string.IsNullOrEmpty(dbSource) ? "tcp:mssql,1433" : dbSource;
+        grafanaDBSrc = grafanaDBSrc.Replace("tcp:", "");
+        grafanaDBSrc = grafanaDBSrc.Replace(",", ":");
+        _grafanaOverrideValues = new Dictionary<string, string>
+        {
+            ["GF_INSTALL_PLUGINS"] = "\"grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel\"",
+            ["GF_SERVER_SERVE_FROM_SUB_PATH"] = "true",
+            ["GF_SERVER_ROOT_URL"] = "\"%(protocol)s://%(domain)s/grafana\"",
+            ["BSAFE_DB_URL"] = grafanaDBSrc,
+            ["BSAFE_DB_NAME"] = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog,
+            ["GRAFANA_DB_USER"] = dbGrafanaDBUser,
+            ["GRAFANA_DB_PASSWORD"] = dbGrafanaDBUserPassword
+        };
+
+        SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
         {
             DataSource = string.IsNullOrEmpty(dbSource) ? "tcp:mssql,1433" : dbSource,
             InitialCatalog = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog,
@@ -105,7 +131,9 @@ public class EnvironmentFileBuilder
             ConnectTimeout = 30,
             TrustServerCertificate = true,
             PersistSecurityInfo = false
-        }.ConnectionString;
+        };
+
+        var dbConnectionString = builder.ConnectionString;
 
         _globalOverrideValues = new Dictionary<string, string>
         {
@@ -263,6 +291,12 @@ public class EnvironmentFileBuilder
         {
             using (var sw = File.CreateText("/bitwarden/env/uid.env")) { }
         }
+
+        using (var sw = File.CreateText("/bitwarden/env/grafana.override.env"))
+        {
+            sw.Write(template(new TemplateModel(_grafanaOverrideValues)));
+        }
+        Helpers.Exec("chmod 600 /bitwarden/env/grafana.override.env");
     }
 
     public class TemplateModel
