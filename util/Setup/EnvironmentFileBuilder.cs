@@ -101,9 +101,9 @@ public class EnvironmentFileBuilder
             _context.Config.UseGrafanaDocker = true;
 
             dbGrafanaDBUser = dbCatalog + "_grafana";
-            dbGrafanaDBUserPassword = Helpers.ReadInput("Enter your: " + dbGrafanaDBUser + " password otherwise default to [P@ssWord!!!]");
+            dbGrafanaDBUserPassword = Helpers.ReadInput("Enter your: " + dbGrafanaDBUser + " password otherwise default to [0P@ssWord!!!]");
             if (string.IsNullOrEmpty(dbGrafanaDBUserPassword))
-                dbGrafanaDBUserPassword = "P@ssWord!!!";
+                dbGrafanaDBUserPassword = "0P@ssWord!!!";
 
         }
         var grafanaDBSrc = string.IsNullOrEmpty(dbSource) ? "tcp:mssql,1433" : dbSource;
@@ -116,8 +116,8 @@ public class EnvironmentFileBuilder
             ["GF_SERVER_ROOT_URL"] = "\"%(protocol)s://%(domain)s/grafana\"",
             ["BSAFE_DB_URL"] = grafanaDBSrc,
             ["BSAFE_DB_NAME"] = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog,
-            ["GRAFANA_DB_USER"] = dbGrafanaDBUser,
-            ["GRAFANA_DB_PASSWORD"] = dbGrafanaDBUserPassword
+            ["GRAFANA_DB_USER"] = "${globalSettings__grafana__dBUser}",
+            ["GRAFANA_DB_PASSWORD"] = "${globalSettings__grafana__dBUserPassword}"
         };
 
         SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
@@ -202,6 +202,12 @@ public class EnvironmentFileBuilder
             _globalOverrideValues.Add("globalSettings__amazon__sNSPlatformARNAndroid", "arn:aws:sns:us-east-1:1234567890:app/GCM/BravuraSafeAndroid_REPLACEWHOLELINE");
             _globalOverrideValues.Add("globalSettings__amazon__sNSPlatformARNIOS", "arn:aws:sns:us-east-1:1234567890:app/APNS/BravuraSafe_iOSREPLACEWHOLELINE");
             _globalOverrideValues.Add("globalSettings__amazon__sNSTopicARN", "arn:aws:sns:us-east-1:1234567890:BravuraSafeTestTope_ReplaceWholeLine");
+        }
+
+        //grafana settings
+        {
+            _globalOverrideValues.Add("globalSettings__grafana__dBUser", dbGrafanaDBUser);
+            _globalOverrideValues.Add("globalSettings__grafana__dBUserPassword", dbGrafanaDBUserPassword);
         }
 
     }

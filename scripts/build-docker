@@ -67,6 +67,7 @@ case "$PROJECT" in
   "sso" | "Sso") docker_build sso $PWD/bravura_src/server/sso $TAG $PUSH ;;
   "server" | "Server") docker_build Server $PWD/util/Server $TAG $PUSH ;;
   "nginx" | "Nginx") docker_build Nginx $PWD/util/Nginx $TAG $PUSH ;;
+  "grafana" | "Grafana") docker_build Grafana $PWD/util/Grafana $TAG $PUSH ;;
   "k8s-proxy" | "K8s-Proxy") docker_build K8s-Proxy $PWD/util/Nginx $TAG $PUSH ;;
   "attachments" | "Attachments") docker_build Attachments $PWD/util/Attachments $TAG $PUSH ;;
   "icons" | "Icons") docker_build Icons $PWD/src/Icons $TAG $PUSH ;;
