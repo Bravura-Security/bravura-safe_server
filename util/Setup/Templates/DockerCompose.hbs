@@ -297,6 +297,7 @@ volumes:
       - ../appdata/datasources:/etc/grafana/provisioning/datasources
       
     env_file:
+      - ../env/uid.env
       - ../env/global.override.env
       - ../env/grafana.override.env
 {{/if}}
