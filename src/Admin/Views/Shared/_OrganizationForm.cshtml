@@ -240,7 +240,7 @@
 
     @if (canViewPlan)
     {
-        <div id="organization-secrets-configuration" hidden="@(!Model.UseSecretsManager)">
+        <div id="organization-secrets-configuration" hidden="@(!Model.UseSecretsManager || Model.SecretsManagerBeta)">
             <h2>Secrets Manager Configuration</h2>
             <div class="row">
                 <div class="col-sm">

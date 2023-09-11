@@ -5,6 +5,7 @@ using Bit.Admin.Utilities;
 using Bit.Core.Context;
 using Bit.Core.Entities;
 using Bit.Core.Enums;
+using Bit.Core.Exceptions;
 using Bit.Core.Models.OrganizationConnectionConfigs;
 using Bit.Core.OrganizationFeatures.OrganizationSponsorships.FamiliesForEnterprise.Interfaces;
 using Bit.Core.Repositories;
@@ -205,6 +206,14 @@ public class OrganizationsController : Controller
     {
         var organization = await GetOrganization(id, model);
         model.ToOrganization(organization);
+
+        if (organization.UseSecretsManager &&
+            !organization.SecretsManagerBeta
+            && StaticStore.GetSecretsManagerPlan(organization.PlanType) == null
+            )
+        {
+            throw new BadRequestException("Plan does not support Secrets Manager");
+        }
 
         await _organizationRepository.ReplaceAsync(organization);
         await _applicationCacheService.UpsertOrganizationAbilityAsync(organization);

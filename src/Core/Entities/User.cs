@@ -213,6 +213,11 @@ public class User : ITableObject<Guid>, ISubscriber, IStorable, IStorableSubscri
         };
     }
 
+    public bool HasMasterPassword()
+    {
+        return MasterPassword != null;
+    }
+
     public User Encrypt(byte[] cryptKey, byte[] authKey)
     {
         if (encrypted == true)
