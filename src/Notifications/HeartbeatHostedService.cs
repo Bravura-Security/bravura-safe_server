@@ -1,5 +1,6 @@
 ﻿using Bit.Core.Settings;
 using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json;
 
 namespace Bit.Notifications;
 
@@ -7,6 +8,7 @@ public class HeartbeatHostedService : IHostedService, IDisposable
 {
     private readonly ILogger _logger;
     private readonly IHubContext<NotificationsHub> _hubContext;
+    private readonly IHubContext<AnonymousNotificationsHub> _anonymousHubContext;
     private readonly GlobalSettings _globalSettings;
 
     private Task _executingTask;
@@ -15,10 +17,12 @@ public class HeartbeatHostedService : IHostedService, IDisposable
     public HeartbeatHostedService(
         ILogger<HeartbeatHostedService> logger,
         IHubContext<NotificationsHub> hubContext,
+        IHubContext<AnonymousNotificationsHub> anonymousHubContext,
         GlobalSettings globalSettings)
     {
         _logger = logger;
         _hubContext = hubContext;
+        _anonymousHubContext = anonymousHubContext;
         _globalSettings = globalSettings;
     }
 
@@ -48,8 +52,21 @@ public class HeartbeatHostedService : IHostedService, IDisposable
     {
         while (!cancellationToken.IsCancellationRequested)
         {
+            // max 25 second total delay and added sending heartbeat to anonymous hub as well
+            await Task.Delay(5000, cancellationToken);
             await _hubContext.Clients.All.SendAsync("Heartbeat");
-            await Task.Delay(120000, cancellationToken);
+            if (_anonymousHubContext!=null)
+            {
+                await _anonymousHubContext.Clients.All.SendAsync("Heartbeat");
+            }
+            _logger.LogWarning("Sent heartbeat.");
+            await Task.Delay(15000, cancellationToken);
+
+            if (_anonymousHubContext!=null)
+            {
+                await HubHelpers.DoResend(_anonymousHubContext, cancellationToken);
+            }
+            await Task.Delay(5000, cancellationToken);
         }
         _logger.LogWarning("Done with heartbeat.");
     }
