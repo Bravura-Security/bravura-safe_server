@@ -47,6 +47,17 @@ public class AuthRequestService : IAuthRequestService
         _organizationUserRepository = organizationRepository;
     }
 
+    public async Task<AuthRequest?> GetAuthRequestByEmailAsync(Guid id, string eMail)
+    {
+        var user = await _userRepository.GetByEmailAsync(eMail);
+        if (user == null)
+        {
+            throw new NotFoundException();
+        }
+
+        return await GetAuthRequestAsync(id, user.Id);
+    }
+
     public async Task<AuthRequest?> GetAuthRequestAsync(Guid id, Guid userId)
     {
         var authRequest = await _authRequestRepository.GetByIdAsync(id);
@@ -215,6 +226,7 @@ public class AuthRequestService : IAuthRequestService
 
         // We only want to send an approval notification if the request is approved (or null), 
         // to not leak that it was denied to the originating client if it was originated by a malicious actor.
+        //Console.WriteLine("Debug:::AuthRequest for request ID: " + authRequestId + " and user ID: " + userId + "   approval: " + authRequest.Approved.ToString() );
         if (authRequest.Approved ?? true)
         {
             if (authRequest.OrganizationId.HasValue)
@@ -226,6 +238,7 @@ public class AuthRequestService : IAuthRequestService
 
             // No matter what we want to push out the success notification
             await _pushNotificationService.PushAuthRequestResponseAsync(authRequest);
+            Console.WriteLine("Debug:::AuthRequest::UpdateAuthRequestAsync for request ID: " + authRequestId + "   push sent . . . ");
         }
         // If the request is rejected by an organization admin then we want to log an event of that action
         else if (authRequest.Approved.HasValue && !authRequest.Approved.Value && authRequest.OrganizationId.HasValue)

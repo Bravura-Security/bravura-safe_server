@@ -22,12 +22,18 @@ public class SendController : Controller
     [SelfHosted(SelfHostedOnly = true)]
     public async Task PostSend()
     {
+        Console.WriteLine("Debug::SendController PostSend ... ");
         using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
         {
             var notificationJson = await reader.ReadToEndAsync();
             if (!string.IsNullOrWhiteSpace(notificationJson))
             {
                 await HubHelpers.SendNotificationToHubAsync(notificationJson, _hubContext, _anonymousHubContext);
+                Console.WriteLine("Debug::SendController Performed SendNotificationToHubAsync ... " + notificationJson);
+            }
+            else
+            {
+                Console.WriteLine("Debug::SendController Invalid notificationJson ... ");
             }
         }
     }

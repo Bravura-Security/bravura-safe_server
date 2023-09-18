@@ -69,6 +69,21 @@ public class AuthRequestsController : Controller
 
         return new AuthRequestResponseModel(authRequest, _globalSettings.BaseServiceUri.Vault);
     }
+/* **
+    [AllowAnonymous]
+    [HttpGet("{id}/poll")]
+    public async Task<AuthRequestResponseModel> GetByIdentifierQuery(Guid id,
+        [FromHeader(Name = "X-Request-Email")] string email)
+    {
+        var authRequest = await _authRequestService.GetAuthRequestByEmailAsync(id, email);
+        if (authRequest == null)
+        {
+            throw new NotFoundException();
+        }
+
+        return new AuthRequestResponseModel(authRequest, _globalSettings.BaseServiceUri.Vault);
+    }
+    *** */
 
     [HttpPost("")]
     [AllowAnonymous]

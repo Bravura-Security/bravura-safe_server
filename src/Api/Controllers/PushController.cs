@@ -99,6 +99,8 @@ public class PushController : Controller
             return;
         }
 
+        Console.WriteLine("Error:: Not correctly configured for push relays.");
+        
         throw new BadRequestException("Not correctly configured for push relays.");
     }
 

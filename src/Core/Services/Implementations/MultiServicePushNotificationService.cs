@@ -8,6 +8,8 @@ using Bit.Core.Vault.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
+using Newtonsoft.Json;
+
 namespace Bit.Core.Services;
 
 public class MultiServicePushNotificationService : IPushNotificationService
@@ -34,21 +36,27 @@ public class MultiServicePushNotificationService : IPushNotificationService
                 //tttgh skip for now?
                // _services.Add(new RelayPushNotificationService(httpFactory, deviceRepository, globalSettings,
                //     httpContextAccessor, relayLogger));
+               Console.WriteLine("Error MultiServicePushNotificationService:: would have registered RelayPushNotificationService ... why?");
             }
             if (CoreHelpers.SettingHasValue(globalSettings.InternalIdentityKey) &&
                 CoreHelpers.SettingHasValue(globalSettings.BaseServiceUri.InternalNotifications))
             {
                 _services.Add(new NotificationsApiPushNotificationService(
                     httpFactory, globalSettings, httpContextAccessor, hubLogger));
+
+                    Console.WriteLine("Debug::MultiServicePushNotificationService:: registered NotificationsApiPushNotificationService ...");
             }
             if (CoreHelpers.SettingHasValue(globalSettings.Amazon.SNSTopicARN))
             { 
                 _services.Add(new AmazonSNSPushNotificationService(
                     installationDeviceRepository, deviceRepository, globalSettings, httpContextAccessor, hubLogger));
+
+                    Console.WriteLine("Debug::MultiServicePushNotificationService:: registered AmazonSNSPushNotificationService ...");
             }
         }
         else
         {
+            Console.WriteLine("Debug:: Fatal Error MultiServicePushNotificationService:: we are self hosted, why are we here...");
             if (CoreHelpers.SettingHasValue(globalSettings.NotificationHub.ConnectionString))
             {
                 _services.Add(new NotificationHubPushNotificationService(installationDeviceRepository,
