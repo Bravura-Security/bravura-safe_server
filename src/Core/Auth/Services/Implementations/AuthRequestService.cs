@@ -38,6 +38,17 @@ public class AuthRequestService : IAuthRequestService
         _pushNotificationService = pushNotificationService;
     }
 
+    public async Task<AuthRequest?> GetAuthRequestByEmailAsync(Guid id, string eMail)
+    {
+        var user = await _userRepository.GetByEmailAsync(eMail);
+        if (user == null)
+        {
+            throw new NotFoundException();
+        }
+
+        return await GetAuthRequestAsync(id, user.Id);
+    }
+
     public async Task<AuthRequest?> GetAuthRequestAsync(Guid id, Guid userId)
     {
         var authRequest = await _authRequestRepository.GetByIdAsync(id);
@@ -144,9 +155,11 @@ public class AuthRequestService : IAuthRequestService
 
         // We only want to send an approval notification if the request is approved (or null), 
         // to not leak that it was denied to the originating client if it was originated by a malicious actor.
+        //Console.WriteLine("Debug:::AuthRequest for request ID: " + authRequestId + " and user ID: " + userId + "   approval: " + authRequest.Approved.ToString() );
         if (authRequest.Approved ?? true)
         {
             await _pushNotificationService.PushAuthRequestResponseAsync(authRequest);
+            Console.WriteLine("Debug:::AuthRequest::UpdateAuthRequestAsync for request ID: " + authRequestId + "   push sent . . . ");
         }
 
         return authRequest;

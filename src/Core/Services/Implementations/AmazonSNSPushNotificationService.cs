@@ -244,6 +244,8 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
 
     private async Task SendPayloadAsync(string userId, PushType type, object payload, string ctxIdentifier, string deviceId = null)
     {
+        //Console.WriteLine("Debug::AmazonSNSPushNotificationService .... SendPayloadAsync ...");
+
         var messageData = new Dictionary<string, IDictionary>
             {
                 {"data", new Dictionary<string, string>
@@ -318,14 +320,14 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
         );
 
         /* *****
-        _logger.LogWarning("\nMessage published. Message ID: " + response.MessageId);
-        _logger.LogWarning("\nMessage published. recipientId: " + userId.ToLower());
-        _logger.LogWarning("\nMessage published. deviceIdentifier: " + (!ctxIdentifier.IsNullOrEmpty() ? ctxIdentifier.ToLower() : "_NO_IDENTIFIER_") );
-        _logger.LogWarning("\nMessage published. Message Body: " + JsonSerializer.Serialize(message));
+        _logger.LogWarning("\nDebug::AmazonSNSPushNotificationService .... SendPayloadAsync Message published. Message ID: " + response.MessageId);
+        _logger.LogWarning("\nDebug::AmazonSNSPushNotificationService .... SendPayloadAsync Message published. recipientId: " + userId.ToLower());
+        _logger.LogWarning("\nDebug::AmazonSNSPushNotificationService .... SendPayloadAsync Message published. deviceIdentifier: " + (!ctxIdentifier.IsNullOrEmpty() ? ctxIdentifier.ToLower() : "_NO_IDENTIFIER_") );
+        _logger.LogWarning("\nDebug::AmazonSNSPushNotificationService .... SendPayloadAsync Message published. Message Body: " + JsonSerializer.Serialize(message));
         // Print the dictionary to the console
         foreach (var kvp in messageAttributes)
         {
-            _logger.LogInformation($"\nMessage published. { kvp.Key}: {kvp.Value.StringValue}");
+            _logger.LogInformation($"\nDebug::AmazonSNSPushNotificationService .... SendPayloadAsync Message published. { kvp.Key}: {kvp.Value.StringValue}");
         }
         *** */
 
