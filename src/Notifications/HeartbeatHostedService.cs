@@ -59,7 +59,7 @@ public class HeartbeatHostedService : IHostedService, IDisposable
             {
                 await _anonymousHubContext.Clients.All.SendAsync("Heartbeat");
             }
-            _logger.LogWarning("Sent heartbeat.");
+            _logger.LogInformation("Sent heartbeat.");
             await Task.Delay(15000, cancellationToken);
 
             if (_anonymousHubContext!=null)

@@ -5,5 +5,5 @@ CREATE TABLE [dbo].[AmazonSNSDevice] (
     [SubscriptionARN]   NVARCHAR (2048) NOT NULL,
     [CreationDate]      DATETIME2 (7)    NOT NULL,
     CONSTRAINT [PK_AmazonSNSDevice] PRIMARY KEY CLUSTERED ([Id] ASC),
-    CONSTRAINT [FK_AmazonSNSDevice_Device] FOREIGN KEY ([DeviceId]) REFERENCES [dbo].[Device] ([Id]),
+    CONSTRAINT [FK_AmazonSNSDevice_Device] FOREIGN KEY ([DeviceId]) REFERENCES [dbo].[Device] ([Id]) ON DELETE CASCADE
 );

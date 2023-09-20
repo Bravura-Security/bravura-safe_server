@@ -28,6 +28,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
     IAmazonSNSDeviceRepository amazonSNSDeviceRepository,
     GlobalSettings globalSettings)
     {
+        Console.WriteLine("Debug:::AmazonSNSPushRegistrationService::constructor ...");
         _installationDeviceRepository = installationDeviceRepository;
         _amazonSNSDeviceRepository = amazonSNSDeviceRepository;
         _globalSettings = globalSettings;
@@ -86,12 +87,12 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
             }
             else
             {
-                Console.WriteLine("AWS SNS: Failed to list topics.");
+                Console.WriteLine("Error (fatal) AWS SNS: Failed to list topics. Push notifications to devices will fail.");
             }
         }
         catch (System.Exception)
         {
-            Console.WriteLine("AWS SNS: Failed to list topics in AWS SNS.");
+            Console.WriteLine("Error (fatal) AWS SNS: Failed to list topics in *AWS SNS*. Push notifications to devices will fail.");
         }
 	}
 
@@ -133,7 +134,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
         {
             return;
         }
-
+        Console.WriteLine("Debug::: SNS Push Registration for token {0}, device {1}, user {2}, deviceType: {3} ", pushToken, deviceId, userId, type);
         string platformARN = null;
         string topicARN = _globalSettings.Amazon.SNSTopicARN;
         switch (type)

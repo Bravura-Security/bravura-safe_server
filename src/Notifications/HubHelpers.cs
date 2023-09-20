@@ -109,7 +109,7 @@ public static class HubHelpers
 
     public static async Task DoResend(IHubContext<AnonymousNotificationsHub> anonymousHubContext, CancellationToken cancellationToken)
     {
-        Console.WriteLine("Entering DoResend");
+        //Console.WriteLine("Entering DoResend");
         while (_notificationStack.Count > 0)
         {
             PushNotificationData<AuthRequestPushNotification> authRequestResponseNotification = null;
@@ -134,6 +134,6 @@ public static class HubHelpers
             }
         }
 
-        Console.WriteLine("Exiting DoResend");
+        //Console.WriteLine("Exiting DoResend");
     }
 }
