@@ -96,6 +96,8 @@ public class Startup
             app.UseForwardedHeaders(globalSettings);
         }
 
+        HubHelpers.InitHubConnectionManager(globalSettings);
+
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();

@@ -11,4 +11,5 @@ public interface IAuthRequestService
     Task<AuthRequest?> GetValidatedAuthRequestAsync(Guid id, string code);
     Task<AuthRequest> CreateAuthRequestAsync(AuthRequestCreateRequestModel model);
     Task<AuthRequest> UpdateAuthRequestAsync(Guid authRequestId, Guid userId, AuthRequestUpdateRequestModel model);
+    Task<AuthRequest?> GetAuthRequestByEmailAsync(Guid id, string eMail);
 }

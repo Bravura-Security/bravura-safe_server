@@ -15,6 +15,7 @@ public class GlobalSettings : IGlobalSettings
         Attachment = new FileStorageSettings(this, "attachments", "attachments");
         Send = new FileStorageSettings(this, "attachments/send", "attachments/send");
         DataProtection = new DataProtectionSettings(this);
+        NotificationsSaveFolder = new FileStorageSettings(this, "notifications", "notifications");
     }
 
     public bool SelfHosted { get; set; }
@@ -58,6 +59,7 @@ public class GlobalSettings : IGlobalSettings
     public virtual ConnectionStringSettings Events { get; set; } = new ConnectionStringSettings();
     public virtual IConnectionStringSettings Redis { get; set; } = new ConnectionStringSettings();
     public virtual NotificationsSettings Notifications { get; set; } = new NotificationsSettings();
+    public virtual IFileStorageSettings NotificationsSaveFolder { get; set; }
     public virtual IFileStorageSettings Attachment { get; set; }
     public virtual FileStorageSettings Send { get; set; }
     public virtual IdentityServerSettings IdentityServer { get; set; } = new IdentityServerSettings();

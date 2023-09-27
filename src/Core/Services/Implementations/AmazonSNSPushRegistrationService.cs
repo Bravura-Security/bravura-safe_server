@@ -28,6 +28,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
     IAmazonSNSDeviceRepository amazonSNSDeviceRepository,
     GlobalSettings globalSettings)
     {
+        Console.WriteLine("Debug:::AmazonSNSPushRegistrationService::constructor ...");
         _installationDeviceRepository = installationDeviceRepository;
         _amazonSNSDeviceRepository = amazonSNSDeviceRepository;
         _globalSettings = globalSettings;
@@ -56,7 +57,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
                 // Iterate over the topics and print their ARNs
                 foreach (var topic in listTopicsResponse.Topics)
                 {
-                    Console.WriteLine("AWS SNS: Topic ARN: " + topic.TopicArn);
+                    //Console.WriteLine("AWS SNS: Topic ARN (listed): " + topic.TopicArn);
                     if (topic.TopicArn.Equals(_globalSettings.Amazon.SNSTopicARN))
                     {
                         Console.WriteLine("AWS SNS: Found topic as specified in settings: " + topic.TopicArn);
@@ -86,12 +87,12 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
             }
             else
             {
-                Console.WriteLine("AWS SNS: Failed to list topics.");
+                Console.WriteLine("Error (fatal) AWS SNS: Failed to list topics. Push notifications to devices will fail.");
             }
         }
         catch (System.Exception)
         {
-            Console.WriteLine("AWS SNS: Failed to list topics in AWS SNS.");
+            Console.WriteLine("Error (fatal) AWS SNS: Failed to list topics in *AWS SNS*. Push notifications to devices will fail.");
         }
 	}
 
@@ -133,7 +134,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
         {
             return;
         }
-
+        Console.WriteLine("Debug::: SNS Push Registration for token {0}, device {1}, user {2}, deviceType: {3} ", pushToken, deviceId, userId, type);
         string platformARN = null;
         string topicARN = _globalSettings.Amazon.SNSTopicARN;
         switch (type)
@@ -256,10 +257,21 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
 
     public async Task AddUserRegistrationOrganizationAsync(IEnumerable<string> deviceIds, string organizationId)
     {
+        if (_client==null)
+        {
+            Console.WriteLine("****** Fatal Error ***** AmazonSimpleNotificationServiceClient is not initialized *****\n");
+            return; 
+        }
+
         organizationId = StripPrefix(organizationId);
         foreach (var devicId in deviceIds)
         {
             var snsDevice = await _amazonSNSDeviceRepository.GetByDeviceIDAsync(new Guid(StripPrefix(devicId)));
+            if (snsDevice == null)
+            {
+                Console.WriteLine("Debug::AWS SNS: ****** Device Registration Error (non-fatal.) Device exists in Device table but not in AmazonSNSDevice verify your SNS settings (non fatal if a non mobile device) --- Device ID: {0} *****\n", devicId);
+                continue;
+            }
             GetSubscriptionAttributesResponse subscriptionAttributes = await _client.GetSubscriptionAttributesAsync(new GetSubscriptionAttributesRequest
             {
                 SubscriptionArn = snsDevice.SubscriptionARN

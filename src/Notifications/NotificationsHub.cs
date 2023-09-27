@@ -1,6 +1,7 @@
 ﻿using Bit.Core.Context;
 using Bit.Core.Settings;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Bit.Notifications;
 
@@ -25,10 +26,14 @@ public class NotificationsHub : Microsoft.AspNetCore.SignalR.Hub
             foreach (var org in currentContext.Organizations)
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"Organization_{org.Id}");
+
             }
         }
         _connectionCounter.Increment();
         await base.OnConnectedAsync();
+
+        HubHelpers._hubConnectionManager.AddConnection(Context.ConnectionId, currentContext.UserId.ToString());
+        Console.WriteLine("Debug::NotificationsHub added connectionid ... " + Context.ConnectionId + " for user " + currentContext.UserId.ToString());
     }
 
     public override async Task OnDisconnectedAsync(Exception exception)
@@ -44,5 +49,8 @@ public class NotificationsHub : Microsoft.AspNetCore.SignalR.Hub
         }
         _connectionCounter.Decrement();
         await base.OnDisconnectedAsync(exception);
+
+        HubHelpers._hubConnectionManager.RemoveConnection(Context.ConnectionId);
+        await HubHelpers._hubConnectionManager.DeleteExpiredRequests("authreq_");
     }
 }

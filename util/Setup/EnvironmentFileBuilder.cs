@@ -23,7 +23,8 @@ public class EnvironmentFileBuilder
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
             ["globalSettings__selfHosted"] = "true",
             ["globalSettings__baseServiceUri__vault"] = "http://localhost",
-            ["globalSettings__pushRelayBaseUri"] = "https://push.safe.hitachi-id.net",
+            //["globalSettings__pushRelayBaseUri"] = "https://push.safe.hitachi-id.net",
+            ["globalSettings__pushRelayBaseUri"] = "REPLACE",
         };
         _mssqlValues = new Dictionary<string, string>
         {
