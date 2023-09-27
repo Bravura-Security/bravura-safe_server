@@ -19,5 +19,15 @@ public class AnonymousNotificationsHub : Microsoft.AspNetCore.SignalR.Hub, INoti
             Console.WriteLine("Debug::AnonymousNotificationsHub adding connectionid ... " + Context.ConnectionId + " with token " + token);
         }
         await base.OnConnectedAsync();
+
+        if (!string.IsNullOrWhiteSpace(token))
+            HubHelpers._anonHubConnectionManager.AddConnection(Context.ConnectionId, token);
+    }
+
+    public override async Task OnDisconnectedAsync(Exception exception)
+    {
+        await base.OnDisconnectedAsync(exception);
+
+        HubHelpers._anonHubConnectionManager.RemoveConnection(Context.ConnectionId);
     }
 }

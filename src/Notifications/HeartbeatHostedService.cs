@@ -50,24 +50,42 @@ public class HeartbeatHostedService : IHostedService, IDisposable
 
     private async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        // this may look weird, but don't want to send hearbeat too fast
+        // yet still want to process any websocket stuff as fast as possible
+        int iCntr = 0;
         while (!cancellationToken.IsCancellationRequested)
         {
+            ++iCntr;
             // max 25 second total delay and added sending heartbeat to anonymous hub as well
-            await Task.Delay(5000, cancellationToken);
-            await _hubContext.Clients.All.SendAsync("Heartbeat");
-            if (_anonymousHubContext!=null)
-            {
-                await _anonymousHubContext.Clients.All.SendAsync("Heartbeat");
-            }
-            _logger.LogInformation("Sent heartbeat.");
-            await Task.Delay(15000, cancellationToken);
+            await Task.Delay(1000, cancellationToken);
+            if (iCntr == 5)
+                await _hubContext.Clients.All.SendAsync("Heartbeat");
+
+            await HubHelpers.DoHubResend(_hubContext, cancellationToken);
 
             if (_anonymousHubContext!=null)
             {
-                await HubHelpers.DoResend(_anonymousHubContext, cancellationToken);
+                if (iCntr == 5)
+                    await _anonymousHubContext.Clients.All.SendAsync("Heartbeat");
+
+                await HubHelpers.DoAnonHubResend(_anonymousHubContext, cancellationToken);
             }
+            
             await Task.Delay(5000, cancellationToken);
-        }
+
+            if (_anonymousHubContext!=null)
+            {
+                await HubHelpers.DoAnonHubResend(_anonymousHubContext, cancellationToken);
+            }
+            await Task.Delay(1000, cancellationToken);
+
+            if (iCntr >= 5)
+            {
+                iCntr = 0;
+                _logger.LogInformation("Sent heartbeat.");
+            }
+        }//end while
+
         _logger.LogWarning("Done with heartbeat.");
-    }
+    }//ExecuteAsync
 }
