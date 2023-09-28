@@ -47,6 +47,43 @@ RUN set -eux; \
                 openssl \
                 icu-libs
 
+# customize grafana sections
+ENV GF_ENABLE_GZIP=true
+ENV GF_USERS_DEFAULT_THEME=dark
+
+## Replace Favicon and Apple Touch
+COPY favicon-32x32.png /usr/share/grafana/public/img/fav32.png
+COPY favicon-32x32.png /usr/share/grafana/public/img/apple-touch-icon.png
+
+## Replace Logo
+COPY grafana_bravura-safe-logo-white.svg /usr/share/grafana/public/img/grafana_icon.svg
+
+## Update Background
+COPY g8_login_dark.svg /usr/share/grafana/public/img/g8_login_dark.svg
+COPY g8_login_light.svg /usr/share/grafana/public/img/g8_login_light.svg
+
+## Update Title
+RUN find /usr/share/grafana/public/build/ -name *.js -exec sed -i 's|AppTitle="Grafana"|AppTitle="Bravura Safe"|g' {} \;
+
+## Update Login Title
+RUN find /usr/share/grafana/public/build/ -name *.js -exec sed -i 's|LoginTitle="Welcome to Grafana"|LoginTitle="Welcome to Bravura Safe"|g' {} \;
+
+## Remove Documentation, Support, Community in the Footer
+RUN find /usr/share/grafana/public/build/ -name *.js -exec sed -i 's|\[{target:"_blank",id:"documentation".*grafana_footer"}\]|\[\]|g' {} \;
+
+## Remove Edition in the Footer
+#RUN find /usr/share/grafana/public/build/ -name *.js -exec sed -i 's|({target:"_blank",id:"license",.*licenseUrl})|()|g' {} \;
+
+## Remove Version in the Footer
+#RUN find /usr/share/grafana/public/build/ -name *.js -exec sed -i 's|({target:"_blank",id:"version",.*CHANGELOG.md":void 0})|()|g' {} \;
+
+## Remove New Version is available in the Footer
+RUN find /usr/share/grafana/public/build/ -name *.js -exec sed -i 's|({target:"_blank",id:"updateVersion",.*grafana_footer"})|()|g' {} \;
+
+## Remove News icon
+RUN find /usr/share/grafana/public/build/ -name *.js -exec sed -i 's|..createElement(....,{className:.,onClick:.,iconOnly:!0,icon:"rss","aria-label":"News"})|null|g' {} \;
+
+# end grafana customizations
 
 COPY entrypoint.sh /
 RUN chmod +x /entrypoint.sh
