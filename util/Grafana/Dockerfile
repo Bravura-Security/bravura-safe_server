@@ -47,6 +47,13 @@ RUN set -eux; \
                 openssl \
                 icu-libs
 
+
+# COPY custom.ini /etc/grafana/custom.ini
+ENV GF_INSTALL_PLUGINS="grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel"
+ENV GF_SERVER_SERVE_FROM_SUB_PATH=true
+ENV GF_SERVER_ROOT_URL="%(protocol)s://%(domain)s/grafana"
+
+
 # customize grafana sections
 ENV GF_ENABLE_GZIP=true
 ENV GF_USERS_DEFAULT_THEME=dark
@@ -90,8 +97,10 @@ RUN chmod +x /entrypoint.sh
 
 # Expose the Grafana port
 EXPOSE 3000
+EXPOSE 3001
 
 ENTRYPOINT ["sh", "/entrypoint.sh"]
 
 # Start Grafana
 #CMD ["grafana-server", "--config=/etc/grafana/grafana.ini"]
+# ENTRYPOINT ["tail", "-f", "/dev/null"]

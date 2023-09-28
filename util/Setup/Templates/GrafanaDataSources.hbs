@@ -14,7 +14,7 @@ datasources:
   orgId: 1
   # <string> url ex set to localhost:1433
   url: $BSAFE_DB_URL
-  user: $GRAFANA_DB_USER
+  user: $globalSettings__grafana__dBUser
   jsonData:
       database: $BSAFE_DB_NAME
       encrypt: 'false'
@@ -24,5 +24,5 @@ datasources:
   editable: true
 
   secureJsonData:
-    password : '$GRAFANA_DB_PASSWORD'
+    password : '$globalSettings__grafana__dBUserPassword'
   

@@ -112,13 +112,13 @@ public class EnvironmentFileBuilder
         grafanaDBSrc = grafanaDBSrc.Replace(",", ":");
         _grafanaOverrideValues = new Dictionary<string, string>
         {
-            ["GF_INSTALL_PLUGINS"] = "\"grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel\"",
-            ["GF_SERVER_SERVE_FROM_SUB_PATH"] = "true",
-            ["GF_SERVER_ROOT_URL"] = "\"%(protocol)s://%(domain)s/grafana\"",
+            //["GF_INSTALL_PLUGINS"] = "\"grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel\"",
+            //["GF_SERVER_SERVE_FROM_SUB_PATH"] = "true",
+            //["GF_SERVER_ROOT_URL"] = "\"%(protocol)s://%(domain)s/grafana\"",
             ["BSAFE_DB_URL"] = grafanaDBSrc,
-            ["BSAFE_DB_NAME"] = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog,
-            ["GRAFANA_DB_USER"] = "${globalSettings__grafana__dBUser}",
-            ["GRAFANA_DB_PASSWORD"] = "${globalSettings__grafana__dBUserPassword}"
+            ["BSAFE_DB_NAME"] = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog //,
+            //["GRAFANA_DB_USER"] = "${globalSettings__grafana__dBUser}",
+            //["GRAFANA_DB_PASSWORD"] = "${globalSettings__grafana__dBUserPassword}"
         };
 
         SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
