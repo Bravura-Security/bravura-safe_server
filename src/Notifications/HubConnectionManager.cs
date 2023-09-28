@@ -47,7 +47,7 @@ public class HubConnectionManager: IHubConnectionManager
 
     public void AddConnection(string key, string value)
     {
-        var connectionInfo = new ConnectionInfo(value, DateTime.UtcNow.AddSeconds(-60));
+        var connectionInfo = new ConnectionInfo(value, DateTime.UtcNow.AddSeconds(-20));
         lock (lockObject)
         {
             keyToValue.TryAdd(key, connectionInfo);
