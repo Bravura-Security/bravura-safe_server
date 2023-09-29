@@ -45,14 +45,17 @@ public class HubConnectionManager: IHubConnectionManager
     }
     public Core.Settings.GlobalSettings GlobalSettings { get; set; }
 
-    public void AddConnection(string key, string value)
+    public void AddConnection(string key, string value, double clockDriftAdjust=0)
     {
-        var connectionInfo = new ConnectionInfo(value, DateTime.UtcNow.AddSeconds(-20));
+        var l_time = DateTime.UtcNow.AddSeconds(clockDriftAdjust);
+        var connectionInfo = new ConnectionInfo(value, l_time);
         lock (lockObject)
         {
             keyToValue.TryAdd(key, connectionInfo);
             valueToKey.TryAdd(value, key);
         }
+
+        Console.WriteLine("HubConnectionManager::AddConnection ... {0} with token {1}  :: {2}", key, value, l_time);
     }
 
     public void RemoveConnection(string key)
@@ -143,11 +146,14 @@ public class HubConnectionManager: IHubConnectionManager
     }
 
     //delete all files in a specific folder with the extension .json that are older than 30 minutes
-    public async Task DeleteExpiredRequests(string strPrefix)
+    public async Task DeleteExpiredRequests(string strPrefix, double dMinutesSince)
     {
+        if (dMinutesSince > 0) //this really shoud be a negative value ie want to delete requests that are from x minutes in the past
+            dMinutesSince = -1;
+
         await InitAsync();
 
-        DateTime cutoffTime = DateTime.Now.AddMinutes(-30);
+        DateTime cutoffTime = DateTime.Now.AddMinutes(dMinutesSince);
 
         try
         {
@@ -207,7 +213,7 @@ public class HubConnectionManager: IHubConnectionManager
     }
 
     // ReadFromFile will read if file last write time is older than timestamp (cutoffUTCTime)
-    public async Task<string> ReadFromFile(string prefix, string token, DateTime cutoffUTCTime, HubConnectionManagerFileAction fileAction = HubConnectionManagerFileAction.DeleteFile)
+    public async Task<string> ReadFromFile(string prefix, string token, DateTime cutoffUTCTime, HubConnectionManagerFileAction fileAction)
     {
         if (this.GlobalSettings == null)
             return null;
@@ -231,7 +237,10 @@ public class HubConnectionManager: IHubConnectionManager
         // therefore the write time of the file should be greater than connection ID creation time
         // if it is less then no need to read it
         if (lastWriteTimeUtc < cutoffUTCTime)
+        {
+            //Console.WriteLine($"Skipping {token} Last Write Time: {lastWriteTime} is less than websocket cutoff: {cutoffUTCTime} ");
             return null;
+        }
 
         // if I already processed this file, then don't read it again.
         DateTime l_lastProcessedTime = DateTime.MinValue;
@@ -303,6 +312,8 @@ public class HubConnectionManager: IHubConnectionManager
         {
         }
 
+        Console.WriteLine($"ReadFromFile: {token} with last wite time: {lastWriteTime}");
+
         return outJson;
     }
 
@@ -353,7 +364,7 @@ public class HubConnectionManager: IHubConnectionManager
                 lastWriteTimeUtc = lastWriteTime.ToUniversalTime();
 
             }
-            catch (Exception ex)
+            catch (Exception)// ex)
             {
                 //Console.WriteLine($"An error occurred: {ex.Message}");
                 return false;

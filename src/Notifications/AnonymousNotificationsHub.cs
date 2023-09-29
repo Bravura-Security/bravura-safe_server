@@ -16,7 +16,7 @@ public class AnonymousNotificationsHub : Microsoft.AspNetCore.SignalR.Hub, INoti
         if (!string.IsNullOrWhiteSpace(token))
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, token);
-            Console.WriteLine("Debug::AnonymousNotificationsHub adding connectionid ... " + Context.ConnectionId + " with token " + token);
+            Console.WriteLine("Debug::AnonymousNotificationsHub adding connectionid ... {0} with token {1}  :: {2}", Context.ConnectionId, token, DateTime.UtcNow);
         }
         await base.OnConnectedAsync();
 
@@ -29,5 +29,6 @@ public class AnonymousNotificationsHub : Microsoft.AspNetCore.SignalR.Hub, INoti
         await base.OnDisconnectedAsync(exception);
 
         HubHelpers._anonHubConnectionManager.RemoveConnection(Context.ConnectionId);
+        _ = HubHelpers._hubConnectionManager.DeleteExpiredRequests("anon_", -1);
     }
 }

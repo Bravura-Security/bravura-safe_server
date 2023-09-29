@@ -2,7 +2,7 @@
 
 public interface IHubConnectionManager
 {
-    void AddConnection(string key, string value);
+    void AddConnection(string key, string value, double clockDriftAdjustment);
     void RemoveConnection(string key);
     void RemoveConnectionByValue(string value);
     string FindValueByKey(string key);

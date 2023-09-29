@@ -29,11 +29,12 @@ public class NotificationsHub : Microsoft.AspNetCore.SignalR.Hub
 
             }
         }
+        Console.WriteLine("Debug::NotificationsHub adding connectionid ... {0} with token {1}  :: {2}", Context.ConnectionId, currentContext.UserId.ToString(), DateTime.UtcNow);
+
         _connectionCounter.Increment();
         await base.OnConnectedAsync();
 
-        HubHelpers._hubConnectionManager.AddConnection(Context.ConnectionId, currentContext.UserId.ToString());
-        Console.WriteLine("Debug::NotificationsHub added connectionid ... " + Context.ConnectionId + " for user " + currentContext.UserId.ToString());
+        HubHelpers._hubConnectionManager.AddConnection(Context.ConnectionId, currentContext.UserId.ToString(), -10);
     }
 
     public override async Task OnDisconnectedAsync(Exception exception)
@@ -51,6 +52,6 @@ public class NotificationsHub : Microsoft.AspNetCore.SignalR.Hub
         await base.OnDisconnectedAsync(exception);
 
         HubHelpers._hubConnectionManager.RemoveConnection(Context.ConnectionId);
-        await HubHelpers._hubConnectionManager.DeleteExpiredRequests("authreq_");
+        _ = HubHelpers._hubConnectionManager.DeleteExpiredRequests("authreq_", -1);
     }
 }

@@ -56,30 +56,22 @@ public class HeartbeatHostedService : IHostedService, IDisposable
         while (!cancellationToken.IsCancellationRequested)
         {
             ++iCntr;
-            // max 25 second total delay and added sending heartbeat to anonymous hub as well
-            await Task.Delay(1000, cancellationToken);
-            if (iCntr == 5)
+            //Added sending heartbeat to anonymous hub as well
+            await Task.Delay(1500, cancellationToken);
+            if (iCntr >= 60)
                 await _hubContext.Clients.All.SendAsync("Heartbeat");
 
             await HubHelpers.DoHubResend(_hubContext, cancellationToken);
 
             if (_anonymousHubContext!=null)
             {
-                if (iCntr == 5)
+                if (iCntr >= 60)
                     await _anonymousHubContext.Clients.All.SendAsync("Heartbeat");
 
                 await HubHelpers.DoAnonHubResend(_anonymousHubContext, cancellationToken);
             }
             
-            await Task.Delay(5000, cancellationToken);
-
-            if (_anonymousHubContext!=null)
-            {
-                await HubHelpers.DoAnonHubResend(_anonymousHubContext, cancellationToken);
-            }
-            await Task.Delay(1000, cancellationToken);
-
-            if (iCntr >= 5)
+            if (iCntr >= 60)
             {
                 iCntr = 0;
                 _logger.LogInformation("Sent heartbeat.");

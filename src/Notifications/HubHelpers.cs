@@ -104,8 +104,8 @@ public static class HubHelpers
                     {
                         //wrong node processed the push so need to send for retry
                         //only dumping to file since on wrong node
-                        await _anonHubConnectionManager.DumpToFile("", payloadID, notificationJson);
-                        Console.WriteLine("\nDebug::HubHelpers:: incorrect node, adding authRequestResponseNotification to retry on correct node ... " + payloadID);
+                        await _anonHubConnectionManager.DumpToFile("anon_", payloadID, notificationJson);
+                        Console.WriteLine("\nDebug::HubHelpers::Anon incorrect node, adding authRequestResponseNotification to retry on correct node ...{0} ... {1}",payloadID, DateTime.UtcNow);
                     }
                     else
                     {
@@ -114,7 +114,7 @@ public static class HubHelpers
 
                         // remove the connection tracking since I am the servicing node and no need
                         // to do anything for myself in DoResend()
-                        HubHelpers._anonHubConnectionManager.RemoveConnectionByValue(l_token);
+                        //HubHelpers._anonHubConnectionManager.RemoveConnectionByValue(l_token);
                     }
                 }
                 catch (Exception ex)
@@ -182,7 +182,7 @@ public static class HubHelpers
             if (string.IsNullOrEmpty(token))
                 continue;
 
-            string strJson = await _anonHubConnectionManager.ReadFromFile("", token, DateTime.MinValue);//can't have more than one for anon connection
+            string strJson = await _anonHubConnectionManager.ReadFromFile("anon_", token, DateTime.MinValue, HubConnectionManagerFileAction.DeleteFile);//can't have more than one for anon connection
             if (string.IsNullOrEmpty(strJson))
                 continue;
 
@@ -191,15 +191,15 @@ public static class HubHelpers
                             strJson, _deserializerOptions);
 
             // just before sending check again if still servicing this connection
-            token = HubHelpers._anonHubConnectionManager.FindValueByKey(connectionId);
-            if (string.IsNullOrEmpty(token))
-                continue;
+            //token = HubHelpers._anonHubConnectionManager.FindValueByKey(connectionId);
+            //if (string.IsNullOrEmpty(token))
+            //    continue;
 
             // Notice the typo AuthRequestResponseRecieved do not change it, must match typo in client side
             await anonymousHubContext.Clients.Group(authRequestResponseNotification.Payload.Id.ToString())
                 .SendAsync("AuthRequestResponseRecieved", authRequestResponseNotification, cancellationToken);
 
-            Console.WriteLine("\nHubHelpers::DoAnonHubResend sent from correct node {0} \n", token);
+            Console.WriteLine("\nHubHelpers::DoAnonHubResend sent from correct node {0} at utc time: {1}\n", token, DateTime.UtcNow);
         }
         //Console.WriteLine("Exiting DoResend");
     }
@@ -230,9 +230,9 @@ public static class HubHelpers
                                 strJson, _deserializerOptions);
 
             // just before sending check again if still servicing this connection
-            token = HubHelpers._hubConnectionManager.FindValueByKey(connectionId);
-            if (string.IsNullOrEmpty(token))
-                continue;
+            //token = HubHelpers._hubConnectionManager.FindValueByKey(connectionId);
+            //if (string.IsNullOrEmpty(token))
+             //   continue;
 
             await hubContext.Clients.User(authRequestNotification.Payload.UserId.ToString())
                 .SendAsync("ReceiveMessage", authRequestNotification, cancellationToken);
