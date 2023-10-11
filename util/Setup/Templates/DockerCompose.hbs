@@ -138,6 +138,7 @@ services:
     volumes:
       - ../ca-certificates:/etc/bitwarden/ca-certificates
       - ../logs/notifications:/etc/bitwarden/logs
+      - ../core/notifications:/etc/bitwarden/core/notifications
     env_file:
       - global.env
       - ../env/uid.env
