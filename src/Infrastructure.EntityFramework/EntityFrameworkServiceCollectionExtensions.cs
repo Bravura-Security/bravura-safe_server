@@ -83,6 +83,7 @@ public static class EntityFrameworkServiceCollectionExtensions
         services.AddSingleton<IUserRepository, UserRepository>();
         services.AddSingleton<IOrganizationDomainRepository, OrganizationDomainRepository>();
         services.AddSingleton<IAmazonSNSDeviceRepository, AmazonSNSDeviceRepository>();
+        services.AddSingleton<IHubConnectionRepository, HubConnectionRepository>();
 
         if (selfHosted)
         {

@@ -52,6 +52,6 @@ public class NotificationsHub : Microsoft.AspNetCore.SignalR.Hub
         await base.OnDisconnectedAsync(exception);
 
         HubHelpers._hubConnectionManager.RemoveConnection(Context.ConnectionId);
-        _ = HubHelpers._hubConnectionManager.DeleteExpiredRequests("authreq_", -1);
+        //_ = HubHelpers._hubConnectionManager.DeleteExpiredRequests("authreq_", -1);
     }
 }

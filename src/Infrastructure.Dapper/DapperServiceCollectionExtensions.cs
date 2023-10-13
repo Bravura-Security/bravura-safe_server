@@ -46,6 +46,7 @@ public static class DapperServiceCollectionExtensions
         services.AddSingleton<IUserRepository, UserRepository>();
         services.AddSingleton<IOrganizationDomainRepository, OrganizationDomainRepository>();
         services.AddSingleton<IAmazonSNSDeviceRepository, AmazonSNSDeviceRepository>();
+        services.AddSingleton<IHubConnectionRepository, HubConnectionRepository>();
 
         if (selfHosted)
         {

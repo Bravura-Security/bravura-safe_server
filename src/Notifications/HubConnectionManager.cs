@@ -1,5 +1,7 @@
 ﻿//using Bit.Core.Models;
 using System.Collections.Concurrent;
+using Bit.Core.Repositories;
+using Bit.Infrastructure.EntityFramework.Models;
 
 namespace Bit.Notifications;
 public class FileNameGenerator
@@ -44,6 +46,7 @@ public class HubConnectionManager: IHubConnectionManager
         valueToKey = new ConcurrentDictionary<string, string>();
     }
     public Core.Settings.GlobalSettings GlobalSettings { get; set; }
+    public IHubConnectionRepository HubConnRepo { get; set; }
 
     public void AddConnection(string key, string value, double clockDriftAdjust=0)
     {
@@ -54,6 +57,14 @@ public class HubConnectionManager: IHubConnectionManager
             keyToValue.TryAdd(key, connectionInfo);
             valueToKey.TryAdd(value, key);
         }
+
+        HubConnection l_hub = new HubConnection();
+        l_hub.ConnectionId = key;
+        Guid l_token;
+        bool bSuccess = Guid.TryParse(value, out l_token);
+        l_hub.Token = l_token;
+        l_hub.MessageType = null; ;
+        HubConnRepo.UpsertAsync(l_hub);
 
         Console.WriteLine("HubConnectionManager::AddConnection ... {0} with token {1}  :: {2}", key, value, l_time);
     }
@@ -67,6 +78,8 @@ public class HubConnectionManager: IHubConnectionManager
                 valueToKey.TryRemove(connectionInfo.ConnectionId, out _);
             }
         }
+
+        HubConnRepo.DeleteAsync(key);
     }
 
     public void RemoveConnectionByValue(string value)
@@ -175,7 +188,23 @@ public class HubConnectionManager: IHubConnectionManager
         }
     }
 
-    public async Task<bool> DumpToFile(string prefix, string strID, string strJson)
+    public async Task<bool> SaveNotification(string prefix, string strToken, string strJson, bool bDumpFile)
+    {
+        Guid.TryParse(strToken, out var token);
+        await HubConnRepo.SaveNotificationPayload(token, prefix, strJson);
+
+        if (bDumpFile)
+        {
+            // old way
+            string strFileName = strToken;
+            strFileName = FileNameGenerator.SanitizeFileName(strFileName);
+            return await DumpToFile(prefix, strToken, strJson);
+        }
+
+        return true;
+    }
+
+    private async Task<bool> DumpToFile(string prefix, string strID, string strJson)
     {
         if (this.GlobalSettings == null)
             return false;
@@ -212,8 +241,24 @@ public class HubConnectionManager: IHubConnectionManager
         return bRetVal;
     }
 
-    // ReadFromFile will read if file last write time is older than timestamp (cutoffUTCTime)
-    public async Task<string> ReadFromFile(string prefix, string token, DateTime cutoffUTCTime, HubConnectionManagerFileAction fileAction)
+    private async Task<string> GetNotification(string prefix, string strToken, DateTime cutoffUTCTime, HubConnectionManagerFileAction fileAction, bool bReadFromFile)
+    {
+        if (this.GlobalSettings == null)
+            return null;
+
+        string strFileName = strToken;
+        strFileName = FileNameGenerator.SanitizeFileName(strFileName);
+
+        Guid.TryParse(strToken, out var l_token);
+
+        if (bReadFromFile)
+            return await ReadFromFile(prefix, strFileName, cutoffUTCTime, fileAction);
+
+        var l_hub = await HubConnRepo.GetByTokenAsync(l_token, cutoffUTCTime, prefix);
+        return l_hub.MessagePayload;
+    }
+        // ReadFromFile will read if file last write time is older than timestamp (cutoffUTCTime)
+    private async Task<string> ReadFromFile(string prefix, string token, DateTime cutoffUTCTime, HubConnectionManagerFileAction fileAction)
     {
         if (this.GlobalSettings == null)
             return null;

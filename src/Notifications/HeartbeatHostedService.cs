@@ -1,6 +1,5 @@
 ﻿using Bit.Core.Settings;
 using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
 
 namespace Bit.Notifications;
 
@@ -50,32 +49,17 @@ public class HeartbeatHostedService : IHostedService, IDisposable
 
     private async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        // this may look weird, but don't want to send hearbeat too fast
-        // yet still want to process any websocket stuff as fast as possible
-        int iCntr = 0;
         while (!cancellationToken.IsCancellationRequested)
         {
-            ++iCntr;
-            //Added sending heartbeat to anonymous hub as well
-            await Task.Delay(1500, cancellationToken);
-            if (iCntr >= 60)
-                await _hubContext.Clients.All.SendAsync("Heartbeat");
-
-            await HubHelpers.DoHubResend(_hubContext, cancellationToken);
+            await Task.Delay(60000, cancellationToken);
+            await _hubContext.Clients.All.SendAsync("Heartbeat");
 
             if (_anonymousHubContext!=null)
             {
-                if (iCntr >= 60)
-                    await _anonymousHubContext.Clients.All.SendAsync("Heartbeat");
-
-                await HubHelpers.DoAnonHubResend(_anonymousHubContext, cancellationToken);
+                //Added sending heartbeat to anonymous hub as well
+                await _anonymousHubContext.Clients.All.SendAsync("Heartbeat");
             }
             
-            if (iCntr >= 60)
-            {
-                iCntr = 0;
-                _logger.LogInformation("Sent heartbeat.");
-            }
         }//end while
 
         _logger.LogWarning("Done with heartbeat.");

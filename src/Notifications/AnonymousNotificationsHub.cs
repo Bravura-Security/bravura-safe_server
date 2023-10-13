@@ -29,6 +29,6 @@ public class AnonymousNotificationsHub : Microsoft.AspNetCore.SignalR.Hub, INoti
         await base.OnDisconnectedAsync(exception);
 
         HubHelpers._anonHubConnectionManager.RemoveConnection(Context.ConnectionId);
-        _ = HubHelpers._hubConnectionManager.DeleteExpiredRequests("anon_", -1);
+        //_ = HubHelpers._hubConnectionManager.DeleteExpiredRequests("anon_", -1);
     }
 }

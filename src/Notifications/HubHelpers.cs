@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using Bit.Core.Enums;
 using Bit.Core.Models;
+using Bit.Core.Repositories;
 using Bit.Core.Settings;
-using LinqToDB;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Bit.Notifications;
@@ -15,10 +15,13 @@ public static class HubHelpers
     public static HubConnectionManager _anonHubConnectionManager = new HubConnectionManager();
     public static HubConnectionManager _hubConnectionManager = new HubConnectionManager();
 
-    public static void InitHubConnectionManager(GlobalSettings globalSettings)
+    public static void InitHubConnectionManager(GlobalSettings globalSettings, IHubConnectionRepository hubConnRepo)
     {
         _anonHubConnectionManager.GlobalSettings = globalSettings;
+        _anonHubConnectionManager.HubConnRepo = hubConnRepo;
+
         _hubConnectionManager.GlobalSettings = globalSettings;
+        _hubConnectionManager.HubConnRepo = hubConnRepo;
     }
 
     public static async Task SendNotificationToHubAsync(
@@ -83,7 +86,7 @@ public static class HubHelpers
             case PushType.AuthRequestResponse:
                 try
                 {
-                    Console.WriteLine("\nDebug::HubHelpers:: Sending AuthRequestResponse\n");
+                    //Console.WriteLine("\nDebug::HubHelpers:: Sending AuthRequestResponse\n");
 
                     var authRequestResponseNotification =
                         JsonSerializer.Deserialize<PushNotificationData<AuthRequestPushNotification>>(
@@ -92,29 +95,22 @@ public static class HubHelpers
                     // Notice the typo AuthRequestResponseRecieved, do not change it, must match typo in client side
                     string payloadID = authRequestResponseNotification.Payload.Id.ToString();
 
-                 
                     await anonymousHubContext.Clients.Group(payloadID)
                         .SendAsync("AuthRequestResponseRecieved", authRequestResponseNotification, cancellationToken);
 
-                    Console.WriteLine("\nDebug::HubHelpers:: Just sent to websocket AuthRequestResponseRecieved with payload ID == " + payloadID);
-                    
+                    Console.WriteLine("\nDebug::HubHelpers:: Just sent (blindly) to websocket AuthRequestResponseRecieved will also check for anon connection for payload ID == " + payloadID);
 
                     var l_token = _anonHubConnectionManager.FindKeyByValue(payloadID);
                     if (string.IsNullOrEmpty(l_token))
                     {
                         //wrong node processed the push so need to send for retry
                         //only dumping to file since on wrong node
-                        await _anonHubConnectionManager.DumpToFile("anon_", payloadID, notificationJson);
-                        Console.WriteLine("\nDebug::HubHelpers::Anon incorrect node, adding authRequestResponseNotification to retry on correct node ...{0} ... {1}",payloadID, DateTime.UtcNow);
+                        await _anonHubConnectionManager.SaveNotification("anon_", payloadID, notificationJson, false);
+                        Console.WriteLine("\nDebug::HubHelpers:: SaveNotification -- anon incorrect node, adding authRequestResponseNotification to retry on correct node ...{0} ... {1}", payloadID, DateTime.UtcNow);
                     }
                     else
                     {
-                        //for retry mechanism, might no longer be needed
-                        //_anonConnectionManager._notificationStack.Push(authRequestResponseNotification);
-
-                        // remove the connection tracking since I am the servicing node and no need
-                        // to do anything for myself in DoResend()
-                        //HubHelpers._anonHubConnectionManager.RemoveConnectionByValue(l_token);
+                        Console.WriteLine("\nDebug::HubHelpers:: Token found in list for anon connection for ID == {0}, with token {1}", payloadID, l_token);
                     }
                 }
                 catch (Exception ex)
@@ -129,38 +125,40 @@ public static class HubHelpers
                         JsonSerializer.Deserialize<PushNotificationData<AuthRequestPushNotification>>(
                                 notificationJson, _deserializerOptions);
 
-                    await hubContext.Clients.User(authRequestNotification.Payload.UserId.ToString())
-                        .SendAsync("ReceiveMessage", authRequestNotification, cancellationToken);
+                    // do not blind send auth requests
 
-                    bool bAlwaysCreate = true;
-                    if (bAlwaysCreate)
-                    {
+                    //await hubContext.Clients.User(authRequestNotification.Payload.UserId.ToString())
+                    //   .SendAsync("ReceiveMessage", authRequestNotification, cancellationToken);
+
+
+                    // so the reason to always create is since than different nodes can be servicing the exact same user
+                    // example desktop app on node A, phone on B, another desktop app on NOde C
+                    // so always create and let each node decide if it must send.
+                    //bool bAlwaysCreate = true;
+                    //if (bAlwaysCreate)
+                    //{
                         //always create in case other nodes are procesing websockets for this user
-                        string strFileName = authRequestNotification.Payload.UserId.ToString();
-                        strFileName = FileNameGenerator.SanitizeFileName(strFileName);
-                        await _hubConnectionManager.DumpToFile("authreq_", strFileName, notificationJson);
-                    }
+                        // change last arg in save notification to true is we want to use EFS instead of DB
+                        await _hubConnectionManager.SaveNotification("authreq_", authRequestNotification.Payload.UserId.ToString(), notificationJson, false);
+                    //}
 
 
                     var tmpConnID = _hubConnectionManager.FindKeyByValue(authRequestNotification.Payload.UserId.ToString());
-                    //if (string.IsNullOrEmpty(tmpConnID) == false)
-                    //    _hubConnectionManager.RemoveConnection(tmpConnID);
-
                     if (string.IsNullOrEmpty(tmpConnID))
                     {
                         //wrong node processed the push so need to send for retry
                         //only dumping to file since on wrong node
                         Console.WriteLine("\nDebug::HubHelpers:: incorrect node, adding PushType.AuthRequest to retry on correct node ... " + authRequestNotification.Payload.UserId.ToString());
                     }
-                    else
-                    {
+                    //else
+                    //{
                         //do not remove the connection since what if another node updates the same file and servicing node needs to read it.
                         //HubHelpers._hubConnectionManager.RemoveConnectionByValue(authRequestNotification.Payload.UserId.ToString());
 
                         // now could force read it myself since don't want to reprocess it
                         // but DumpToFile also sets that I just read it since I did after all just write it.
                         //await _hubConnectionManager.ReadFromFile(strFileName, DateTime.MinValue, HubConnectionManagerFileAction.DoNothing);
-                    }
+                    //}
                 }
                 break;
             default:
@@ -168,6 +166,7 @@ public static class HubHelpers
         }
     }
 
+    /* ***
     public static async Task DoAnonHubResend(IHubContext<AnonymousNotificationsHub> anonymousHubContext, CancellationToken cancellationToken)
     {
         // here need to read the notifications dumped to file that I am servicing. file names will be something like <folder>/notifications/<token>.json
@@ -182,7 +181,7 @@ public static class HubHelpers
             if (string.IsNullOrEmpty(token))
                 continue;
 
-            string strJson = await _anonHubConnectionManager.ReadFromFile("anon_", token, DateTime.MinValue, HubConnectionManagerFileAction.DeleteFile);//can't have more than one for anon connection
+            string strJson = await _anonHubConnectionManager.GetNotification("anon_", token, DateTime.MinValue, HubConnectionManagerFileAction.DeleteFile, true);//can't have more than one for anon connection
             if (string.IsNullOrEmpty(strJson))
                 continue;
 
@@ -219,9 +218,8 @@ public static class HubHelpers
             // ie do not send old messages
             // in hubconnectionmanager tracking the last file with this name that I processed and do not reprocess.
 
-            string strFileName = token;
-            strFileName = FileNameGenerator.SanitizeFileName(strFileName);
-            string strJson = await _hubConnectionManager.ReadFromFile("authreq_", strFileName, timeStamp, HubConnectionManagerFileAction.DoNothing);//can have more than one for that auth request so keep file around
+            
+            string strJson = await _hubConnectionManager.GetNotification("authreq_", token, timeStamp, HubConnectionManagerFileAction.DoNothing, true);//can have more than one for that auth request so keep file around
             if (string.IsNullOrEmpty(strJson))
                 continue;
 
@@ -238,4 +236,6 @@ public static class HubHelpers
                 .SendAsync("ReceiveMessage", authRequestNotification, cancellationToken);
         }
     }
+
+    *** */
 }
