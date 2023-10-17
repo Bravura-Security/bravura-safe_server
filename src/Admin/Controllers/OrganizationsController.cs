@@ -448,6 +448,7 @@ public class OrganizationsController : Controller
             organization.UseTotp = model.UseTotp;
             organization.UsersGetPremium = model.UsersGetPremium;
             organization.UseSecretsManager = model.UseSecretsManager;
+            organization.Skip2faForSso = model.Skip2faForSso;
 
             //secrets
             organization.SmSeats = model.SmSeats;

@@ -67,6 +67,7 @@ public class OrganizationEditModel : OrganizationViewModel
         MaxAutoscaleSmSeats = org.MaxAutoscaleSmSeats;
         SmServiceAccounts = org.SmServiceAccounts;
         MaxAutoscaleSmServiceAccounts = org.MaxAutoscaleSmServiceAccounts;
+        Skip2faForSso = org.Skip2faForSso;
     }
 
     public BillingInfo BillingInfo { get; set; }
@@ -147,6 +148,9 @@ public class OrganizationEditModel : OrganizationViewModel
     [Display(Name = "Max Autoscale Service Accounts")]
     public int? MaxAutoscaleSmServiceAccounts { get; set; }
 
+    [Display(Name = "Skip Internal Two Factor for SSO Login")]
+    public bool Skip2faForSso { get; set; }
+
     public Organization CreateOrganization(Provider provider)
     {
         BillingEmail = provider.BillingEmail;
@@ -190,6 +194,7 @@ public class OrganizationEditModel : OrganizationViewModel
         existingOrganization.MaxAutoscaleSmSeats = MaxAutoscaleSmSeats;
         existingOrganization.SmServiceAccounts = SmServiceAccounts;
         existingOrganization.MaxAutoscaleSmServiceAccounts = MaxAutoscaleSmServiceAccounts;
+        existingOrganization.Skip2faForSso = Skip2faForSso;
         return existingOrganization;
     }
 }

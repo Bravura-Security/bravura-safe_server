@@ -53,6 +53,7 @@ public class OrganizationResponseModel : ResponseModel
         SmServiceAccounts = organization.SmServiceAccounts;
         MaxAutoscaleSmSeats = organization.MaxAutoscaleSmSeats;
         MaxAutoscaleSmServiceAccounts = organization.MaxAutoscaleSmServiceAccounts;
+        Skip2faForSso = organization.Skip2faForSso;
     }
 
     public string Id { get; set; }
@@ -91,6 +92,7 @@ public class OrganizationResponseModel : ResponseModel
     public int? SmServiceAccounts { get; set; }
     public int? MaxAutoscaleSmSeats { get; set; }
     public int? MaxAutoscaleSmServiceAccounts { get; set; }
+    public bool Skip2faForSso { get; set; }
 }
 
 public class OrganizationSubscriptionResponseModel : OrganizationResponseModel
