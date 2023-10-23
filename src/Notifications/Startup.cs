@@ -76,6 +76,10 @@ public class Startup
                 services.AddHostedService<AzureQueueHostedService>();
             }
         }
+        // Repositories
+        services.AddDatabaseRepositories(globalSettings);
+
+        services.AddHostedService<HubConnectionManagerService>();
     }
 
     public void Configure(
@@ -95,6 +99,8 @@ public class Startup
         {
             app.UseForwardedHeaders(globalSettings);
         }
+
+        //HubHelpers.InitHubConnectionManager(globalSettings);
 
         if (env.IsDevelopment())
         {

@@ -7,7 +7,7 @@ using Bit.Infrastructure.EntityFramework.Vault.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Microsoft.Identity.Client;
+
 using DP = Microsoft.AspNetCore.DataProtection;
 
 namespace Bit.Infrastructure.EntityFramework.Repositories;
@@ -61,6 +61,7 @@ public class DatabaseContext : DbContext
     public DbSet<AuthRequest> AuthRequests { get; set; }
     public DbSet<OrganizationDomain> OrganizationDomains { get; set; }
     public DbSet<AmazonSNSDevice> AmazonSNSDevices { get; set; }
+    public DbSet<HubConnection> HubConnections { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -101,6 +102,7 @@ public class DatabaseContext : DbContext
         var eOrganizationConnection = builder.Entity<OrganizationConnection>();
         var eOrganizationDomain = builder.Entity<OrganizationDomain>();
         var eAmazonSNSDevice = builder.Entity<AmazonSNSDevice>();
+        var eHubConnection = builder.Entity<HubConnection>();
 
         eCipher.Property(c => c.Id).ValueGeneratedNever();
         eCollection.Property(c => c.Id).ValueGeneratedNever();
@@ -174,6 +176,7 @@ public class DatabaseContext : DbContext
         eOrganizationConnection.ToTable(nameof(OrganizationConnection));
         eOrganizationDomain.ToTable(nameof(OrganizationDomain));
         eAmazonSNSDevice.ToTable(nameof(AmazonSNSDevice));
+        eHubConnection.ToTable(nameof(HubConnection));
 
         ConfigureDateTimeUtcQueries(builder);
     }

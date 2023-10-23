@@ -1,6 +1,5 @@
 ﻿using Bit.Core.Settings;
 using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
 
 namespace Bit.Notifications;
 
@@ -52,22 +51,17 @@ public class HeartbeatHostedService : IHostedService, IDisposable
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            // max 25 second total delay and added sending heartbeat to anonymous hub as well
-            await Task.Delay(5000, cancellationToken);
+            await Task.Delay(60000, cancellationToken);
             await _hubContext.Clients.All.SendAsync("Heartbeat");
-            if (_anonymousHubContext!=null)
-            {
-                await _anonymousHubContext.Clients.All.SendAsync("Heartbeat");
-            }
-            _logger.LogWarning("Sent heartbeat.");
-            await Task.Delay(15000, cancellationToken);
 
             if (_anonymousHubContext!=null)
             {
-                await HubHelpers.DoResend(_anonymousHubContext, cancellationToken);
+                //Added sending heartbeat to anonymous hub as well
+                await _anonymousHubContext.Clients.All.SendAsync("Heartbeat");
             }
-            await Task.Delay(5000, cancellationToken);
-        }
+            
+        }//end while
+
         _logger.LogWarning("Done with heartbeat.");
-    }
+    }//ExecuteAsync
 }
