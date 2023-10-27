@@ -14,4 +14,5 @@ public enum PolicyType : byte
     MaximumVaultTimeout = 9,
     DisablePersonalVaultExport = 10,
     ActivateAutofill = 11,
+    Skip2faForSso = 12,
 }
