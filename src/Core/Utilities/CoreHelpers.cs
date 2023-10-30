@@ -30,7 +30,7 @@ public static class CoreHelpers
     private static readonly DateTime _max = new DateTime(9999, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     private static readonly Random _random = new Random();
     private static string _internalVersion;
-    private static readonly string CloudFlareConnectingIp = "CF-Connecting-IP";
+    private static readonly string RealConnectingIp = "X-Connecting-IP";
 
     /// <summary>
     /// Generate sequential Guid for Sql Server.
@@ -544,7 +544,8 @@ public static class CoreHelpers
         var subName = globalSettings.ServiceBus.ApplicationCacheSubscriptionName;
         if (string.IsNullOrWhiteSpace(subName))
         {
-            var websiteInstanceId = Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID");
+            var websiteInstanceId = Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID") ??
+                                    globalSettings.ServiceBus.WebSiteInstanceId;
             if (string.IsNullOrWhiteSpace(websiteInstanceId))
             {
                 throw new Exception("No service bus subscription name available.");
@@ -569,9 +570,9 @@ public static class CoreHelpers
             return null;
         }
 
-        if (!globalSettings.SelfHosted && httpContext.Request.Headers.ContainsKey(CloudFlareConnectingIp))
+        if (!globalSettings.SelfHosted && httpContext.Request.Headers.ContainsKey(RealConnectingIp))
         {
-            return httpContext.Request.Headers[CloudFlareConnectingIp].ToString();
+            return httpContext.Request.Headers[RealConnectingIp].ToString();
         }
 
         return httpContext.Connection?.RemoteIpAddress?.ToString();

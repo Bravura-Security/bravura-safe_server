@@ -22,6 +22,7 @@ using Stripe;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Bit.Core.Auth.Identity;
+using Bit.Core.OrganizationFeatures.OrganizationSubscriptions;
 
 #if !OSS
 using Bit.Commercial.Core.SecretsManager;
@@ -140,6 +141,7 @@ public class Startup
         // Services
         services.AddBaseServices(globalSettings);
         services.AddDefaultServices(globalSettings);
+        services.AddOrganizationSubscriptionServices();
         services.AddCoreLocalizationServices();
 
         //health check
@@ -154,6 +156,7 @@ public class Startup
         services.AddCommercialCoreServices();
         services.AddCommercialSecretsManagerServices();
         services.AddSecretsManagerEfRepositories();
+        Jobs.JobsHostedService.AddCommercialSecretsManagerJobServices(services);
 #endif
 
         // MVC
