@@ -50,7 +50,7 @@
     @SmServiceAccounts INT = null,
     @MaxAutoscaleSmSeats INT = null,
     @MaxAutoscaleSmServiceAccounts INT = null,
-    @Skip2faForSso BIT = 0
+    @Skip2faForSso BIT
 AS
 BEGIN
     SET NOCOUNT ON

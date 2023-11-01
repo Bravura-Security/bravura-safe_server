@@ -283,6 +283,17 @@ public class OrganizationService : IOrganizationService
             }
         }
 
+        if (!newPlan.HasSkip2faForSso && organization.Skip2faForSso)
+        {
+            var skip2faForSsoPolicy =
+                await _policyRepository.GetByOrganizationIdTypeAsync(organization.Id, PolicyType.Skip2faForSso);
+            if (skip2faForSsoPolicy != null && skip2faForSsoPolicy.Enabled)
+            {
+                throw new BadRequestException("Your new plan does not allow the Skip2faForSso feature. " +
+                    "Disable your skip2faForSsoPolicy policy.");
+            }
+        }
+
         if (!newPlan.HasScim && organization.UseScim)
         {
             var scimConnections = await _organizationConnectionRepository.GetByOrganizationIdTypeAsync(organization.Id,
@@ -346,6 +357,7 @@ public class OrganizationService : IOrganizationService
         organization.UseKeyConnector = newPlan.HasKeyConnector;
         organization.UseScim = newPlan.HasScim;
         organization.UseResetPassword = newPlan.HasResetPassword;
+        organization.Skip2faForSso = newPlan.HasSkip2faForSso;
         organization.SelfHost = newPlan.HasSelfHost;
         organization.UsersGetPremium = newPlan.UsersGetPremium || upgrade.PremiumAccessAddon;
         organization.UseCustomPermissions = newPlan.HasCustomPermissions;
@@ -649,6 +661,7 @@ public class OrganizationService : IOrganizationService
             Use2fa = plan.Has2fa,
             UseApi = plan.HasApi,
             UseResetPassword = plan.HasResetPassword,
+            Skip2faForSso = plan.HasSkip2faForSso,
             SelfHost = plan.HasSelfHost,
             UsersGetPremium = plan.UsersGetPremium || signup.PremiumAccessAddon,
             UseCustomPermissions = plan.HasCustomPermissions,

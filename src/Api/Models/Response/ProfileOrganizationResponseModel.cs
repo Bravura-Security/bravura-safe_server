@@ -111,5 +111,5 @@ public class ProfileOrganizationResponseModel : ResponseModel
     public DateTime? FamilySponsorshipValidUntil { get; set; }
     public bool? FamilySponsorshipToDelete { get; set; }
     public bool AccessSecretsManager { get; set; }
-    public bool Skip2faForSso { get; set; } 
+    public bool Skip2faForSso { get; set; }
 }

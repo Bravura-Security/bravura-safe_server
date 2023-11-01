@@ -36,6 +36,7 @@ public class Plan
     public bool HasKeyConnector { get; set; }
     public bool HasScim { get; set; }
     public bool HasResetPassword { get; set; }
+    public bool HasSkip2faForSso { get; set; }
     public bool UsersGetPremium { get; set; }
     public bool HasCustomPermissions { get; set; }
 

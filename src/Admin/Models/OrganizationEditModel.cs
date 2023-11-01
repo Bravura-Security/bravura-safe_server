@@ -147,7 +147,6 @@ public class OrganizationEditModel : OrganizationViewModel
     public int? SmServiceAccounts { get; set; }
     [Display(Name = "Max Autoscale Service Accounts")]
     public int? MaxAutoscaleSmServiceAccounts { get; set; }
-
     [Display(Name = "Skip Internal Two Factor for SSO Login")]
     public bool Skip2faForSso { get; set; }
 

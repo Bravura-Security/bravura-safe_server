@@ -50,6 +50,7 @@
     [SmServiceAccounts]             INT              NULL,
     [MaxAutoscaleSmSeats]           INT              NULL,
     [MaxAutoscaleSmServiceAccounts] INT              NULL,
+    [Skip2faForSso]                 BIT              NOT NULL,
     CONSTRAINT [PK_Organization] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 
