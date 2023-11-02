@@ -50,6 +50,7 @@
     @SmServiceAccounts INT = null,
     @MaxAutoscaleSmSeats INT = null,
     @MaxAutoscaleSmServiceAccounts INT = null,
+    @SecretsManagerBeta BIT = 0,
     @Skip2faForSso BIT
 AS
 BEGIN
@@ -108,6 +109,7 @@ SET
     [SmServiceAccounts] = @SmServiceAccounts,
     [MaxAutoscaleSmSeats] = @MaxAutoscaleSmSeats,
     [MaxAutoscaleSmServiceAccounts] = @MaxAutoscaleSmServiceAccounts,
+    [SecretsManagerBeta] = @SecretsManagerBeta,
     [Skip2faForSso] = @Skip2faForSso
 WHERE
     [Id] = @Id

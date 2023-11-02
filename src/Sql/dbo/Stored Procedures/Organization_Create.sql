@@ -50,6 +50,7 @@
     @SmServiceAccounts INT = null,
     @MaxAutoscaleSmSeats INT = null,
     @MaxAutoscaleSmServiceAccounts INT = null,
+    @SecretsManagerBeta BIT = 0,
     @Skip2faForSso BIT
 AS
 BEGIN
@@ -108,6 +109,7 @@ BEGIN
         [SmServiceAccounts],
         [MaxAutoscaleSmSeats],
         [MaxAutoscaleSmServiceAccounts],
+        [SecretsManagerBeta],
         [Skip2faForSso]
     )
     VALUES
@@ -163,6 +165,7 @@ BEGIN
         @SmServiceAccounts,
         @MaxAutoscaleSmSeats,
         @MaxAutoscaleSmServiceAccounts,
+        @SecretsManagerBeta,
         @Skip2faForSso
     )
 END

@@ -10,7 +10,7 @@ public class AnonymousNotificationsHub : Microsoft.AspNetCore.SignalR.Hub, INoti
 {
     public override async Task OnConnectedAsync()
     {
-        Console.WriteLine("Debug::AnonymousNotificationsHub OnConnectedAsync ...... "); 
+        //Console.WriteLine("Debug::AnonymousNotificationsHub OnConnectedAsync ...... "); 
         var httpContext = Context.GetHttpContext();
         var token = httpContext.Request.Query["Token"].FirstOrDefault();
         if (!string.IsNullOrWhiteSpace(token))

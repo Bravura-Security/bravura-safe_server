@@ -31,7 +31,7 @@ public static class HubHelpers
         CancellationToken cancellationToken = default(CancellationToken)
     )
     {
-        Console.WriteLine("\nDebug::HubHelpers:: Received a notification inside SendNotificationToHubAsync .... {0} \n", notificationJson);
+        //Console.WriteLine("\nDebug::HubHelpers:: Received a notification inside SendNotificationToHubAsync .... {0} \n", notificationJson);
         var notification = JsonSerializer.Deserialize<PushNotificationData<object>>(notificationJson, _deserializerOptions);
         switch (notification.Type)
         {
@@ -120,27 +120,24 @@ public static class HubHelpers
                 break;
             case PushType.AuthRequest:
                 {
-                    Console.WriteLine("\nDebug::HubHelpers:: Sending AuthRequest\n");
+                    //Console.WriteLine("\nDebug::HubHelpers:: Send/Save PushType.AuthRequest\n");
                     var authRequestNotification =
                         JsonSerializer.Deserialize<PushNotificationData<AuthRequestPushNotification>>(
                                 notificationJson, _deserializerOptions);
 
-                    // do not blind send auth requests
+                    // do not blind send auth requests because send here and then would resend in the HubConnectionManagerService
+                    // so comment out the next send to CLients.User and let HubConnectionManagerService handle the sneds
 
                     //await hubContext.Clients.User(authRequestNotification.Payload.UserId.ToString())
                     //   .SendAsync("ReceiveMessage", authRequestNotification, cancellationToken);
 
 
-                    // so the reason to always create is since than different nodes can be servicing the exact same user
-                    // example desktop app on node A, phone on B, another desktop app on NOde C
+                    // so the reason to always create is because since different nodes can be servicing the exact same user
+                    // example desktop app on node A, phone on B, another desktop app on Node C
                     // so always create and let each node decide if it must send.
-                    //bool bAlwaysCreate = true;
-                    //if (bAlwaysCreate)
-                    //{
-                        //always create in case other nodes are procesing websockets for this user
-                        // change last arg in save notification to true is we want to use EFS instead of DB
-                        await _hubConnectionManager.SaveNotification("authreq_", authRequestNotification.Payload.UserId.ToString(), notificationJson, false);
-                    //}
+                    // i.e. always create in case other nodes are procesing websockets for this user
+                    // change last arg in save notification to true is we want to use EFS instead of DB
+                    await _hubConnectionManager.SaveNotification("authreq_", authRequestNotification.Payload.UserId.ToString(), notificationJson, false);
 
 
                     var tmpConnID = _hubConnectionManager.FindKeyByValue(authRequestNotification.Payload.UserId.ToString());
@@ -150,15 +147,6 @@ public static class HubHelpers
                         //only dumping to file since on wrong node
                         Console.WriteLine("\nDebug::HubHelpers:: incorrect node, adding PushType.AuthRequest to retry on correct node ... " + authRequestNotification.Payload.UserId.ToString());
                     }
-                    //else
-                    //{
-                        //do not remove the connection since what if another node updates the same file and servicing node needs to read it.
-                        //HubHelpers._hubConnectionManager.RemoveConnectionByValue(authRequestNotification.Payload.UserId.ToString());
-
-                        // now could force read it myself since don't want to reprocess it
-                        // but DumpToFile also sets that I just read it since I did after all just write it.
-                        //await _hubConnectionManager.ReadFromFile(strFileName, DateTime.MinValue, HubConnectionManagerFileAction.DoNothing);
-                    //}
                 }
                 break;
             default:

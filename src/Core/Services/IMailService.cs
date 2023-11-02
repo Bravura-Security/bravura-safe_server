@@ -56,6 +56,8 @@ public interface IMailService
     Task SendFailedTwoFactorAttemptsEmailAsync(string email, DateTime utcNow, string ip);
     Task SendHyprMagicLinkEmailAsync(string email, string url, DateTime expirationDate);
     Task SendUnverifiedOrganizationDomainEmailAsync(IEnumerable<string> adminEmails, string organizationId, string domainName);
+    Task SendSecretsManagerMaxSeatLimitReachedEmailAsync(Organization organization, int maxSeatCount, IEnumerable<string> ownerEmails);
+    Task SendSecretsManagerMaxServiceAccountLimitReachedEmailAsync(Organization organization, int maxSeatCount, IEnumerable<string> ownerEmails);
     Task SendTrustedDeviceAdminApprovalEmailAsync(string email, DateTime utcNow, string ip, string deviceTypeAndIdentifier);
 }
 

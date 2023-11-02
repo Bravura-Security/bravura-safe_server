@@ -112,10 +112,12 @@ public class HubConnectionManagerService : IHostedService, IDisposable
                                 if (item.RevisionDate < timeStamp)
                                     continue;
 
+                                /* ***
                                 if (connectionId.CompareTo(item?.ConnectionId) == 0)
                                 {
                                     Console.WriteLine("****______***** I will be sending this authreq, found a connection ID ***______*****");
                                 }
+                                *** */
 
                             } else if (item.MessageType.CompareTo("anon_") == 0)
                             {
@@ -137,7 +139,7 @@ public class HubConnectionManagerService : IHostedService, IDisposable
                                 await _hubContext.Clients.User(authRequestNotification.Payload.UserId.ToString())
                                    .SendAsync("ReceiveMessage", authRequestNotification, cancellationToken);
 
-                                Console.WriteLine("\nHubConnectionManagerService ** _hubContext authreq_ ** sent from correct node {0} at utc time: {1}\n", item.Token, DateTime.UtcNow);
+                                Console.WriteLine("\nHubConnectionManagerService ** _hubContext authreq_ ** sent from correct node {0} UTC time: {1}\n", item.Token, DateTime.UtcNow);
                             }
                             else if (item.MessageType.CompareTo("anon_") == 0)
                             {
@@ -149,7 +151,7 @@ public class HubConnectionManagerService : IHostedService, IDisposable
                                 await _anonymousHubContext.Clients.Group(authRequestResponseNotification.Payload.Id.ToString())
                                     .SendAsync("AuthRequestResponseRecieved", authRequestResponseNotification, cancellationToken);
 
-                                Console.WriteLine("\nHubConnectionManagerService _anonymousHubContext sent from this node {0} at utc time: {1}\n", item.Token, DateTime.UtcNow);
+                                Console.WriteLine("\nHubConnectionManagerService -- _anonymousHubContext -- sent from this node {0} UTC time: {1}\n", item.Token, DateTime.UtcNow);
                             }
                         }//end foreach
                     }

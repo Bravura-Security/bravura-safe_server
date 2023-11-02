@@ -86,6 +86,7 @@ CREATE OR ALTER PROCEDURE [dbo].[Organization_Create]
     @SmServiceAccounts INT = null,
     @MaxAutoscaleSmSeats INT = null,
     @MaxAutoscaleSmServiceAccounts INT = null,
+    @SecretsManagerBeta BIT = 0,
     @Skip2faForSso BIT
 AS
 BEGIN
@@ -144,6 +145,7 @@ BEGIN
         [SmServiceAccounts],
         [MaxAutoscaleSmSeats],
         [MaxAutoscaleSmServiceAccounts],
+        [SecretsManagerBeta],
         [Skip2faForSso]
     )
     VALUES
@@ -199,6 +201,7 @@ BEGIN
         @SmServiceAccounts,
         @MaxAutoscaleSmSeats,
         @MaxAutoscaleSmServiceAccounts,
+        @SecretsManagerBeta,
         @Skip2faForSso
     )
 END
@@ -256,6 +259,7 @@ CREATE OR ALTER PROCEDURE [dbo].[Organization_Update]
     @SmServiceAccounts INT = null,
     @MaxAutoscaleSmSeats INT = null,
     @MaxAutoscaleSmServiceAccounts INT = null,
+    @SecretsManagerBeta BIT = 0,
     @Skip2faForSso BIT
 AS
 BEGIN
@@ -314,6 +318,7 @@ SET
     [SmServiceAccounts] = @SmServiceAccounts,
     [MaxAutoscaleSmSeats] = @MaxAutoscaleSmSeats,
     [MaxAutoscaleSmServiceAccounts] = @MaxAutoscaleSmServiceAccounts,
+    [SecretsManagerBeta] = @SecretsManagerBeta,
     [Skip2faForSso] = @Skip2faForSso
 WHERE
     [Id] = @Id
