@@ -12,6 +12,7 @@ namespace Bit.Core.Services;
 
 public class PolicyService : IPolicyService
 {
+    private readonly IApplicationCacheService _applicationCacheService;
     private readonly IEventService _eventService;
     private readonly IOrganizationRepository _organizationRepository;
     private readonly IOrganizationUserRepository _organizationUserRepository;
@@ -21,6 +22,7 @@ public class PolicyService : IPolicyService
     private readonly GlobalSettings _globalSettings;
 
     public PolicyService(
+        IApplicationCacheService applicationCacheService,
         IEventService eventService,
         IOrganizationRepository organizationRepository,
         IOrganizationUserRepository organizationUserRepository,
@@ -29,6 +31,7 @@ public class PolicyService : IPolicyService
         IMailService mailService,
         GlobalSettings globalSettings)
     {
+        _applicationCacheService = applicationCacheService;
         _eventService = eventService;
         _organizationRepository = organizationRepository;
         _organizationUserRepository = organizationUserRepository;

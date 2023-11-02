@@ -84,7 +84,7 @@
                         var planTypes = Enum.GetValues<PlanType>()
                             .Where(p => Model.Provider == null || p is >= PlanType.TeamsMonthly and <= PlanType.EnterpriseAnnually)
                             .Select(e => new SelectListItem
-                            { 
+                            {
                                 Value = ((int)e).ToString(),
                                 Text = e.GetDisplayAttribute()?.GetName() ?? e.ToString()
                             })
@@ -305,7 +305,13 @@
                     }
                     else
                     {
-                        <input type="email" class="form-control" asp-for="BillingEmail" readonly='@(!canEditBilling)'>
+                        <input
+                            type="text"
+                            class="form-control"
+                            asp-for="BillingEmail"
+                            readonly='@(!canEditBilling)'
+                            pattern="@(@"[^@\s]+@[^@\s]+\.[^@\s]+")"
+                            title="Email address must be in the format 'address@domain.com'.">
                     }
                 </div>
             </div>
@@ -343,7 +349,7 @@
                     <label asp-for="GatewaySubscriptionId"></label>
                     <div class="input-group">
                         <input type="text" class="form-control" asp-for="GatewaySubscriptionId" readonly='@(!canEditBilling)'>
-                        @if (canLaunchGateway) 
+                        @if (canLaunchGateway)
                         {
                         <div class="input-group-append">
                             <button class="btn btn-secondary" type="button" id="gateway-subscription-link">

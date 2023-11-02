@@ -35,7 +35,7 @@
             }
         });
         document.getElementById('@(nameof(Model.UseSecretsManager))').addEventListener('change', (event) => {
-            document.getElementById('organization-secrets-configuration').hidden  = !event.target.checked;
+            document.getElementById('organization-secrets-configuration').hidden = !event.target.checked;
 
             if (event.target.checked) {
                 setInitialSecretsManagerConfiguration();
