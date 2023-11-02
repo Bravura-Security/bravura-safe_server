@@ -247,6 +247,14 @@ public class OrganizationsController : Controller
                 await _policyRepository.UpsertAsync(existingPolicyTwoFactorAuthentication);
             }
 
+            // Skip SSO
+            var existingPolicySkipSSO = await _policyRepository.GetByOrganizationIdTypeAsync(id, PolicyType.Skip2faForSso);
+            if (existingPolicySkipSSO != null)
+            {
+                existingPolicySkipSSO.Enabled = false;
+                await _policyRepository.UpsertAsync(existingPolicySkipSSO);
+            }
+
             await _organizationRepository.DemoteAsync(organization);
             organization = await _organizationRepository.GetByIdAsync(id);
             await _organizationRepository.ReplaceAsync(organization);

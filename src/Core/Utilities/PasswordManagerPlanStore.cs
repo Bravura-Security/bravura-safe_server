@@ -167,6 +167,7 @@ public static class PasswordManagerPlanStore
                 HasKeyConnector = false,
                 HasScim = false,
                 HasResetPassword = false,
+                HasSkip2faForSso = false,
                 UsersGetPremium = true,
                 HasCustomPermissions = true,
 
@@ -200,6 +201,7 @@ public static class PasswordManagerPlanStore
                 HasKeyConnector = false,
                 HasScim = false,
                 HasResetPassword = true,
+                HasSkip2faForSso = true,
                 UsersGetPremium = true,
                 HasCustomPermissions = true,
 

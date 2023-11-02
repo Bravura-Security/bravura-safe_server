@@ -1,3 +1,6 @@
+-- New column 'Skip2faForSso'
+
+-- TABLES
 IF COL_LENGTH('[dbo].[Organization]', 'Skip2faForSso') IS NULL
 BEGIN
     ALTER TABLE
@@ -12,7 +15,15 @@ UPDATE
 SET
     [Skip2faForSso] = 0
 WHERE
-    [Skip2faForSso] IS NULL
+    PlanType <> 13
+GO
+
+UPDATE
+    [dbo].[Organization]
+SET
+    [Skip2faForSso] = 1
+WHERE
+    PlanType = 13
 GO
 
 ALTER TABLE
@@ -22,7 +33,7 @@ ALTER COLUMN
 GO
 
 
---Insert value in column 'Skip2faForSso'
+-- STORED PROCEDURES
 CREATE OR ALTER PROCEDURE [dbo].[Organization_Create]
     @Id UNIQUEIDENTIFIER OUTPUT,
     @Identifier NVARCHAR(50),
@@ -75,7 +86,7 @@ CREATE OR ALTER PROCEDURE [dbo].[Organization_Create]
     @SmServiceAccounts INT = null,
     @MaxAutoscaleSmSeats INT = null,
     @MaxAutoscaleSmServiceAccounts INT = null,
-    @Skip2faForSso BIT = 0
+    @Skip2faForSso BIT
 AS
 BEGIN
     SET NOCOUNT ON
@@ -193,7 +204,6 @@ BEGIN
 END
 GO
 
---Update column 'Skip2faForSso'
 CREATE OR ALTER PROCEDURE [dbo].[Organization_Update]
     @Id UNIQUEIDENTIFIER,
     @Identifier NVARCHAR(50),
@@ -246,7 +256,7 @@ CREATE OR ALTER PROCEDURE [dbo].[Organization_Update]
     @SmServiceAccounts INT = null,
     @MaxAutoscaleSmSeats INT = null,
     @MaxAutoscaleSmServiceAccounts INT = null,
-    @Skip2faForSso BIT = 0
+    @Skip2faForSso BIT
 AS
 BEGIN
     SET NOCOUNT ON
@@ -308,4 +318,214 @@ SET
 WHERE
     [Id] = @Id
 END
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[Organization_DemoteById]
+    @Id UNIQUEIDENTIFIER
+AS
+BEGIN
+
+    SET NOCOUNT ON
+
+    UPDATE
+        [dbo].[Organization]
+    SET
+        [Plan] = 'Teams',
+        [PlanType] = 12,
+        [Seats] = 32767,
+        [Use2fa] = 0,
+        [UseSso] = 0,
+        [UseResetPassword] = 0,
+        [Skip2faForSso] = 0,
+        [RevisionDate] = GETUTCDATE()
+    WHERE
+        [Id] = @Id
+END
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[Organization_PromoteById]
+    @Id UNIQUEIDENTIFIER
+AS
+BEGIN
+
+    SET NOCOUNT ON
+
+    UPDATE
+        [dbo].[Organization]
+    SET
+        [Plan] = 'Enterprise',
+        [PlanType] = 13,
+        [Seats] = 1000000,
+        [Use2fa] = 1,
+        [UseSso] = 1,
+        [UseResetPassword] = 1,
+        [Skip2faForSso] = 1,
+        [RevisionDate] = GETUTCDATE()
+    WHERE
+        [Id] = @Id
+END
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[Organization_ReadAbilities]
+AS
+BEGIN
+    SET NOCOUNT ON
+
+    SELECT
+        [Id],
+        [UseEvents],
+        [Use2fa],
+        CASE
+        WHEN [Use2fa] = 1 AND [TwoFactorProviders] IS NOT NULL AND [TwoFactorProviders] != '{}' THEN
+            1
+        ELSE
+            0
+        END AS [Using2fa],
+        [UsersGetPremium],
+        [UseCustomPermissions],
+        [UseSso],
+        [UseKeyConnector],
+        [UseScim],
+        [UseResetPassword],
+        [Skip2faForSso],
+        [Enabled]
+    FROM
+        [dbo].[Organization]
+END
+GO
+
+
+-- VIEWS
+IF OBJECT_ID('[dbo].[OrganizationView]') IS NOT NULL
+BEGIN
+DROP VIEW [dbo].[OrganizationView]
+END
+GO
+
+CREATE VIEW [dbo].[OrganizationView]
+AS
+SELECT
+    *
+FROM
+    [dbo].[Organization]
+GO
+
+IF OBJECT_ID('[dbo].[OrganizationUserOrganizationDetailsView]') IS NOT NULL
+BEGIN
+DROP VIEW [dbo].[OrganizationUserOrganizationDetailsView]
+END
+GO
+
+CREATE VIEW [dbo].[OrganizationUserOrganizationDetailsView]
+AS
+SELECT
+    OU.[UserId],
+    OU.[OrganizationId],
+    O.[Name],
+    O.[Enabled],
+    O.[PlanType],
+    O.[UsePolicies],
+    O.[UseSso],
+    O.[UseKeyConnector],
+    O.[UseScim],
+    O.[UseGroups],
+    O.[UseDirectory],
+    O.[UseEvents],
+    O.[UseTotp],
+    O.[Use2fa],
+    O.[UseApi],
+    O.[UseResetPassword],
+    O.[SelfHost],
+    O.[UsersGetPremium],
+    O.[UseCustomPermissions],
+    O.[UseSecretsManager],
+    O.[Seats],
+    O.[MaxCollections],
+    O.[MaxStorageGb],
+    O.[Identifier],
+    OU.[Key],
+    OU.[ResetPasswordKey],
+    O.[PublicKey],
+    O.[PrivateKey],
+    OU.[Status],
+    OU.[Type],
+    SU.[ExternalId] SsoExternalId,
+    OU.[Permissions],
+    PO.[ProviderId],
+    P.[Name] ProviderName,
+    P.[Type] ProviderType,
+    SS.[Data] SsoConfig,
+    OS.[FriendlyName] FamilySponsorshipFriendlyName,
+    OS.[LastSyncDate] FamilySponsorshipLastSyncDate,
+    OS.[ToDelete] FamilySponsorshipToDelete,
+    OS.[ValidUntil] FamilySponsorshipValidUntil,
+    OU.[AccessSecretsManager],
+    O.[UsePasswordManager],
+    O.[SmSeats],
+    O.[SmServiceAccounts],
+    O.[Skip2faForSso]
+FROM
+    [dbo].[OrganizationUser] OU
+LEFT JOIN
+    [dbo].[Organization] O ON O.[Id] = OU.[OrganizationId]
+LEFT JOIN
+    [dbo].[SsoUser] SU ON SU.[UserId] = OU.[UserId] AND SU.[OrganizationId] = OU.[OrganizationId]
+LEFT JOIN
+    [dbo].[ProviderOrganization] PO ON PO.[OrganizationId] = O.[Id]
+LEFT JOIN
+    [dbo].[Provider] P ON P.[Id] = PO.[ProviderId]
+LEFT JOIN
+    [dbo].[SsoConfig] SS ON SS.[OrganizationId] = OU.[OrganizationId]
+LEFT JOIN
+    [dbo].[OrganizationSponsorship] OS ON OS.[SponsoringOrganizationUserID] = OU.[Id]
+GO
+
+IF OBJECT_ID('[dbo].[ProviderUserProviderOrganizationDetailsView]') IS NOT NULL
+BEGIN
+DROP VIEW [dbo].[ProviderUserProviderOrganizationDetailsView]
+END
+GO
+CREATE VIEW [dbo].[ProviderUserProviderOrganizationDetailsView]
+AS
+SELECT
+    PU.[UserId],
+    PO.[OrganizationId],
+    O.[Name],
+    O.[Enabled],
+    O.[UsePolicies],
+    O.[UseSso],
+    O.[UseKeyConnector],
+    O.[UseScim],
+    O.[UseGroups],
+    O.[UseDirectory],
+    O.[UseEvents],
+    O.[UseTotp],
+    O.[Use2fa],
+    O.[UseApi],
+    O.[UseResetPassword],
+    O.[SelfHost],
+    O.[UsersGetPremium],
+    O.[UseCustomPermissions],
+    O.[Seats],
+    O.[MaxCollections],
+    O.[MaxStorageGb],
+    O.[Identifier],
+    PO.[Key],
+    O.[PublicKey],
+    O.[PrivateKey],
+    PU.[Status],
+    PU.[Type],
+    PO.[ProviderId],
+    PU.[Id] ProviderUserId,
+    P.[Name] ProviderName,
+    O.[PlanType],
+    O.[Skip2faForSso]
+FROM
+    [dbo].[ProviderUser] PU
+INNER JOIN
+    [dbo].[ProviderOrganization] PO ON PO.[ProviderId] = PU.[ProviderId]
+INNER JOIN
+    [dbo].[Organization] O ON O.[Id] = PO.[OrganizationId]
+INNER JOIN
+    [dbo].[Provider] P ON P.[Id] = PU.[ProviderId]
 GO

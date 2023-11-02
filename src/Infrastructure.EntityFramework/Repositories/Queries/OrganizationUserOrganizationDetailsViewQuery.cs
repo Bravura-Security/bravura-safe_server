@@ -65,7 +65,7 @@ public class OrganizationUserOrganizationDetailsViewQuery : IQuery<OrganizationU
                         UsePasswordManager = o.UsePasswordManager,
                         SmSeats = o.SmSeats,
                         SmServiceAccounts = o.SmServiceAccounts,
-                        Skip2faForSso = o.Skip2faForSso,
+                        Skip2faForSso = o.Skip2faForSso
                     };
         return query;
     }
