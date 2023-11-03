@@ -1189,32 +1189,14 @@ public class OrganizationService : IOrganizationService
         var org = await _organizationRepository.GetByIdAsync(organizationId);
         if (org == null)
         {
-            throw new BadRequestException("Organization invalid.");
+            throw new BadRequestException("Team invalid.");
         }
 
         var usersOrgs = await _organizationUserRepository.GetManyByUserAsync(user.Id);
         var orgUser = usersOrgs.FirstOrDefault(u => u.OrganizationId == org.Id);
         if (orgUser == null)
         {
-            throw new BadRequestException("User not found within organization.");
-        }
-
-        return await AcceptUserAsync(orgUser, user, userService);
-    }
-
-    public async Task<OrganizationUser> AcceptUserAsync(Guid organizationId, User user, IUserService userService)
-    {
-        var org = await _organizationRepository.GetByIdAsync(organizationId);
-        if (org == null)
-        {
-            throw new BadRequestException("Organization invalid.");
-        }
-
-        var usersOrgs = await _organizationUserRepository.GetManyByUserAsync(user.Id);
-        var orgUser = usersOrgs.FirstOrDefault(u => u.OrganizationId == org.Id);
-        if (orgUser == null)
-        {
-            throw new BadRequestException("User not found within organization.");
+            throw new BadRequestException("User not found within team.");
         }
 
         return await AcceptUserAsync(orgUser, user, userService);
