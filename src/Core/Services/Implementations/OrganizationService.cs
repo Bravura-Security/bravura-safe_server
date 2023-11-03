@@ -167,18 +167,6 @@ public class OrganizationService : IOrganizationService
             new ReferenceEvent(ReferenceEventType.ReinstateSubscription, organization, _currentContext));
     }
 
-        if (!newPlan.HasSkip2faForSso && organization.Skip2faForSso)
-        {
-            var skip2faForSsoPolicy =
-                await _policyRepository.GetByOrganizationIdTypeAsync(organization.Id, PolicyType.Skip2faForSso);
-            if (skip2faForSsoPolicy != null && skip2faForSsoPolicy.Enabled)
-            {
-                throw new BadRequestException("Your new plan does not allow the Skip2faForSso feature. " +
-                    "Disable your skip2faForSsoPolicy policy.");
-            }
-        }
-
-        organization.Skip2faForSso = newPlan.HasSkip2faForSso;
     public async Task<string> AdjustStorageAsync(Guid organizationId, short storageAdjustmentGb)
     {
         var organization = await GetOrgById(organizationId);

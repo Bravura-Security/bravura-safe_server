@@ -186,6 +186,17 @@ public class UpgradeOrganizationPlanCommand : IUpgradeOrganizationPlanCommand
             }
         }
 
+        if (!newPasswordManagerPlan.HasSkip2faForSso && organization.Skip2faForSso)
+        {
+            var skip2faForSsoPolicy =
+                await _policyRepository.GetByOrganizationIdTypeAsync(organization.Id, PolicyType.Skip2faForSso);
+            if (skip2faForSsoPolicy != null && skip2faForSsoPolicy.Enabled)
+            {
+                throw new BadRequestException("Your new plan does not allow the Skip2faForSso feature. " +
+                    "Disable your skip2faForSsoPolicy policy.");
+            }
+        }
+
         if (!newPasswordManagerPlan.HasScim && organization.UseScim)
         {
             var scimConnections = await _organizationConnectionRepository.GetByOrganizationIdTypeAsync(organization.Id,
@@ -268,6 +279,7 @@ public class UpgradeOrganizationPlanCommand : IUpgradeOrganizationPlanCommand
         organization.PrivateKey = upgrade.PrivateKey;
         organization.UsePasswordManager = true;
         organization.UseSecretsManager = upgrade.UseSecretsManager;
+        organization.Skip2faForSso = newPasswordManagerPlan.HasSkip2faForSso;
 
         if (upgrade.UseSecretsManager)
         {
