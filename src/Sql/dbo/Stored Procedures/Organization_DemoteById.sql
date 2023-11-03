@@ -14,6 +14,7 @@ BEGIN
         [Use2fa] = 0,
         [UseSso] = 0,
         [UseResetPassword] = 0,
+        [Skip2faForSso] = 0,
         [RevisionDate] = GETUTCDATE()
     WHERE
         [Id] = @Id

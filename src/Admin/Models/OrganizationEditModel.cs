@@ -70,6 +70,7 @@ public class OrganizationEditModel : OrganizationViewModel
         SmServiceAccounts = org.SmServiceAccounts;
         MaxAutoscaleSmServiceAccounts = org.MaxAutoscaleSmServiceAccounts;
         SecretsManagerBeta = org.SecretsManagerBeta;
+        Skip2faForSso = org.Skip2faForSso;
     }
 
     public BillingInfo BillingInfo { get; set; }
@@ -151,6 +152,8 @@ public class OrganizationEditModel : OrganizationViewModel
     public int? MaxAutoscaleSmServiceAccounts { get; set; }
     [Display(Name = "Secrets Manager Beta")]
     public bool SecretsManagerBeta { get; set; }
+    [Display(Name = "Skip Internal Two Factor for SSO Login")]
+    public bool Skip2faForSso { get; set; }
 
     /**
      * Creates a Plan[] object for use in Javascript
@@ -209,6 +212,7 @@ public class OrganizationEditModel : OrganizationViewModel
         existingOrganization.SmServiceAccounts = SmServiceAccounts;
         existingOrganization.MaxAutoscaleSmServiceAccounts = MaxAutoscaleSmServiceAccounts;
         existingOrganization.SecretsManagerBeta = SecretsManagerBeta;
+        existingOrganization.Skip2faForSso = Skip2faForSso;
         return existingOrganization;
     }
 }

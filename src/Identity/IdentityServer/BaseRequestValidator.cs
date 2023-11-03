@@ -343,8 +343,13 @@ public abstract class BaseRequestValidator<T> where T : class
                     o => orgs.Any(om => om.Id == o.Id) && o.TwoFactorIsEnabled());
             }
         }
+        bool twoFactorRequired = individualRequired || firstEnabledOrg != null;
+        if (request.GrantType == "authorization_code" && firstEnabledOrg != null && firstEnabledOrg.Skip2faForSso)
+        {
+            twoFactorRequired = false;
+        }
 
-        return new Tuple<bool, Organization>(individualRequired || firstEnabledOrg != null, firstEnabledOrg);
+        return new Tuple<bool, Organization>(twoFactorRequired, firstEnabledOrg);
     }
 
     private async Task<bool> IsValidAuthTypeAsync(User user, string grantType)

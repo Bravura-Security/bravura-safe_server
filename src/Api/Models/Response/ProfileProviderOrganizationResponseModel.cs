@@ -42,5 +42,6 @@ public class ProfileProviderOrganizationResponseModel : ProfileOrganizationRespo
         ProviderId = organization.ProviderId;
         ProviderName = organization.ProviderName;
         PlanProductType = StaticStore.GetPasswordManagerPlan(organization.PlanType).Product;
+        Skip2faForSso = organization.Skip2faForSso;
     }
 }
