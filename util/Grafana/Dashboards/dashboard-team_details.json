@@ -1,0 +1,549 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Team specific information, statistics, and events",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 3,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": false,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Jump To",
+      "tooltip": "",
+      "type": "dashboards",
+      "url": ""
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "PAAAEB8D7872B0C49"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 20,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.1.2",
+      "targets": [
+        {
+          "dataset": "vaultDev",
+          "datasource": {
+            "type": "mssql",
+            "uid": "PAAAEB8D7872B0C49"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \r\n  \"Name\", \r\n  CreationDate, \r\n  (SELECT COUNT(*) FROM Cipher WHERE Cipher.OrganizationId = OrganizationView.Id) \"secrets\", \r\n  (SELECT COUNT(*) FROM OrganizationUser WHERE OrganizationUser.OrganizationId = OrganizationView.Id) \"members\", \r\n  (SELECT COUNT(*) FROM \"Collection\" WHERE \"Collection\".OrganizationId = OrganizationView.Id) \"collections\",\r\n  RevisionDate \r\nFROM OrganizationView\r\nWHERE \"Name\" = '$OrganizationName';",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [
+                  {
+                    "name": "Name",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "CreationDate",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "RevisionDate",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "dbo.OrganizationView"
+        }
+      ],
+      "title": "Team Statistics",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "PAAAEB8D7872B0C49"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 20,
+        "x": 0,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "dataset": "vaultDev",
+          "datasource": {
+            "type": "mssql",
+            "uid": "PAAAEB8D7872B0C49"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT CAST( EventView.Date AS DATE) AS \"time\", EventType.event \"Event\", COUNT(*)\r\nFROM EventView \r\nJOIN OrganizationView ON OrganizationView.Id = EventView.OrganizationId\r\nJOIN metadata.EventType ON EventView.Type = EventType.code \r\nWHERE OrganizationView.Name = '$OrganizationName'\r\nGROUP BY CAST( EventView.Date AS DATE), \"Event\"\r\nORDER BY CAST( EventView.Date AS DATE) ASC\r\n;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "dataset": "vaultDev",
+          "datasource": {
+            "type": "mssql",
+            "uid": "PAAAEB8D7872B0C49"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT CAST( EventView.Date AS DATE) AS \"time\", COUNT(*) \"Total Number of Events\"\r\nFROM EventView \r\nJOIN OrganizationView ON OrganizationView.Id = EventView.OrganizationId\r\nWHERE OrganizationView.Name = '$OrganizationName'\r\nGROUP BY CAST( EventView.Date AS DATE)\r\nORDER BY CAST( EventView.Date AS DATE) ASC\r\n;\r\n",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "General Team Activity",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "PAAAEB8D7872B0C49"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 16,
+        "w": 10,
+        "x": 0,
+        "y": 12
+      },
+      "id": 1,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "User Name"
+          }
+        ]
+      },
+      "pluginVersion": "10.1.2",
+      "targets": [
+        {
+          "dataset": "vaultDev",
+          "datasource": {
+            "type": "mssql",
+            "uid": "PAAAEB8D7872B0C49"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT UserView.Name \"User Name\", UserView.Email, OrganizationUserType.type \"Role\", UserView.\"CreationDate\" AS \"Join Date\"\r\nFROM dbo.OrganizationView\r\nJOIN dbo.OrganizationUser ON OrganizationView.Id = OrganizationUser.OrganizationId\r\nJOIN dbo.UserView ON OrganizationUser.UserId = UserView.Id\r\nJOIN metadata.OrganizationUserType ON OrganizationUserType.code = OrganizationUser.type\r\nWHERE OrganizationView.\"Name\" = '$OrganizationName' AND UserView.Name IN ($UserName)\r\nORDER BY UserView.Name ASC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "dbo.OrganizationUserView"
+        }
+      ],
+      "title": "Team Membership",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "PAAAEB8D7872B0C49"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 16,
+        "w": 10,
+        "x": 10,
+        "y": 12
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.1.2",
+      "targets": [
+        {
+          "dataset": "vaultDev",
+          "datasource": {
+            "type": "mssql",
+            "uid": "PAAAEB8D7872B0C49"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT EventView.Date, UserView.Name, EventType.event, EventView.DeviceType\r\nFROM EventView \r\nJOIN OrganizationView ON OrganizationView.Id = EventView.OrganizationId\r\nJOIN UserView ON UserView.Id = EventView.ActingUserId\r\nJOIN metadata.EventType ON EventView.Type = EventType.code \r\nWHERE OrganizationView.Name = '$OrganizationName' AND UserView.Name IN ($UserName)\r\nORDER BY \"Date\" DESC\r\n;\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Team Members Event Log",
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "Teams"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "Agile Transformation",
+          "value": "Agile Transformation"
+        },
+        "datasource": {
+          "type": "mssql",
+          "uid": "PAAAEB8D7872B0C49"
+        },
+        "definition": "SELECT \"Name\" FROM dbo.OrganizationView",
+        "description": "",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Team selection",
+        "multi": false,
+        "name": "OrganizationName",
+        "options": [],
+        "query": "SELECT \"Name\" FROM dbo.OrganizationView",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 5,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "mssql",
+          "uid": "PAAAEB8D7872B0C49"
+        },
+        "definition": "SELECT UserView.Name \nFROM OrganizationUserView\nJOIN OrganizationView ON OrganizationUserView.OrganizationId = OrganizationView.Id\nJOIN UserView ON OrganizationUserView.UserId = UserView.Id\nWHERE OrganizationView.\"Name\" = '$OrganizationName';",
+        "hide": 0,
+        "includeAll": true,
+        "label": "User selection",
+        "multi": true,
+        "name": "UserName",
+        "options": [],
+        "query": "SELECT UserView.Name \nFROM OrganizationUserView\nJOIN OrganizationView ON OrganizationUserView.OrganizationId = OrganizationView.Id\nJOIN UserView ON OrganizationUserView.UserId = UserView.Id\nWHERE OrganizationView.\"Name\" = '$OrganizationName';",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Team Details",
+  "uid": "b248fa20-5a03-4273-9b96-884a8317e970",
+  "version": 26,
+  "weekStart": ""
+}
