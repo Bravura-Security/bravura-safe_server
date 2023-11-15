@@ -77,7 +77,8 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "10.1.2",
       "targets": [
@@ -162,7 +163,8 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "10.1.2",
       "targets": [
@@ -230,7 +232,7 @@
             {
               "targetBlank": true,
               "title": "Team Details - Drilldown into ${__data.fields[0]}",
-              "url": "https://bsi-earlm/grafana/d/b248fa20-5a03-4273-9b96-884a8317e970/team-details?orgId=1&var-OrganizationName=${__data.fields[0]}"
+              "url": "$baseServiceUri/grafana/d/b248fa20-5a03-4273-9b96-884a8317e970/team-details?orgId=1&var-OrganizationName=${__data.fields[0]}"
             }
           ],
           "mappings": [],
@@ -265,6 +267,7 @@
         "displayMode": "lcd",
         "minVizHeight": 10,
         "minVizWidth": 0,
+        "namePlacement": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -342,7 +345,7 @@
             {
               "targetBlank": true,
               "title": "Team Details - Drilldown into ${__data.fields[0]}",
-              "url": "https://bsi-earlm/grafana/d/b248fa20-5a03-4273-9b96-884a8317e970/team-details?orgId=1&var-OrganizationName=${__data.fields[0]}"
+              "url": "$baseServiceUri/grafana/d/b248fa20-5a03-4273-9b96-884a8317e970/team-details?orgId=1&var-OrganizationName=${__data.fields[0]}"
             }
           ],
           "mappings": [],
@@ -377,6 +380,7 @@
         "displayMode": "lcd",
         "minVizHeight": 10,
         "minVizWidth": 0,
+        "namePlacement": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -462,7 +466,7 @@
             {
               "targetBlank": true,
               "title": "Team Details - Drilldown into ${__data.fields[0]}",
-              "url": "https://bsi-earlm/grafana/d/b248fa20-5a03-4273-9b96-884a8317e970/team-details?orgId=1&var-OrganizationName=${__data.fields[0]}"
+              "url": "$baseServiceUri/grafana/d/b248fa20-5a03-4273-9b96-884a8317e970/team-details?orgId=1&var-OrganizationName=${__data.fields[0]}"
             }
           ],
           "mappings": [],
@@ -492,7 +496,7 @@
       "links": [
         {
           "title": "",
-          "url": "https://bsi-earlm/grafana/d/b248fa20-5a03-4273-9b96-884a8317e970"
+          "url": "$baseServiceUri/grafana/d/b248fa20-5a03-4273-9b96-884a8317e970"
         }
       ],
       "options": {
@@ -574,7 +578,15 @@
     "Teams"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "hide": 2,
+        "name": "baseServiceUri",
+        "query": "https://192.168.1.196",
+        "skipUrlSync": false,
+        "type": "constant"
+      }
+    ]
   },
   "time": {
     "from": "now-6h",
