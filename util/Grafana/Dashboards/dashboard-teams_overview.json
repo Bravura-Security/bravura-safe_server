@@ -89,7 +89,7 @@
           },
           "editorMode": "builder",
           "format": "table",
-          "rawSql": "SELECT TOP(50) COUNT(*) FROM vaultDev.dbo.OrganizationView ",
+          "rawSql": "SELECT TOP(50) COUNT(*) FROM dbo.OrganizationView ",
           "refId": "A",
           "sql": {
             "columns": [
@@ -175,7 +175,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT AVG(\"count\")\r\nFROM (\r\n  SELECT OrganizationId, COUNT(*) \"count\" FROM vaultDev.dbo.OrganizationUserView GROUP BY OrganizationId \r\n  ) \"data\"",
+          "rawSql": "SELECT AVG(\"count\")\r\nFROM (\r\n  SELECT OrganizationId, COUNT(*) \"count\" FROM dbo.OrganizationUserView GROUP BY OrganizationId \r\n  ) \"data\"",
           "refId": "A",
           "sql": {
             "columns": [
@@ -287,7 +287,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "  SELECT TOP(10) Organization.Name , COUNT(*) \"count\"\r\n  FROM vaultDev.dbo.Cipher \r\n  JOIN Organization ON Organization.Id = OrganizationId\r\n  WHERE OrganizationId IS NOT NULL \r\n  GROUP BY Organization.Name \r\n  ORDER BY COUNT(*) DESC\r\n",
+          "rawSql": "  SELECT TOP(10) Organization.Name , COUNT(*) \"count\"\r\n  FROM dbo.Cipher \r\n  JOIN Organization ON Organization.Id = OrganizationId\r\n  WHERE OrganizationId IS NOT NULL \r\n  GROUP BY Organization.Name \r\n  ORDER BY COUNT(*) DESC\r\n",
           "refId": "A",
           "sql": {
             "columns": [
@@ -400,7 +400,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "  SELECT TOP(50) Organization.Name , COUNT(*) \"count\"\r\n  FROM vaultDev.dbo.OrganizationUserView \r\n  JOIN Organization ON Organization.Id = OrganizationId\r\n  WHERE OrganizationId IS NOT NULL \r\n  GROUP BY Organization.Name \r\n  ORDER BY COUNT(*) DESC",
+          "rawSql": "  SELECT TOP(50) Organization.Name , COUNT(*) \"count\"\r\n  FROM dbo.OrganizationUserView \r\n  JOIN Organization ON Organization.Id = OrganizationId\r\n  WHERE OrganizationId IS NOT NULL \r\n  GROUP BY Organization.Name \r\n  ORDER BY COUNT(*) DESC",
           "refId": "A",
           "sql": {
             "columns": [

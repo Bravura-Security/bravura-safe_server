@@ -49,7 +49,7 @@ RUN set -eux; \
 
 
 # COPY custom.ini /etc/grafana/custom.ini
-ENV GF_INSTALL_PLUGINS="grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel"
+ENV GF_INSTALL_PLUGINS="grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel"
 ENV GF_SERVER_SERVE_FROM_SUB_PATH=true
 ENV GF_SERVER_ROOT_URL="%(protocol)s://%(domain)s/grafana"
 
@@ -85,7 +85,8 @@ RUN find /usr/share/grafana/public/build/ -name *.js -exec sed -i 's|\[{target:"
 #RUN find /usr/share/grafana/public/build/ -name *.js -exec sed -i 's|({target:"_blank",id:"version",.*CHANGELOG.md":void 0})|()|g' {} \;
 
 ## Remove New Version is available in the Footer
-RUN find /usr/share/grafana/public/build/ -name *.js -exec sed -i 's|({target:"_blank",id:"updateVersion",.*grafana_footer"})|()|g' {} \;
+## this next line will cause crash on grafana 10.2.x do not uncomment
+##RUN find /usr/share/grafana/public/build/ -name *.js -exec sed -i 's|({target:"_blank",id:"updateVersion",.*grafana_footer"})|()|g' {} \;
 
 ## Remove News icon
 RUN find /usr/share/grafana/public/build/ -name *.js -exec sed -i 's|..createElement(....,{className:.,onClick:.,iconOnly:!0,icon:"rss","aria-label":"News"})|null|g' {} \;
@@ -98,6 +99,8 @@ RUN chmod +x /entrypoint.sh
 # Expose the Grafana port
 EXPOSE 3000
 EXPOSE 3001
+
+HEALTHCHECK --interval=1m --timeout=10s CMD wget --no-verbose --tries=3 --spider http://localhost:3000/api/health || exit 1
 
 ENTRYPOINT ["sh", "/entrypoint.sh"]
 
