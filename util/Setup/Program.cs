@@ -188,10 +188,10 @@ public class Program
             "globalSettings__sqlServer__connectionString");
 
         var grafanaDBUser = Helpers.GetValueFromEnvFile("grafana",
-            "GRAFANA_DB_USER");
+            "globalSettings__grafana__dBUser");
 
         var grafanaDBUserPwd = Helpers.GetValueFromEnvFile("grafana",
-            "GRAFANA_DB_PASSWORD");
+            "globalSettings__grafana__dBUserPassword");
         var migrator = new DbMigrator(vaultConnectionString, null);
         migrator.GrafanaDBUser = grafanaDBUser;
         migrator.GrafanaDBUserPWD = grafanaDBUserPwd;
