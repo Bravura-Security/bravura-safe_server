@@ -54,6 +54,7 @@ public class DockerComposeBuilder
             HttpsPort = context.Config.HttpsPort;
             UseCustomMaildev = context.Config.UseCustomMaildev;
             MaildevWebUserPassword = context.Config.MaildevWebUserPassword;
+            UseGrafanaDocker = context.Config.UseGrafanaDocker;
 
             if (!string.IsNullOrWhiteSpace(context.CoreVersion))
             {
@@ -82,5 +83,6 @@ public class DockerComposeBuilder
         public string KeyConnectorVersion { get; set; } = "latest";
         public bool UseCustomMaildev { get; set; }
         public bool MaildevWebUserPassword { get; set; }
+        public bool UseGrafanaDocker { get; set; }
     }
 }
