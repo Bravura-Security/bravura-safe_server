@@ -117,6 +117,7 @@ public class EnvironmentFileBuilder
             //["GF_SERVER_ROOT_URL"] = "\"%(protocol)s://%(domain)s/grafana\"",
             ["BSAFE_DB_URL"] = grafanaDBSrc,
             ["BSAFE_DB_NAME"] = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog //,
+            ["GF_SECURITY_ADMIN_PASSWORD"] = dbGrafanaDBUserPassword+"1234" //set base same password as DB user for testing only
             //["GRAFANA_DB_USER"] = "${globalSettings__grafana__dBUser}",
             //["GRAFANA_DB_PASSWORD"] = "${globalSettings__grafana__dBUserPassword}"
         };
