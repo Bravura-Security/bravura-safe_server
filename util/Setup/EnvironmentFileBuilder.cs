@@ -67,6 +67,7 @@ public class EnvironmentFileBuilder
 
         var dbGrafanaDBUser = "";
         var dbGrafanaDBUserPassword = "";
+        var grafanaDefaultAdminPassword = "";
 
         if (forInstall)
         {
@@ -106,6 +107,10 @@ public class EnvironmentFileBuilder
             if (string.IsNullOrEmpty(dbGrafanaDBUserPassword))
                 dbGrafanaDBUserPassword = "0P@ssWord!!!";
 
+            grafanaDefaultAdminPassword = Helpers.ReadInput("Enter your grafana default admin password (GF_SECURITY_ADMIN_PASSWORD) defaults to [0P@ssWord1234!!!]");
+            if (string.IsNullOrEmpty(grafanaDefaultAdminPassword))
+                grafanaDefaultAdminPassword = "0P@ssWord1234!!!";
+
         }
         var grafanaDBSrc = string.IsNullOrEmpty(dbSource) ? "tcp:mssql,1433" : dbSource;
         grafanaDBSrc = grafanaDBSrc.Replace("tcp:", "");
@@ -116,8 +121,8 @@ public class EnvironmentFileBuilder
             //["GF_SERVER_SERVE_FROM_SUB_PATH"] = "true",
             //["GF_SERVER_ROOT_URL"] = "\"%(protocol)s://%(domain)s/grafana\"",
             ["BSAFE_DB_URL"] = grafanaDBSrc,
-            ["BSAFE_DB_NAME"] = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog //,
-            ["GF_SECURITY_ADMIN_PASSWORD"] = dbGrafanaDBUserPassword+"1234" //set base same password as DB user for testing only
+            ["BSAFE_DB_NAME"] = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog,
+            ["GF_SECURITY_ADMIN_PASSWORD"] = grafanaDefaultAdminPassword
             //["GRAFANA_DB_USER"] = "${globalSettings__grafana__dBUser}",
             //["GRAFANA_DB_PASSWORD"] = "${globalSettings__grafana__dBUserPassword}"
         };
