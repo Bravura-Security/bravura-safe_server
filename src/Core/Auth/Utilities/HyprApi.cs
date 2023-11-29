@@ -90,6 +90,10 @@ namespace Bit.Core.Auth.Utilities.Hypr
                 {
                     return (res,JsonSerializer.Deserialize<T>(responseBody));
                 }
+                else if (res.StatusCode == HttpStatusCode.Unauthorized && string.IsNullOrEmpty(responseBody))
+                {
+                    return (res, JsonSerializer.Deserialize<HyprErrorResponseJson>("{}"));
+                }
                 return (res,JsonSerializer.Deserialize<HyprErrorResponseJson>(responseBody));
             }
             catch (Exception e)
