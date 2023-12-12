@@ -110,6 +110,9 @@ public class Configuration
     [Description("Maildev: require/use HTTP username and password for GUI")]
     public bool MaildevWebUserPassword { get; set; } = false;
 
+    [Description("Use the grafana container for visualizations pulling latest from docker hub.")]
+    public bool UseGrafanaDocker { get; set; } = true;
+
     [YamlIgnore]
     public string Domain
     {

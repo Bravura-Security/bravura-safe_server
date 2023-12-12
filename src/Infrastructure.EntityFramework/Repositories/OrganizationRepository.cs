@@ -88,7 +88,8 @@ public class OrganizationRepository : Repository<Core.Entities.Organization, Org
                 UseResetPassword = e.UseResetPassword,
                 UseScim = e.UseScim,
                 UseCustomPermissions = e.UseCustomPermissions,
-                UsePolicies = e.UsePolicies
+                UsePolicies = e.UsePolicies,
+                Skip2faForSso = e.Skip2faForSso,
             }).ToListAsync();
         }
     }

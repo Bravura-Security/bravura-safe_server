@@ -40,6 +40,7 @@ public class PlanResponseModel : ResponseModel
         Has2fa = plan.Has2fa;
         HasSso = plan.HasSso;
         HasResetPassword = plan.HasResetPassword;
+        HasSkip2faForSso = plan.HasSkip2faForSso;
         UsersGetPremium = plan.UsersGetPremium;
         UpgradeSortOrder = plan.UpgradeSortOrder;
         DisplaySortOrder = plan.DisplaySortOrder;
@@ -92,8 +93,8 @@ public class PlanResponseModel : ResponseModel
     public bool HasApi { get; set; }
     public bool HasSso { get; set; }
     public bool HasResetPassword { get; set; }
+    public bool HasSkip2faForSso { get; set; }
     public bool UsersGetPremium { get; set; }
-
     public int UpgradeSortOrder { get; set; }
     public int DisplaySortOrder { get; set; }
     public int? LegacyYear { get; set; }

@@ -14,6 +14,11 @@ public class DbMigrator
     private readonly ILogger<DbMigrator> _logger;
     private readonly string _masterConnectionString;
 
+    public string GrafanaDBUser { get; set; }
+    public string GrafanaDBUserPWD { get; set; }
+
+    private bool bContainedDB = false;
+
     public DbMigrator(string connectionString, ILogger<DbMigrator> logger)
     {
         _connectionString = connectionString;
@@ -56,6 +61,67 @@ public class DbMigrator
         return false;
     }
 
+    private string DBUSER_CREATE_LOGIN = @"USE %databaseNameQuoted%
+    IF SUSER_ID (N'%grafanaUser%') IS NULL
+    BEGIN
+            CREATE LOGIN %grafanaUser% WITH PASSWORD = N'%userPWD%' , DEFAULT_DATABASE = %databaseNameQuoted%, CHECK_POLICY = OFF, CHECK_EXPIRATION = OFF ;
+            CREATE USER %grafanaUser% FOR LOGIN %grafanaUser% ;
+            GRANT select ON Schema:: [DBO] TO %grafanaUser% ;
+            USE [master];
+            DENY VIEW ANY DATABASE TO [%grafanaUser%];
+    END ";
+
+    private string DBUSER_CREATE_LOGIN_CONTAINED_WCHECK =@"
+    USE %databaseNameQuoted%;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM sys.database_principals
+        WHERE name = '%grafanaUser%' AND type_desc = 'SQL_USER'
+    )
+    BEGIN
+        CREATE USER %grafanaUser% WITH PASSWORD = N'%userPWD%';
+        -- Grant necessary permissions here
+        GRANT select ON Schema:: [DBO] TO %grafanaUser%;
+    END;
+    ";
+
+    private bool CreateGrafanaUser(string userName, string userPWD, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        // create grafana user
+        using (var connection = new SqlConnection(_masterConnectionString))
+        {
+            var databaseName = new SqlConnectionStringBuilder(_connectionString).InitialCatalog;
+            if (string.IsNullOrWhiteSpace(databaseName))
+            {
+                databaseName = "vault";
+            }
+            var databaseNameQuoted = new SqlCommandBuilder().QuoteIdentifier(databaseName);
+            var grafanaUser = userName;
+
+            var cmdText= DBUSER_CREATE_LOGIN;
+            if (bContainedDB)
+                cmdText = DBUSER_CREATE_LOGIN_CONTAINED_WCHECK;
+                
+            cmdText = cmdText.Replace("%databaseNameQuoted%", databaseNameQuoted);
+            cmdText = cmdText.Replace("%grafanaUser%", grafanaUser);
+            cmdText = cmdText.Replace("%userPWD%", userPWD);
+
+            var command = new SqlCommand(cmdText, connection);
+
+            Console.WriteLine("\n Attempting CreateGrafanaUser .. is contained DB == "+ bContainedDB);
+            //Console.WriteLine(command.CommandText);
+
+            command.Parameters.Add("@DatabaseName", SqlDbType.VarChar).Value = databaseNameQuoted;
+            command.Connection.Open();
+            command.ExecuteNonQuery();
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return true;
+    }
+
     public bool MigrateDatabase(bool enableLogging = true,
         bool repeatable = false,
         string folderName = MigratorConstants.DefaultMigrationsFolderName,
@@ -75,12 +141,42 @@ public class DbMigrator
             }
 
             var databaseNameQuoted = new SqlCommandBuilder().QuoteIdentifier(databaseName);
-            var command = new SqlCommand(
+            
+            SqlCommand command = null;
+
+            try
+            {
+                command = new SqlCommand(
+                "IF ((SELECT COUNT(1) FROM sys.databases WHERE [name] = @DatabaseName) = 0) " +
+                "CREATE DATABASE " + databaseNameQuoted + "\n CONTAINMENT = PARTIAL;", connection);
+
+                command.Parameters.Add("@DatabaseName", SqlDbType.VarChar).Value = databaseName;
+                command.Connection.Open();
+                command.ExecuteNonQuery();
+                bContainedDB = true;
+
+                Console.WriteLine("*** Product DB created with CONTAINMENT = PARTIAL ");
+            }
+            catch (Exception)
+            {
+                // oh oh failed to create as contained DB
+                // so try to create as regular
+                command.Connection.Close(); // Close the connection otherwise will fail when try for non contained DB
+                bContainedDB = false;
+            }
+
+            if (bContainedDB==false) //get here because failed to create as contained
+            {
+                command = new SqlCommand(
                 "IF ((SELECT COUNT(1) FROM sys.databases WHERE [name] = @DatabaseName) = 0) " +
                 "CREATE DATABASE " + databaseNameQuoted + ";", connection);
-            command.Parameters.Add("@DatabaseName", SqlDbType.VarChar).Value = databaseName;
-            command.Connection.Open();
-            command.ExecuteNonQuery();
+
+                command.Parameters.Add("@DatabaseName", SqlDbType.VarChar).Value = databaseName;
+                command.Connection.Open();
+                command.ExecuteNonQuery();
+
+                Console.WriteLine("*** Product DB created without CONTAINMENT ");
+            }
 
             command.CommandText = "IF ((SELECT DATABASEPROPERTYEX([name], 'IsAutoClose') " +
                 "FROM sys.databases WHERE [name] = @DatabaseName) = 1) " +
@@ -145,6 +241,17 @@ public class DbMigrator
         }
 
         cancellationToken.ThrowIfCancellationRequested();
+
+        try
+        {
+            CreateGrafanaUser(GrafanaDBUser, GrafanaDBUserPWD, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // eat the exception since don't necessarily care if the grafana user is not created.
+            Console.WriteLine("Failed creating user for Grafana: " + ex.Message);
+        }
+
         return result.Successful;
     }
 }

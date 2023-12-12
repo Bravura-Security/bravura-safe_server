@@ -31,7 +31,8 @@ SELECT
     PO.[ProviderId],
     PU.[Id] ProviderUserId,
     P.[Name] ProviderName,
-    O.[PlanType]
+    O.[PlanType],
+    O.[Skip2faForSso]
 FROM
     [dbo].[ProviderUser] PU
 INNER JOIN

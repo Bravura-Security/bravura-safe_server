@@ -21,6 +21,7 @@ public class OrganizationAbility
         UseResetPassword = organization.UseResetPassword;
         UseCustomPermissions = organization.UseCustomPermissions;
         UsePolicies = organization.UsePolicies;
+        Skip2faForSso = organization.Skip2faForSso;
     }
 
     public Guid Id { get; set; }
@@ -34,5 +35,6 @@ public class OrganizationAbility
     public bool UseScim { get; set; }
     public bool UseResetPassword { get; set; }
     public bool UseCustomPermissions { get; set; }
+    public bool Skip2faForSso { get; set; }
     public bool UsePolicies { get; set; }
 }

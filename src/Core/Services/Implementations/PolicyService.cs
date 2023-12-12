@@ -283,6 +283,7 @@ public class PolicyService : IPolicyService
                 case PolicyType.SendOptions:
                 case PolicyType.ResetPassword:
                 case PolicyType.DisablePersonalVaultExport:
+                case PolicyType.Skip2faForSso:
                 default:
                     return false;
             }

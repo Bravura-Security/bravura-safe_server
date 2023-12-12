@@ -293,6 +293,14 @@ public class OrganizationsController : Controller
                 await _policyRepository.UpsertAsync(existingPolicyTwoFactorAuthentication);
             }
 
+            // Skip SSO
+            var existingPolicySkipSSO = await _policyRepository.GetByOrganizationIdTypeAsync(id, PolicyType.Skip2faForSso);
+            if (existingPolicySkipSSO != null)
+            {
+                existingPolicySkipSSO.Enabled = false;
+                await _policyRepository.UpsertAsync(existingPolicySkipSSO);
+            }
+
             await _organizationRepository.DemoteAsync(organization);
             organization = await _organizationRepository.GetByIdAsync(id);
             await _organizationRepository.ReplaceAsync(organization);
@@ -495,6 +503,7 @@ public class OrganizationsController : Controller
             organization.UsersGetPremium = model.UsersGetPremium;
             organization.UseSecretsManager = model.UseSecretsManager;
             organization.SecretsManagerBeta = model.SecretsManagerBeta;
+            organization.Skip2faForSso = model.Skip2faForSso;
 
             //secrets
             organization.SmSeats = model.SmSeats;

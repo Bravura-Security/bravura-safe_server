@@ -441,6 +441,7 @@ public class OrganizationService : IOrganizationService
             UseApi = passwordManagerPlan.HasApi,
             UseResetPassword = passwordManagerPlan.HasResetPassword,
             SelfHost = passwordManagerPlan.HasSelfHost,
+            Skip2faForSso = passwordManagerPlan.HasSkip2faForSso,
             UsersGetPremium = passwordManagerPlan.UsersGetPremium || signup.PremiumAccessAddon,
             UseCustomPermissions = passwordManagerPlan.HasCustomPermissions,
             UseScim = passwordManagerPlan.HasScim,

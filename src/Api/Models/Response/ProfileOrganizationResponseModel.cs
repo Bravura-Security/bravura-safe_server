@@ -58,6 +58,7 @@ public class ProfileOrganizationResponseModel : ResponseModel
         FamilySponsorshipToDelete = organization.FamilySponsorshipToDelete;
         FamilySponsorshipValidUntil = organization.FamilySponsorshipValidUntil;
         AccessSecretsManager = organization.AccessSecretsManager;
+        Skip2faForSso = organization.Skip2faForSso;
 
         if (organization.SsoConfig != null)
         {
@@ -112,4 +113,5 @@ public class ProfileOrganizationResponseModel : ResponseModel
     public DateTime? FamilySponsorshipValidUntil { get; set; }
     public bool? FamilySponsorshipToDelete { get; set; }
     public bool AccessSecretsManager { get; set; }
+    public bool Skip2faForSso { get; set; }
 }

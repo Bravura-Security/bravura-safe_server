@@ -13,6 +13,8 @@ public class EnvironmentFileBuilder
     private IDictionary<string, string> _keyConnectorOverrideValues;
     //private IDictionary<string, string> _awsSNSOverrideValues;
 
+    private IDictionary<string, string> _grafanaOverrideValues;
+
     public EnvironmentFileBuilder(Context context)
     {
         _context = context;
@@ -63,6 +65,10 @@ public class EnvironmentFileBuilder
         var dbPassword = "";
         var dbCatalog = "";
 
+        var dbGrafanaDBUser = "";
+        var dbGrafanaDBUserPassword = "";
+        var grafanaDefaultAdminPassword = "";
+
         if (forInstall)
         {
             dbSource = Helpers.ReadInput("Enter your Database Server name. Default will use a local mssql docker. [tcp:mssql,1433]");
@@ -93,9 +99,35 @@ public class EnvironmentFileBuilder
             if (mailDevPass.ToLower().StartsWith("y"))
                 _context.Config.MaildevWebUserPassword = true;
 
-        }
+            // for now always include grafana so don't bother to ask.
+            _context.Config.UseGrafanaDocker = true;
 
-        var dbConnectionString = new SqlConnectionStringBuilder
+            dbGrafanaDBUser = dbCatalog + "_grafana";
+            dbGrafanaDBUserPassword = Helpers.ReadInput("Enter your: " + dbGrafanaDBUser + " password otherwise default to [0P@ssWord!!!]");
+            if (string.IsNullOrEmpty(dbGrafanaDBUserPassword))
+                dbGrafanaDBUserPassword = "0P@ssWord!!!";
+
+            grafanaDefaultAdminPassword = Helpers.ReadInput("Enter your grafana default admin password (GF_SECURITY_ADMIN_PASSWORD) defaults to [0P@ssWord1234!!!]");
+            if (string.IsNullOrEmpty(grafanaDefaultAdminPassword))
+                grafanaDefaultAdminPassword = "0P@ssWord1234!!!";
+
+        }
+        var grafanaDBSrc = string.IsNullOrEmpty(dbSource) ? "tcp:mssql,1433" : dbSource;
+        grafanaDBSrc = grafanaDBSrc.Replace("tcp:", "");
+        grafanaDBSrc = grafanaDBSrc.Replace(",", ":");
+        _grafanaOverrideValues = new Dictionary<string, string>
+        {
+            //["GF_INSTALL_PLUGINS"] = "\"grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel\"",
+            //["GF_SERVER_SERVE_FROM_SUB_PATH"] = "true",
+            //["GF_SERVER_ROOT_URL"] = "\"%(protocol)s://%(domain)s/grafana\"",
+            ["BSAFE_DB_URL"] = grafanaDBSrc,
+            ["BSAFE_DB_NAME"] = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog,
+            ["GF_SECURITY_ADMIN_PASSWORD"] = grafanaDefaultAdminPassword
+            //["GRAFANA_DB_USER"] = "${globalSettings__grafana__dBUser}",
+            //["GRAFANA_DB_PASSWORD"] = "${globalSettings__grafana__dBUserPassword}"
+        };
+
+        SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
         {
             DataSource = string.IsNullOrEmpty(dbSource) ? "tcp:mssql,1433" : dbSource,
             InitialCatalog = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog,
@@ -106,7 +138,9 @@ public class EnvironmentFileBuilder
             ConnectTimeout = 30,
             TrustServerCertificate = true,
             PersistSecurityInfo = false
-        }.ConnectionString;
+        };
+
+        var dbConnectionString = builder.ConnectionString;
 
         _globalOverrideValues = new Dictionary<string, string>
         {
@@ -175,6 +209,12 @@ public class EnvironmentFileBuilder
             _globalOverrideValues.Add("globalSettings__amazon__sNSPlatformARNAndroid", "arn:aws:sns:us-east-1:1234567890:app/GCM/BravuraSafeAndroid_REPLACEWHOLELINE");
             _globalOverrideValues.Add("globalSettings__amazon__sNSPlatformARNIOS", "arn:aws:sns:us-east-1:1234567890:app/APNS/BravuraSafe_iOSREPLACEWHOLELINE");
             _globalOverrideValues.Add("globalSettings__amazon__sNSTopicARN", "arn:aws:sns:us-east-1:1234567890:BravuraSafeTestTope_ReplaceWholeLine");
+        }
+
+        //grafana settings
+        {
+            _globalOverrideValues.Add("globalSettings__grafana__dBUser", dbGrafanaDBUser);
+            _globalOverrideValues.Add("globalSettings__grafana__dBUserPassword", dbGrafanaDBUserPassword);
         }
 
     }
@@ -264,6 +304,12 @@ public class EnvironmentFileBuilder
         {
             using (var sw = File.CreateText("/bitwarden/env/uid.env")) { }
         }
+
+        using (var sw = File.CreateText("/bitwarden/env/grafana.override.env"))
+        {
+            sw.Write(template(new TemplateModel(_grafanaOverrideValues)));
+        }
+        Helpers.Exec("chmod 600 /bitwarden/env/grafana.override.env");
     }
 
     public class TemplateModel
