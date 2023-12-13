@@ -78,6 +78,8 @@ public class Organization : ITableObject<Guid>, ISubscriber, IStorable, IStorabl
     public int? SmServiceAccounts { get; set; }
     public int? MaxAutoscaleSmSeats { get; set; }
     public int? MaxAutoscaleSmServiceAccounts { get; set; }
+    public bool SecretsManagerBeta { get; set; }
+    public bool Skip2faForSso { get; set; }
 
     public void SetNewId()
     {
@@ -110,6 +112,11 @@ public class Organization : ITableObject<Guid>, ISubscriber, IStorable, IStorabl
     public string BraintreeIdField()
     {
         return "organization_id";
+    }
+
+    public string BraintreeCloudRegionField()
+    {
+        return "region";
     }
 
     public string GatewayIdField()
@@ -245,5 +252,6 @@ public class Organization : ITableObject<Guid>, ISubscriber, IStorable, IStorabl
         ExpirationDate = license.Expires;
         LicenseKey = license.LicenseKey;
         RevisionDate = DateTime.UtcNow;
+        Skip2faForSso = license.Skip2faForSso;
     }
 }

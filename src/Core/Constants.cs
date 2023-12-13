@@ -37,6 +37,7 @@ public static class FeatureFlagKeys
     public const string DisplayEuEnvironment = "display-eu-environment";
     public const string DisplayLowKdfIterationWarning = "display-kdf-iteration-warning";
     public const string TrustedDeviceEncryption = "trusted-device-encryption";
+    public const string SecretsManagerBilling = "sm-ga-billing";
 
     public static List<string> GetAllKeys()
     {
@@ -44,5 +45,14 @@ public static class FeatureFlagKeys
             .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.FieldType == typeof(string))
             .Select(x => (string)x.GetRawConstantValue())
             .ToList();
+    }
+
+    public static Dictionary<string, string> GetLocalOverrideFlagValues()
+    {
+        // place overriding values when needed locally (offline), or return null
+        return new Dictionary<string, string>()
+        {
+            { TrustedDeviceEncryption, "true" }
+        };
     }
 }

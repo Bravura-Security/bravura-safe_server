@@ -35,4 +35,5 @@ public class ProviderUserOrganizationDetails
     public Guid? ProviderUserId { get; set; }
     public string ProviderName { get; set; }
     public Enums.PlanType PlanType { get; set; }
+    public bool Skip2faForSso { get; set; }
 }

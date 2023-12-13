@@ -48,8 +48,10 @@
     @UsePasswordManager BIT = 1,
     @SmSeats INT = null,
     @SmServiceAccounts INT = null,
-    @MaxAutoscaleSmSeats INT= null,
-    @MaxAutoscaleSmServiceAccounts INT = null
+    @MaxAutoscaleSmSeats INT = null,
+    @MaxAutoscaleSmServiceAccounts INT = null,
+    @SecretsManagerBeta BIT = 0,
+    @Skip2faForSso BIT
 AS
 BEGIN
     SET NOCOUNT ON
@@ -106,7 +108,9 @@ BEGIN
         [SmSeats],
         [SmServiceAccounts],
         [MaxAutoscaleSmSeats],
-        [MaxAutoscaleSmServiceAccounts]
+        [MaxAutoscaleSmServiceAccounts],
+        [SecretsManagerBeta],
+        [Skip2faForSso]
     )
     VALUES
     (
@@ -160,6 +164,8 @@ BEGIN
         @SmSeats,
         @SmServiceAccounts,
         @MaxAutoscaleSmSeats,
-        @MaxAutoscaleSmServiceAccounts
+        @MaxAutoscaleSmServiceAccounts,
+        @SecretsManagerBeta,
+        @Skip2faForSso
     )
 END

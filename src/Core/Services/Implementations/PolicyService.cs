@@ -66,6 +66,7 @@ public class PolicyService : IPolicyService
                     await RequiredBySsoAsync(org);
                     await RequiredByVaultTimeoutAsync(org);
                     await RequiredByKeyConnectorAsync(org);
+                    await RequiredByAccountRecoveryAsync(org);
                 }
                 break;
 
@@ -73,6 +74,7 @@ public class PolicyService : IPolicyService
                 if (!policy.Enabled)
                 {
                     await RequiredByKeyConnectorAsync(org);
+                    await RequiredBySsoTrustedDeviceEncryptionAsync(org);
                 }
                 break;
 
@@ -80,6 +82,11 @@ public class PolicyService : IPolicyService
                 if (!policy.Enabled || policy.GetDataModel<ResetPasswordDataModel>()?.AutoEnrollEnabled == false)
                 {
                     await RequiredBySsoTrustedDeviceEncryptionAsync(org);
+                }
+
+                if (policy.Enabled)
+                {
+                    await DependsOnSingleOrgAsync(org);
                 }
                 break;
 
@@ -237,6 +244,15 @@ public class PolicyService : IPolicyService
         }
     }
 
+    private async Task RequiredByAccountRecoveryAsync(Organization org)
+    {
+        var requireSso = await _policyRepository.GetByOrganizationIdTypeAsync(org.Id, PolicyType.ResetPassword);
+        if (requireSso?.Enabled == true)
+        {
+            throw new BadRequestException("Account recovery policy is enabled.");
+        }
+    }
+
     private async Task RequiredByVaultTimeoutAsync(Organization org)
     {
         var vaultTimeout = await _policyRepository.GetByOrganizationIdTypeAsync(org.Id, PolicyType.MaximumVaultTimeout);
@@ -264,6 +280,7 @@ public class PolicyService : IPolicyService
                 case PolicyType.SendOptions:
                 case PolicyType.ResetPassword:
                 case PolicyType.DisablePersonalVaultExport:
+                case PolicyType.Skip2faForSso:
                 default:
                     return false;
             }

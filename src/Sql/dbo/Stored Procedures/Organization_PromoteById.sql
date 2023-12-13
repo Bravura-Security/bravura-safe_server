@@ -13,7 +13,8 @@ BEGIN
         [Seats] = 1000000,
         [Use2fa] = 1,
         [UseSso] = 1,
-        [UseResetPassword] = 1, 
+        [UseResetPassword] = 1,
+        [Skip2faForSso] = 1,
         [RevisionDate] = GETUTCDATE()
     WHERE
         [Id] = @Id

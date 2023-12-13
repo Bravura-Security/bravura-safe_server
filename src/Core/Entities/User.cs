@@ -100,6 +100,11 @@ public class User : ITableObject<Guid>, ISubscriber, IStorable, IStorableSubscri
         return "user_id";
     }
 
+    public string BraintreeCloudRegionField()
+    {
+        return "region";
+    }
+
     public string GatewayIdField()
     {
         return "userId";
@@ -206,6 +211,11 @@ public class User : ITableObject<Guid>, ISubscriber, IStorable, IStorableSubscri
             TwoFactorEnabled = twoFactorEnabled,
             SecurityStamp = SecurityStamp
         };
+    }
+
+    public bool HasMasterPassword()
+    {
+        return MasterPassword != null;
     }
 
     public User Encrypt(byte[] cryptKey, byte[] authKey)

@@ -19,6 +19,7 @@ BEGIN
         [UseKeyConnector],
         [UseScim],
         [UseResetPassword],
+        [Skip2faForSso],
         [Enabled]
     FROM
         [dbo].[Organization]

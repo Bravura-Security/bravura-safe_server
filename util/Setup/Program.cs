@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Net.Http.Json;
 using Bit.Migrator;
+using Bit.Setup.Enums;
 
 namespace Bit.Setup;
 
@@ -103,6 +104,9 @@ public class Program
         var dockerComposeBuilder = new DockerComposeBuilder(_context);
         dockerComposeBuilder.BuildForInstaller();
 
+        var grafanaDataSourceBuilder = new GrafanaDataSourceBuilder(_context);
+        grafanaDataSourceBuilder.Build();
+
         _context.SaveConfiguration();
 
         Console.WriteLine("\nInstallation complete");
@@ -182,7 +186,15 @@ public class Program
     {
         var vaultConnectionString = Helpers.GetValueFromEnvFile("global",
             "globalSettings__sqlServer__connectionString");
+
+        var grafanaDBUser = Helpers.GetValueFromEnvFile("grafana",
+            "globalSettings__grafana__dBUser");
+
+        var grafanaDBUserPwd = Helpers.GetValueFromEnvFile("grafana",
+            "globalSettings__grafana__dBUserPassword");
         var migrator = new DbMigrator(vaultConnectionString, null);
+        migrator.GrafanaDBUser = grafanaDBUser;
+        migrator.GrafanaDBUserPWD = grafanaDBUserPwd;
         migrator.MigrateMsSqlDatabaseWithRetries(false);
     }
 
@@ -190,6 +202,7 @@ public class Program
     {
         var installationId = string.Empty;
         var installationKey = string.Empty;
+        CloudRegion cloudRegion;
 
         if (_context.Parameters.ContainsKey("install-id"))
         {
@@ -197,7 +210,13 @@ public class Program
         }
         else
         {
-            installationId = Helpers.ReadInput("Enter your installation id (get at https://<somewhere>/host)");
+            var prompt = "Enter your installation id (get at https://<somewhere>/host)";
+            installationId = Helpers.ReadInput(prompt);
+            while (string.IsNullOrEmpty(installationId))
+            {
+                Helpers.WriteError("Invalid input for installation id. Please try again.");
+                installationId = Helpers.ReadInput(prompt);
+            }
         }
 
         if (!Guid.TryParse(installationId.Trim(), out var installationidGuid))
@@ -212,11 +231,36 @@ public class Program
         }
         else
         {
-            installationKey = Helpers.ReadInput("Enter your installation key");
+            var prompt = "Enter your installation key";
+            installationKey = Helpers.ReadInput(prompt);
+            while (string.IsNullOrEmpty(installationKey))
+            {
+                Helpers.WriteError("Invalid input for installation key. Please try again.");
+                installationKey = Helpers.ReadInput(prompt);
+            }
+        }
+
+        if (_context.Parameters.ContainsKey("cloud-region"))
+        {
+            Enum.TryParse(_context.Parameters["cloud-region"], out cloudRegion);
+        }
+        else
+        {
+            var prompt = "Enter your region (US/EU) [US]";
+            var region = Helpers.ReadInput(prompt);
+            if (string.IsNullOrEmpty(region)) region = "US";
+
+            while (!Enum.TryParse(region, out cloudRegion))
+            {
+                Helpers.WriteError("Invalid input for region. Please try again.");
+                region = Helpers.ReadInput(prompt);
+                if (string.IsNullOrEmpty(region)) region = "US";
+            }
         }
 
         _context.Install.InstallationId = installationidGuid;
         _context.Install.InstallationKey = installationKey;
+        _context.Install.CloudRegion = cloudRegion;
 
         return true;
     }

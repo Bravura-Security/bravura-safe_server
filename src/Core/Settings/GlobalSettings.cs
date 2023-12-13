@@ -1,4 +1,5 @@
-﻿using Bit.Core.Auth.Settings;
+﻿using Azure.Identity;
+using Bit.Core.Auth.Settings;
 using Bit.Core.Settings.LoggingSettings;
 
 namespace Bit.Core.Settings;
@@ -83,6 +84,7 @@ public class GlobalSettings : IGlobalSettings
     public virtual IPasswordlessAuthSettings PasswordlessAuth { get; set; } = new PasswordlessAuthSettings();
     public virtual IDomainVerificationSettings DomainVerification { get; set; } = new DomainVerificationSettings();
     public virtual ILaunchDarklySettings LaunchDarkly { get; set; } = new LaunchDarklySettings();
+    public virtual GrafanaSettings Grafana { get; set; } = new GrafanaSettings();
 
     public string BuildExternalUri(string explicitValue, string name)
     {
@@ -497,6 +499,7 @@ public class GlobalSettings : IGlobalSettings
     {
         public string ApplicationCacheTopicName { get; set; }
         public string ApplicationCacheSubscriptionName { get; set; }
+        public string WebSiteInstanceId { get; set; }
     }
 
     public class AppleIapSettings
@@ -565,5 +568,11 @@ public class GlobalSettings : IGlobalSettings
         public string SdkKey { get; set; }
         public string FlagDataFilePath { get; set; } = "flags.json";
         public Dictionary<string, string> FlagValues { get; set; } = new Dictionary<string, string>();
+    }
+
+    public class GrafanaSettings
+    {
+        public string DBUser { get; set; }
+        public string DBUserPassword { get; set; }
     }
 }

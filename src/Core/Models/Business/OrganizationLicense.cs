@@ -47,6 +47,7 @@ public class OrganizationLicense : ILicense
         UsersGetPremium = org.UsersGetPremium;
         UseCustomPermissions = org.UseCustomPermissions;
         Issued = DateTime.UtcNow;
+        Skip2faForSso = org.Skip2faForSso;
 
         if (subscriptionInfo?.Subscription == null)
         {
@@ -131,6 +132,7 @@ public class OrganizationLicense : ILicense
     public string Signature { get; set; }
     [JsonIgnore]
     public byte[] SignatureBytes => Convert.FromBase64String(Signature);
+    public bool Skip2faForSso { get; set; }
 
     /// <summary>
     /// Represents the current version of the license format. Should be updated whenever new fields are added.
@@ -176,6 +178,8 @@ public class OrganizationLicense : ILicense
                     (Version >= 11 || !p.Name.Equals(nameof(UseCustomPermissions))) &&
                     // ExpirationWithoutGracePeriod was added in Version 12
                     (Version >= 12 || !p.Name.Equals(nameof(ExpirationWithoutGracePeriod))) &&
+                    // Skip2faForSso was added in Version 13
+                    (Version >= 13 || !p.Name.Equals(nameof(Skip2faForSso))) &&
                     (
                         !forHash ||
                         (
@@ -313,6 +317,11 @@ public class OrganizationLicense : ILicense
             if (valid && Version >= 11)
             {
                 valid = organization.UseCustomPermissions == UseCustomPermissions;
+            }
+
+            if (valid && Version >= 13)
+            {
+                valid = organization.Skip2faForSso == Skip2faForSso;
             }
 
             return valid;
