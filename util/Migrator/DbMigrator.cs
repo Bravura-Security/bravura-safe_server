@@ -79,7 +79,7 @@ public class DbMigrator
     BEGIN
         CREATE USER %grafanaUser% WITH PASSWORD = N'%userPWD%';
         -- Grant necessary permissions here
-        GRANT select ON Schema:: [DBO] TO %grafanaUser%;
+        GRANT select ON Schema:: [DBO] TO %grafanaUser% ;
     END;
     ";
 
@@ -106,7 +106,7 @@ public class DbMigrator
 
             var command = new SqlCommand(cmdText, connection);
 
-            Console.WriteLine("\n Attempting CreateGrafanaUser .. is contained DB == "+ bContainedDB);
+            Console.WriteLine("\n DbMigrator: Attempting CreateGrafanaUser: {0} .. is contained DB == {1} ", userName, bContainedDB);
             //Console.WriteLine(command.CommandText);
 
             command.Parameters.Add("@DatabaseName", SqlDbType.VarChar).Value = databaseNameQuoted;
