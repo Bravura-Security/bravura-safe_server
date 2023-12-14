@@ -29,7 +29,7 @@ public class SendController : Controller
             if (!string.IsNullOrWhiteSpace(notificationJson))
             {
                 await HubHelpers.SendNotificationToHubAsync(notificationJson, _hubContext, _anonymousHubContext);
-                Console.WriteLine("Debug::SendController Performed SendNotificationToHubAsync ... " + notificationJson);
+                //Console.WriteLine("Debug::SendController Performed SendNotificationToHubAsync ... " + notificationJson);
             }
             else
             {

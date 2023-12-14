@@ -29,7 +29,7 @@ public class NotificationsHub : Microsoft.AspNetCore.SignalR.Hub
 
             }
         }
-        Console.WriteLine("Debug::NotificationsHub adding connectionid ... {0} with token {1}  :: {2}", Context.ConnectionId, currentContext.UserId.ToString(), DateTime.UtcNow);
+        //Console.WriteLine("Debug::NotificationsHub adding connectionid ... {0} with token {1}  :: {2}", Context.ConnectionId, currentContext.UserId.ToString(), DateTime.UtcNow);
 
         _connectionCounter.Increment();
         await base.OnConnectedAsync();
