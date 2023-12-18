@@ -60,6 +60,19 @@ public class SqlServerDbMigrator : IDbMigrator
 
     private bool CreateGrafanaUser(string userName, string userPWD, CancellationToken cancellationToken = default(CancellationToken))
     {
+
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            Console.WriteLine("\n Failure in CreateGrafanaUser -- userName is empty");
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(userPWD))
+        {
+            Console.WriteLine("\n Failure in CreateGrafanaUser -- userPWD is empty");
+            return false;
+        }
+
         // create grafana user
         using (var connection = new SqlConnection(_masterConnectionString))
         {
