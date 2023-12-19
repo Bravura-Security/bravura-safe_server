@@ -2,6 +2,7 @@
 using Bit.Core.Entities;
 using Bit.Core.Enums;
 using Bit.Core.Exceptions;
+using Bit.Core.Models.BitStripe;
 using Bit.Core.Models.Business;
 using Bit.Core.Repositories;
 using Bit.Core.Settings;
@@ -49,7 +50,7 @@ public class StripePaymentService : IPaymentService
     }
 
     public async Task<string> PurchaseOrganizationAsync(Organization org, PaymentMethodType paymentMethodType,
-        string paymentToken, List<StaticStore.Plan> plans, short additionalStorageGb,
+        string paymentToken, StaticStore.Plan plan, short additionalStorageGb,
         int additionalSeats, bool premiumAccessAddon, TaxInfo taxInfo, bool provider = false,
         int additionalSmSeats = 0, int additionalServiceAccount = 0)
     {
@@ -119,7 +120,7 @@ public class StripePaymentService : IPaymentService
             }
         }
 
-        var subCreateOptions = new OrganizationPurchaseSubscriptionOptions(org, plans, taxInfo, additionalSeats, additionalStorageGb, premiumAccessAddon
+        var subCreateOptions = new OrganizationPurchaseSubscriptionOptions(org, plan, taxInfo, additionalSeats, additionalStorageGb, premiumAccessAddon
         , additionalSmSeats, additionalServiceAccount);
 
         Stripe.Customer customer = null;
@@ -211,7 +212,7 @@ public class StripePaymentService : IPaymentService
 
     private async Task ChangeOrganizationSponsorship(Organization org, OrganizationSponsorship sponsorship, bool applySponsorship)
     {
-        var existingPlan = Utilities.StaticStore.GetPasswordManagerPlan(org.PlanType);
+        var existingPlan = Utilities.StaticStore.GetPlan(org.PlanType);
         var sponsoredPlan = sponsorship != null ?
             Utilities.StaticStore.GetSponsoredPlan(sponsorship.PlanSponsorshipType.Value) :
             null;
@@ -231,7 +232,7 @@ public class StripePaymentService : IPaymentService
     public Task RemoveOrganizationSponsorshipAsync(Organization org, OrganizationSponsorship sponsorship) =>
         ChangeOrganizationSponsorship(org, sponsorship, false);
 
-    public async Task<string> UpgradeFreeOrganizationAsync(Organization org, List<StaticStore.Plan> plans,
+    public async Task<string> UpgradeFreeOrganizationAsync(Organization org, StaticStore.Plan plan,
         OrganizationUpgrade upgrade)
     {
         if (!string.IsNullOrWhiteSpace(org.GatewaySubscriptionId))
@@ -266,7 +267,7 @@ public class StripePaymentService : IPaymentService
             }
         }
 
-        var subCreateOptions = new OrganizationUpgradeSubscriptionOptions(customer.Id, org, plans, upgrade);
+        var subCreateOptions = new OrganizationUpgradeSubscriptionOptions(customer.Id, org, plan, upgrade);
         var (stripePaymentMethod, paymentMethodType) = IdentifyPaymentMethod(customer, subCreateOptions);
 
         var subscription = await ChargeForNewSubscriptionAsync(org, customer, false,
@@ -667,7 +668,7 @@ public class StripePaymentService : IPaymentService
 
             if (!stripePaymentMethod && subInvoiceMetadata.Any())
             {
-                var invoices = await _stripeAdapter.InvoiceListAsync(new Stripe.InvoiceListOptions
+                var invoices = await _stripeAdapter.InvoiceListAsync(new StripeInvoiceListOptions
                 {
                     Subscription = subscription.Id
                 });
@@ -861,6 +862,11 @@ public class StripePaymentService : IPaymentService
     public Task<string> AdjustSeatsAsync(Organization organization, StaticStore.Plan plan, int additionalSeats, DateTime? prorationDate = null)
     {
         return FinalizeSubscriptionChangeAsync(organization, new SeatSubscriptionUpdate(organization, plan, additionalSeats), prorationDate);
+    }
+
+    public Task<string> AdjustSmSeatsAsync(Organization organization, StaticStore.Plan plan, int additionalSeats, DateTime? prorationDate = null)
+    {
+        return FinalizeSubscriptionChangeAsync(organization, new SmSeatSubscriptionUpdate(organization, plan, additionalSeats), prorationDate);
     }
 
     public Task<string> AdjustServiceAccountsAsync(Organization organization, StaticStore.Plan plan, int additionalServiceAccounts, DateTime? prorationDate = null)
@@ -1563,7 +1569,7 @@ public class StripePaymentService : IPaymentService
 
             if (customer.Discount != null)
             {
-                subscriptionInfo.Discount = new SubscriptionInfo.BillingCustomerDiscount(customer.Discount);
+                subscriptionInfo.CustomerDiscount = new SubscriptionInfo.BillingCustomerDiscount(customer.Discount);
             }
 
             if (subscriber.IsUser())
@@ -1845,15 +1851,26 @@ public class StripePaymentService : IPaymentService
             return null;
         }
 
-        var invoices = await _stripeAdapter.InvoiceListAsync(new Stripe.InvoiceListOptions
+        var options = new StripeInvoiceListOptions
         {
             Customer = customer.Id,
-            Limit = 50
-        });
+            SelectAll = true
+        };
 
-        return invoices.Data.Where(i => i.Status != "void" && i.Status != "draft")
-            .OrderByDescending(i => i.Created).Select(i => new BillingInfo.BillingInvoice(i));
+        try
+        {
+            var invoices = await _stripeAdapter.InvoiceListAsync(options);
 
+            return invoices
+                .Where(invoice => invoice.Status != "void" && invoice.Status != "draft")
+                .OrderByDescending(invoice => invoice.Created)
+                .Select(invoice => new BillingInfo.BillingInvoice(invoice));
+        }
+        catch (Stripe.StripeException exception)
+        {
+            _logger.LogError(exception, "An error occurred while listing Stripe invoices");
+            throw new GatewayException("Failed to retrieve current invoices", exception);
+        }
     }
 
     // We are taking only first 30 characters of the SubscriberName because stripe provide

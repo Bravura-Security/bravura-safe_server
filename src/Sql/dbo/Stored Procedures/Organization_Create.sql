@@ -51,6 +51,7 @@
     @MaxAutoscaleSmSeats INT = null,
     @MaxAutoscaleSmServiceAccounts INT = null,
     @SecretsManagerBeta BIT = 0,
+    @LimitCollectionCreationDeletion BIT = 1,
     @Skip2faForSso BIT
 AS
 BEGIN
@@ -110,6 +111,7 @@ BEGIN
         [MaxAutoscaleSmSeats],
         [MaxAutoscaleSmServiceAccounts],
         [SecretsManagerBeta],
+        [LimitCollectionCreationDeletion],
         [Skip2faForSso]
     )
     VALUES
@@ -166,6 +168,7 @@ BEGIN
         @MaxAutoscaleSmSeats,
         @MaxAutoscaleSmServiceAccounts,
         @SecretsManagerBeta,
+        @LimitCollectionCreationDeletion,
         @Skip2faForSso
     )
 END

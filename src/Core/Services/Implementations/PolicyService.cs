@@ -291,14 +291,6 @@ public class PolicyService : IPolicyService
         return true;
     }
 
-    private void LockedTo2020Plan(Organization org)
-    {
-        if (org.PlanType != PlanType.EnterpriseAnnually && org.PlanType != PlanType.EnterpriseMonthly)
-        {
-            throw new BadRequestException("This policy is only available to 2020 Enterprise plans.");
-        }
-    }
-
     private async Task RequiredBySsoTrustedDeviceEncryptionAsync(Organization org)
     {
         var ssoConfig = await _ssoConfigRepository.GetByOrganizationIdAsync(org.Id);
