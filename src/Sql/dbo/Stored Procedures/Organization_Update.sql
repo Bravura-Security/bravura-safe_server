@@ -52,6 +52,7 @@
     @MaxAutoscaleSmServiceAccounts INT = null,
     @SecretsManagerBeta BIT = 0,
     @LimitCollectionCreationDeletion BIT = 1,
+    @AllowAdminAccessToAllCollectionItems BIT = 1,
     @Skip2faForSso BIT
 AS
 BEGIN
@@ -112,6 +113,7 @@ BEGIN
         [MaxAutoscaleSmServiceAccounts] = @MaxAutoscaleSmServiceAccounts,
         [SecretsManagerBeta] = @SecretsManagerBeta,
         [LimitCollectionCreationDeletion] = @LimitCollectionCreationDeletion,
+        [AllowAdminAccessToAllCollectionItems] = @AllowAdminAccessToAllCollectionItems,
         [Skip2faForSso] = @Skip2faForSso
     WHERE
         [Id] = @Id

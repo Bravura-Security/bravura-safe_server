@@ -1,4 +1,4 @@
-CREATE VIEW [dbo].[OrganizationUserOrganizationDetailsView]
+﻿CREATE VIEW [dbo].[OrganizationUserOrganizationDetailsView]
 AS
 SELECT
     OU.[UserId],
@@ -46,6 +46,7 @@ SELECT
     O.[SmSeats],
     O.[SmServiceAccounts],
     O.[LimitCollectionCreationDeletion],
+    O.[AllowAdminAccessToAllCollectionItems],
     O.[Skip2faForSso]
 FROM
     [dbo].[OrganizationUser] OU

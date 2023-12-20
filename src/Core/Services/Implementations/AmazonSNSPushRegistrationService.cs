@@ -6,7 +6,6 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using System.Text.Json;
 using Bit.Core.Models.Data;
-using IdentityServer4.Models;
 
 namespace Bit.Core.Services;
 

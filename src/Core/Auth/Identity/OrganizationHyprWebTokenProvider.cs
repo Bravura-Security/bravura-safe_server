@@ -1,7 +1,7 @@
-﻿using Bit.Core.Auth.Enums;
+﻿using Bit.Core.AdminConsole.Entities;
+using Bit.Core.Auth.Enums;
 using Bit.Core.Auth.Models;
 using Bit.Core.Auth.Utilities.Hypr;
-using System.Threading.Tasks;
 using Bit.Core.Entities;
 using Bit.Core.Settings;
 

@@ -1,8 +1,7 @@
 ﻿using Bit.Core.Auth.Enums;
 using Bit.Core.Auth.Models;
-using System;
-using Bit.Core.Entities;
 using Bit.Core.Models.Api;
+using Bit.Core.AdminConsole.Entities;
 
 namespace Bit.Api.Auth.Models.Response.TwoFactor;
 

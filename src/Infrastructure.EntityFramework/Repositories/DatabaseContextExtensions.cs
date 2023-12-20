@@ -97,8 +97,8 @@ public static class DatabaseContextExtensions
                     from cg in cg_g.DefaultIfEmpty()
                     where ou.OrganizationId == organizationId && collectionIds.Contains(c.Id) &&
                       ou.Status == OrganizationUserStatusType.Confirmed &&
-                        (cu.CollectionId != null ||
-                        cg.CollectionId != null ||
+                        (cu.CollectionId != Guid.Empty ||
+                        cg.CollectionId != Guid.Empty ||
                         ou.AccessAll == true ||
                         g.AccessAll == true)
                     select u;
