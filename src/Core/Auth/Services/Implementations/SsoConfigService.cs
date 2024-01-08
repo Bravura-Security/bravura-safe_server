@@ -63,7 +63,7 @@ public class SsoConfigService : ISsoConfigService
             throw new BadRequestException("Key Connector cannot be disabled at this moment.");
         }
 
-        // Automatically enable account recovery, SSO required, and single org policies if trusted device encryption is selected
+        // Automatically enable master password reset, SSO required, and single org policies if trusted device encryption is selected
         if (config.GetData().MemberDecryptionType == MemberDecryptionType.TrustedDeviceEncryption)
         {
             var singleOrgPolicy = await _policyRepository.GetByOrganizationIdTypeAsync(config.OrganizationId, PolicyType.SingleOrg) ??

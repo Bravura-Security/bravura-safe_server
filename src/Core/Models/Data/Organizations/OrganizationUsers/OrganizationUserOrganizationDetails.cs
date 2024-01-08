@@ -49,4 +49,5 @@ public class OrganizationUserOrganizationDetails
     public int? SmSeats { get; set; }
     public int? SmServiceAccounts { get; set; }
     public bool Skip2faForSso { get; set; }
+    public bool ForcePasswordReset { get; set; }
 }

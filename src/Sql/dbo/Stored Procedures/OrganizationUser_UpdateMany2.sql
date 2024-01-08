@@ -19,7 +19,8 @@ BEGIN
         [RevisionDate] = OUI.[RevisionDate],
         [Permissions] = OUI.[Permissions],
         [ResetPasswordKey] = OUI.[ResetPasswordKey],
-        [AccessSecretsManager] = OUI.[AccessSecretsManager]
+        [AccessSecretsManager] = OUI.[AccessSecretsManager],
+        [ForcePasswordReset] = OUI.[ForcePasswordReset]
     FROM
         [dbo].[OrganizationUser] OU
     INNER JOIN

@@ -548,7 +548,7 @@ public class PolicyServiceTests
                 Substitute.For<IOrganizationService>(),
                 Guid.NewGuid()));
 
-        Assert.Contains("Account recovery policy is enabled.", badRequestException.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Master password reset policy is enabled.", badRequestException.Message, StringComparison.OrdinalIgnoreCase);
 
         await sutProvider.GetDependency<IPolicyRepository>()
             .DidNotReceiveWithAnyArgs()

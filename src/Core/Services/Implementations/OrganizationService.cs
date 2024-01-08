@@ -967,6 +967,7 @@ public class OrganizationService : IOrganizationService
                         ExternalId = externalId,
                         CreationDate = DateTime.UtcNow,
                         RevisionDate = DateTime.UtcNow,
+                        ForcePasswordReset = invite.ForcePasswordReset,
                     };
 
                     if (invite.Permissions != null)

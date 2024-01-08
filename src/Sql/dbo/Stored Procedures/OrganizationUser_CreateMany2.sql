@@ -19,7 +19,8 @@ BEGIN
         [RevisionDate],
         [Permissions],
         [ResetPasswordKey],
-        [AccessSecretsManager]
+        [AccessSecretsManager],
+        [ForcePasswordReset]
         )
     SELECT
         OU.[Id],
@@ -35,7 +36,8 @@ BEGIN
         OU.[RevisionDate],
         OU.[Permissions],
         OU.[ResetPasswordKey],
-        OU.[AccessSecretsManager]
+        OU.[AccessSecretsManager],
+        OU.[ForcePasswordReset]
     FROM
         @OrganizationUsersInput OU
 END

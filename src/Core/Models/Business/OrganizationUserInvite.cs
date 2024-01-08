@@ -12,6 +12,7 @@ public class OrganizationUserInvite
     public Permissions Permissions { get; set; }
     public IEnumerable<CollectionAccessSelection> Collections { get; set; }
     public IEnumerable<Guid> Groups { get; set; }
+    public bool ForcePasswordReset { get; set; }
 
     public OrganizationUserInvite() { }
 
@@ -24,5 +25,6 @@ public class OrganizationUserInvite
         Collections = requestModel.Collections;
         Groups = requestModel.Groups;
         Permissions = requestModel.Permissions;
+        ForcePasswordReset = requestModel.ForcePasswordReset;
     }
 }

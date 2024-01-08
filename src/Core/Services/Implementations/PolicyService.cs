@@ -249,7 +249,7 @@ public class PolicyService : IPolicyService
         var requireSso = await _policyRepository.GetByOrganizationIdTypeAsync(org.Id, PolicyType.ResetPassword);
         if (requireSso?.Enabled == true)
         {
-            throw new BadRequestException("Account recovery policy is enabled.");
+            throw new BadRequestException("Master password reset policy is enabled.");
         }
     }
 
