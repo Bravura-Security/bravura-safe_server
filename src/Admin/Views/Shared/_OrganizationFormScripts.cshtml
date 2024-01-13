@@ -38,32 +38,6 @@
                 window.open(url, '_blank');
             }
         });
-        document.getElementById('@(nameof(Model.UseSecretsManager))').addEventListener('change', (event) => {
-            document.getElementById('organization-secrets-configuration').hidden = !event.target.checked;
-
-            if (event.target.checked) {
-                setInitialSecretsManagerConfiguration();
-                return;
-            }
-
-            // SM beta requires SM access
-            document.getElementById('@(nameof(Model.SecretsManagerBeta))').checked = false;
-            clearSecretsManagerConfiguration();
-        });
-
-        document.getElementById('@(nameof(Model.SecretsManagerBeta))').addEventListener('change', (event) => {
-            document.getElementById('organization-secrets-configuration').hidden = event.target.checked;
-
-            if (event.target.checked) {
-                // SM beta requires SM access
-                document.getElementById('@(nameof(Model.UseSecretsManager))').checked = true;
-                // SM Beta orgs do not have subscription limits
-                clearSecretsManagerConfiguration();
-                return;
-            }
-
-            setInitialSecretsManagerConfiguration();
-        });
     })();
 
     function togglePlanFeatures(planType) {
@@ -111,39 +85,5 @@
                 document.getElementById('@(nameof(Model.UseScim))').checked = true;
             break;
         }
-    }
-
-    /***
-    * Set Secrets Manager values based on current usage (for migrating from SM beta or reinstating an old subscription)
-    */
-    function setInitialSecretsManagerConfiguration() {
-        const planType = document.getElementById('@(nameof(Model.PlanType))').value;
-
-        // Seats
-        document.getElementById('@(nameof(Model.SmSeats))').value = Math.max(@Model.OccupiedSmSeatsCount, 1);
-
-        // Service accounts
-        const baseServiceAccounts = getPlan(planType)?.baseServiceAccount ?? 0;
-        if (planType !== '@((byte)PlanType.Free)' && @Model.ServiceAccountsCount > baseServiceAccounts) {
-            document.getElementById('@(nameof(Model.SmServiceAccounts))').value = @Model.ServiceAccountsCount;
-        } else {
-            document.getElementById('@(nameof(Model.SmServiceAccounts))').value = baseServiceAccounts;
-    }
-
-        // Clear autoscale values (no defaults)
-        document.getElementById('@(nameof(Model.MaxAutoscaleSmSeats))').value = '';
-        document.getElementById('@(nameof(Model.MaxAutoscaleSmServiceAccounts))').value = '';
-    }
-
-    function clearSecretsManagerConfiguration() {
-        document.getElementById('@(nameof(Model.SmSeats))').value = '';
-        document.getElementById('@(nameof(Model.SmServiceAccounts))').value = '';
-        document.getElementById('@(nameof(Model.MaxAutoscaleSmSeats))').value = '';
-        document.getElementById('@(nameof(Model.MaxAutoscaleSmServiceAccounts))').value = '';
-    }
-
-    function getPlan(planType) {
-        const plans = @Html.Raw(Json.Serialize(Model.GetPlansHelper()));
-        return plans.find(p => p.type == planType);
     }
 </script>
