@@ -108,6 +108,9 @@ public static class StaticStore
 
         Plans = new List<Plan>
         {
+            new BravuraEnterprise(),
+            new BravuraTeams(),
+
             new EnterprisePlan(true),
             new EnterprisePlan(false),
             new TeamsStarterPlan(),

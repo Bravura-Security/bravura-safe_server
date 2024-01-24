@@ -41,5 +41,5 @@ public enum PlanType : byte
     [Display(Name = "Enterprise (Annually)")]
     EnterpriseAnnually = 17,
     [Display(Name = "Teams Starter")]
-    TeamsStarter = 17
+    TeamsStarter = 18
 }
