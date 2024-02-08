@@ -318,6 +318,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
         organizationId = StripPrefix(organizationId);
         foreach (var devicId in deviceIds)
         {
+            try{
             var snsDevice = await _amazonSNSDeviceRepository.GetByDeviceIDAsync(new Guid(StripPrefix(devicId)));
             GetSubscriptionAttributesResponse subscriptionAttributes = await _client.GetSubscriptionAttributesAsync(new GetSubscriptionAttributesRequest
             {
@@ -334,6 +335,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
                     AttributeValue = JsonSerializer.Serialize<SafeFilterPolicy>(filterPolicy)
                 });
             }
+            } catch(Exception) {}
         }
         if (deviceIds.Any() && InstallationDeviceEntity.IsInstallationDeviceId(deviceIds.First()))
         {
