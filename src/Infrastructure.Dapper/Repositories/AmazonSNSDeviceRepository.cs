@@ -37,7 +37,7 @@ public class AmazonSNSDeviceRepository : Repository<AmazonSNSDevice, long>, IAma
                 new { DeviceID = deviceId },
                 commandType: CommandType.StoredProcedure);
 
-            return results.SingleOrDefault();
+            return results.FirstOrDefault();
         }
     }
 }
