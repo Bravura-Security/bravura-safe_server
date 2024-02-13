@@ -98,7 +98,7 @@ public static class HubHelpers
                     await anonymousHubContext.Clients.Group(payloadID)
                         .SendAsync("AuthRequestResponseRecieved", authRequestResponseNotification, cancellationToken);
 
-                    Console.WriteLine("\nDebug::HubHelpers:: Just sent (blindly) to websocket AuthRequestResponseRecieved will also check for anon connection for payload ID == " + payloadID);
+                    //Console.WriteLine("\nDebug::HubHelpers:: Just sent (blindly) to websocket AuthRequestResponseRecieved will also check for anon connection for payload ID == " + payloadID);
 
                     var l_token = _anonHubConnectionManager.FindKeyByValue(payloadID);
                     if (string.IsNullOrEmpty(l_token))
@@ -106,7 +106,7 @@ public static class HubHelpers
                         //wrong node processed the push so need to send for retry
                         //only dumping to file since on wrong node
                         await _anonHubConnectionManager.SaveNotification("anon_", payloadID, notificationJson, false);
-                        Console.WriteLine("\nDebug::HubHelpers:: SaveNotification -- anon incorrect node, adding authRequestResponseNotification to retry on correct node ...{0} ... {1}", payloadID, DateTime.UtcNow);
+                        //Console.WriteLine("\nDebug::HubHelpers:: SaveNotification -- anon incorrect node, adding authRequestResponseNotification to retry on correct node ...{0} ... {1}", payloadID, DateTime.UtcNow);
                     }
                     else
                     {

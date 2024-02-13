@@ -28,22 +28,31 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
     IAmazonSNSDeviceRepository amazonSNSDeviceRepository,
     GlobalSettings globalSettings)
     {
-        Console.WriteLine("Debug:::AmazonSNSPushRegistrationService::constructor ...");
+        Console.WriteLine("Info: AmazonSNSPushRegistrationService::constructor ...");
         _installationDeviceRepository = installationDeviceRepository;
         _amazonSNSDeviceRepository = amazonSNSDeviceRepository;
         _globalSettings = globalSettings;
-        if (string.IsNullOrWhiteSpace(globalSettings.Amazon?.AccessKeyId))
+        try
         {
-            _client = new AmazonSimpleNotificationServiceClient();
+            if (string.IsNullOrWhiteSpace(globalSettings.Amazon?.AccessKeyId))
+            {
+                _client = new AmazonSimpleNotificationServiceClient();
+            }
+            else
+            {
+                _client = new AmazonSimpleNotificationServiceClient(
+                        _globalSettings.Amazon.AccessKeyId,
+                        _globalSettings.Amazon.AccessKeySecret,
+                        RegionEndpoint.GetBySystemName(_globalSettings.Amazon.Region)
+                    );
+            }
         }
-        else
+        catch (System.Exception)
         {
-            _client = new AmazonSimpleNotificationServiceClient(
-                    _globalSettings.Amazon.AccessKeyId,
-                    _globalSettings.Amazon.AccessKeySecret,
-                    RegionEndpoint.GetBySystemName(_globalSettings.Amazon.Region)
-                );
+            Console.WriteLine("Error: (fatal) AWS SNS: Unable to create AmazonSimpleNotificationServiceClient");
+            _client = null;
         }
+
         try
         {
             // List topics
@@ -134,7 +143,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
         {
             return;
         }
-        Console.WriteLine("Debug::: SNS Push Registration for token {0}, device {1}, user {2}, deviceType: {3} ", pushToken, deviceId, userId, type);
+        //Console.WriteLine("Debug::: SNS Push Registration for token {0}, device {1}, user {2}, deviceType: {3} ", pushToken, deviceId, userId, type);
         string platformARN = null;
         string topicARN = _globalSettings.Amazon.SNSTopicARN;
         switch (type)
@@ -269,7 +278,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
             var snsDevice = await _amazonSNSDeviceRepository.GetByDeviceIDAsync(new Guid(StripPrefix(devicId)));
             if (snsDevice == null)
             {
-                Console.WriteLine("Debug::AWS SNS: ****** Device Registration Error (non-fatal.) Device exists in Device table but not in AmazonSNSDevice verify your SNS settings (non fatal if a non mobile device) --- Device ID: {0} *****\n", devicId);
+                Console.WriteLine("Info: AWS SNS: ****** Device Registration Error (non-fatal.) Device exists in Device table but not in AmazonSNSDevice verify your SNS settings (non fatal if a non mobile device) --- Device ID: {0} *****\n", devicId);
                 continue;
             }
             GetSubscriptionAttributesResponse subscriptionAttributes = await _client.GetSubscriptionAttributesAsync(new GetSubscriptionAttributesRequest
@@ -306,26 +315,48 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
     }
     public async Task DeleteUserRegistrationOrganizationAsync(IEnumerable<string> deviceIds, string organizationId)
     {
+        if (_client==null)
+        {
+            Console.WriteLine("****** Fatal Error ***** AmazonSimpleNotificationServiceClient is not initialized *****\n");
+            return; 
+        }
+
         organizationId = StripPrefix(organizationId);
         foreach (var devicId in deviceIds)
         {
-            var snsDevice = await _amazonSNSDeviceRepository.GetByDeviceIDAsync(new Guid(StripPrefix(devicId)));
-            GetSubscriptionAttributesResponse subscriptionAttributes = await _client.GetSubscriptionAttributesAsync(new GetSubscriptionAttributesRequest
+            try
             {
-                SubscriptionArn = snsDevice.SubscriptionARN,
-            });
-            var filterPolicy = JsonSerializer.Deserialize<SafeFilterPolicy>(subscriptionAttributes.Attributes["FilterPolicy"]);
-            if (filterPolicy.recipientId.Contains(organizationId))
-            {
-                filterPolicy.recipientId.Remove(organizationId);
-                await _client.SetSubscriptionAttributesAsync(new SetSubscriptionAttributesRequest
+                Console.WriteLine("AWS SNS: Trying {0}", devicId );
+                var snsDevice = await _amazonSNSDeviceRepository.GetByDeviceIDAsync(new Guid(StripPrefix(devicId)));
+                if (snsDevice == null)
+                {
+                    Console.WriteLine("Info: AWS SNS: ****** Device DeleteUserRegistrationOrganizationAsync Error (non-fatal.) Device exists in Device table but not in AmazonSNSDevice verify your SNS settings (non fatal if a non mobile device) --- Device ID: {0} *****\n", devicId);
+                    continue;
+                }
+
+                GetSubscriptionAttributesResponse subscriptionAttributes = await _client.GetSubscriptionAttributesAsync(new GetSubscriptionAttributesRequest
                 {
                     SubscriptionArn = snsDevice.SubscriptionARN,
-                    AttributeName = "FilterPolicy",
-                    AttributeValue = JsonSerializer.Serialize<SafeFilterPolicy>(filterPolicy)
                 });
+                var filterPolicy = JsonSerializer.Deserialize<SafeFilterPolicy>(subscriptionAttributes.Attributes["FilterPolicy"]);
+                if (filterPolicy.recipientId.Contains(organizationId))
+                {
+                    filterPolicy.recipientId.Remove(organizationId);
+                    await _client.SetSubscriptionAttributesAsync(new SetSubscriptionAttributesRequest
+                    {
+                        SubscriptionArn = snsDevice.SubscriptionARN,
+                        AttributeName = "FilterPolicy",
+                        AttributeValue = JsonSerializer.Serialize<SafeFilterPolicy>(filterPolicy)
+                    });
+                }
             }
-        }
+            catch (Exception ex)
+            {
+                Console.WriteLine("AWS SNS: Something failed to DeleteUserRegistrationOrganizationAsync.");
+                Console.WriteLine(ex);
+            }
+        }//foreach
+
         if (deviceIds.Any() && InstallationDeviceEntity.IsInstallationDeviceId(deviceIds.First()))
         {
             var entities = deviceIds.Select(e => new InstallationDeviceEntity(e));

@@ -79,12 +79,24 @@ public class DbMigrator
     BEGIN
         CREATE USER %grafanaUser% WITH PASSWORD = N'%userPWD%';
         -- Grant necessary permissions here
-        GRANT select ON Schema:: [DBO] TO %grafanaUser%;
+        GRANT select ON Schema:: [DBO] TO %grafanaUser% ;
     END;
     ";
 
     private bool CreateGrafanaUser(string userName, string userPWD, CancellationToken cancellationToken = default(CancellationToken))
     {
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            Console.WriteLine("\n Failure in CreateGrafanaUser -- userName is empty");
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(userPWD))
+        {
+            Console.WriteLine("\n Failure in CreateGrafanaUser -- userPWD is empty");
+            return false;
+        }
+
         // create grafana user
         using (var connection = new SqlConnection(_masterConnectionString))
         {
@@ -106,7 +118,7 @@ public class DbMigrator
 
             var command = new SqlCommand(cmdText, connection);
 
-            Console.WriteLine("\n Attempting CreateGrafanaUser .. is contained DB == "+ bContainedDB);
+            Console.WriteLine("\n DbMigrator: Attempting CreateGrafanaUser: {0} .. is contained DB == {1} ", userName, bContainedDB);
             //Console.WriteLine(command.CommandText);
 
             command.Parameters.Add("@DatabaseName", SqlDbType.VarChar).Value = databaseNameQuoted;

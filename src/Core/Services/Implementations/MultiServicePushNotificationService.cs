@@ -44,14 +44,14 @@ public class MultiServicePushNotificationService : IPushNotificationService
                 _services.Add(new NotificationsApiPushNotificationService(
                     httpFactory, globalSettings, httpContextAccessor, hubLogger));
 
-                    Console.WriteLine("Debug::MultiServicePushNotificationService:: registered NotificationsApiPushNotificationService ...");
+                    Console.WriteLine("Info::MultiServicePushNotificationService:: registered NotificationsApiPushNotificationService ...");
             }
             if (CoreHelpers.SettingHasValue(globalSettings.Amazon.SNSTopicARN))
             { 
                 _services.Add(new AmazonSNSPushNotificationService(
                     installationDeviceRepository, deviceRepository, globalSettings, httpContextAccessor, hubLogger));
 
-                    Console.WriteLine("Debug::MultiServicePushNotificationService:: registered AmazonSNSPushNotificationService ...");
+                    Console.WriteLine("Info::MultiServicePushNotificationService:: registered AmazonSNSPushNotificationService ...");
             }
         }
         else

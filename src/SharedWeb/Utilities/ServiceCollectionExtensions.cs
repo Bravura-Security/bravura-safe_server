@@ -277,6 +277,7 @@ public static class ServiceCollectionExtensions
         }
         else
         {
+            Console.WriteLine("Warning: Should never get here in production. If got here, missing values for SNSTopicARN, SNSPlatformARNAndroid or SNSPlatformARNIOS");
             services.AddSingleton<IPushRegistrationService, NoopPushRegistrationService>();
         }
 
