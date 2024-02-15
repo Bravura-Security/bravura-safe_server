@@ -11,4 +11,5 @@ public class OrganizationUserInviteData
     public IEnumerable<CollectionAccessSelection> Collections { get; set; }
     public IEnumerable<Guid> Groups { get; set; }
     public Permissions Permissions { get; set; }
+    public bool ForcePasswordReset { get; set; }
 }

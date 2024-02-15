@@ -362,7 +362,21 @@ public class OrganizationUsersController : Controller
             throw new NotFoundException();
         }
 
-        var result = await _userService.AdminResetPasswordAsync(orgUserType.Value, orgGuidId, new Guid(id), model.NewMasterPasswordHash, model.Key);
+        // Find ForcePasswordReset of owner/admin/custom user currently logged in
+        var forcePasswordReset = true;
+        var user = await _userService.GetUserByPrincipalAsync(User);
+        if (user == null)
+        {
+            throw new UnauthorizedAccessException();
+        }
+        var organizationUser = await _organizationUserRepository.GetByOrganizationAsync(orgGuidId, user.Id);
+        if (organizationUser == null)
+        {
+            throw new UnauthorizedAccessException();
+        }
+        forcePasswordReset = organizationUser.ForcePasswordReset;
+
+        var result = await _userService.AdminResetPasswordAsync(orgUserType.Value, orgGuidId, new Guid(id), model.NewMasterPasswordHash, model.Key, forcePasswordReset);
         if (result.Succeeded)
         {
             return;

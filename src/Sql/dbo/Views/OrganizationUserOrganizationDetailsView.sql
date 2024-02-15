@@ -47,7 +47,8 @@ SELECT
     O.[SmServiceAccounts],
     O.[LimitCollectionCreationDeletion],
     O.[AllowAdminAccessToAllCollectionItems],
-    O.[Skip2faForSso]
+    O.[Skip2faForSso],
+    OU.[ForcePasswordReset]
 FROM
     [dbo].[OrganizationUser] OU
 LEFT JOIN

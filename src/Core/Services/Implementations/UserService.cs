@@ -847,7 +847,7 @@ public class UserService : UserManager<User>, IUserService, IDisposable
         return null;
     }
 
-    public async Task<IdentityResult> AdminResetPasswordAsync(OrganizationUserType callingUserType, Guid orgId, Guid id, string newMasterPassword, string key)
+    public async Task<IdentityResult> AdminResetPasswordAsync(OrganizationUserType callingUserType, Guid orgId, Guid id, string newMasterPassword, string key, bool forcePasswordReset = true)
     {
         // Org must be able to use reset password
         var org = await _organizationRepository.GetByIdAsync(orgId);
@@ -913,7 +913,7 @@ public class UserService : UserManager<User>, IUserService, IDisposable
 
         user.RevisionDate = user.AccountRevisionDate = DateTime.UtcNow;
         user.Key = key;
-        user.ForcePasswordReset = true;
+        user.ForcePasswordReset = forcePasswordReset;
 
         await _userRepository.ReplaceAsync(user);
         await _mailService.SendAdminResetPasswordEmailAsync(user.Email, user.Name, org.Name);

@@ -20,6 +20,7 @@ public class OrganizationUserInviteRequestModel
     public Permissions Permissions { get; set; }
     public IEnumerable<SelectionReadOnlyRequestModel> Collections { get; set; }
     public IEnumerable<Guid> Groups { get; set; }
+    public bool ForcePasswordReset { get; set; }
 
     public OrganizationUserInviteData ToData()
     {
@@ -32,6 +33,7 @@ public class OrganizationUserInviteRequestModel
             Collections = Collections?.Select(c => c.ToSelectionReadOnly()),
             Groups = Groups,
             Permissions = Permissions,
+            ForcePasswordReset = ForcePasswordReset,
         };
     }
 }
@@ -91,6 +93,7 @@ public class OrganizationUserUpdateRequestModel
     public Permissions Permissions { get; set; }
     public IEnumerable<SelectionReadOnlyRequestModel> Collections { get; set; }
     public IEnumerable<Guid> Groups { get; set; }
+    public bool ForcePasswordReset { get; set; }
 
     public OrganizationUser ToOrganizationUser(OrganizationUser existingUser)
     {
@@ -98,6 +101,7 @@ public class OrganizationUserUpdateRequestModel
         existingUser.Permissions = CoreHelpers.ClassToJsonData(Permissions);
         existingUser.AccessAll = AccessAll;
         existingUser.AccessSecretsManager = AccessSecretsManager;
+        existingUser.ForcePasswordReset = ForcePasswordReset;
         return existingUser;
     }
 }

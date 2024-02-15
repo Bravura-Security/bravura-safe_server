@@ -51,5 +51,6 @@ public class OrganizationUserOrganizationDetails
     public bool LimitCollectionCreationDeletion { get; set; }
     public bool AllowAdminAccessToAllCollectionItems { get; set; }
     public bool Skip2faForSso { get; set; }
+    public bool ForcePasswordReset { get; set; }
 }
 

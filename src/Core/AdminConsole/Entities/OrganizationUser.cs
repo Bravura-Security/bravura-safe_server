@@ -24,6 +24,7 @@ public class OrganizationUser : ITableObject<Guid>, IExternal
     public DateTime RevisionDate { get; internal set; } = DateTime.UtcNow;
     public string Permissions { get; set; }
     public bool AccessSecretsManager { get; set; }
+    public bool ForcePasswordReset { get; set; }
 
     public void SetNewId()
     {
