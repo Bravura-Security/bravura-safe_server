@@ -243,7 +243,7 @@ public class AuthRequestService : IAuthRequestService
 
             // No matter what we want to push out the success notification
             await _pushNotificationService.PushAuthRequestResponseAsync(authRequest);
-            Console.WriteLine("Debug:::AuthRequest::UpdateAuthRequestAsync for request ID: " + authRequestId + "   push sent . . . ");
+            //Console.WriteLine("Debug:::AuthRequest::UpdateAuthRequestAsync for request ID: " + authRequestId + "   push sent . . . ");
         }
         // If the request is rejected by an organization admin then we want to log an event of that action
         else if (authRequest.Approved.HasValue && !authRequest.Approved.Value && authRequest.OrganizationId.HasValue)
