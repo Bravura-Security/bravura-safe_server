@@ -56,6 +56,7 @@ public class OrganizationResponseModel : ResponseModel
         MaxAutoscaleSmServiceAccounts = organization.MaxAutoscaleSmServiceAccounts;
         LimitCollectionCreationDeletion = organization.LimitCollectionCreationDeletion;
         AllowAdminAccessToAllCollectionItems = organization.AllowAdminAccessToAllCollectionItems;
+        FlexibleCollections = organization.FlexibleCollections;
         Skip2faForSso = organization.Skip2faForSso;
     }
 
@@ -98,6 +99,7 @@ public class OrganizationResponseModel : ResponseModel
     public int? MaxAutoscaleSmServiceAccounts { get; set; }
     public bool LimitCollectionCreationDeletion { get; set; }
     public bool AllowAdminAccessToAllCollectionItems { get; set; }
+    public bool FlexibleCollections { get; set; }
     public bool Skip2faForSso { get; set; }
 }
 

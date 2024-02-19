@@ -4,12 +4,9 @@ using System.Text.Json;
 using Bit.Core.AdminConsole.Enums;
 using Bit.Core.AdminConsole.Repositories;
 using Bit.Core.AdminConsole.Services;
-using Bit.Core.Auth.Entities;
 using Bit.Core.Auth.Enums;
 using Bit.Core.Auth.Models;
 using Bit.Core.Auth.Models.Business.Tokenables;
-using Bit.Core.Auth.Repositories;
-using Bit.Core.Auth.Utilities;
 using Bit.Core.Context;
 using Bit.Core.Entities;
 using Bit.Core.Enums;
@@ -66,7 +63,6 @@ public class UserService : UserManager<User>, IUserService, IDisposable
     private readonly IProviderUserRepository _providerUserRepository;
     private readonly IStripeSyncService _stripeSyncService;
     private readonly IDataProtectorTokenFactory<OrgUserInviteTokenable> _orgUserInviteTokenDataFactory;
-    private readonly IWebAuthnCredentialRepository _webAuthnCredentialRepository;
 
     public UserService(
         IUserRepository userRepository,
@@ -98,8 +94,7 @@ public class UserService : UserManager<User>, IUserService, IDisposable
         IAcceptOrgUserCommand acceptOrgUserCommand,
         IProviderUserRepository providerUserRepository,
         IStripeSyncService stripeSyncService,
-        IDataProtectorTokenFactory<OrgUserInviteTokenable> orgUserInviteTokenDataFactory,
-        IWebAuthnCredentialRepository webAuthnRepository)
+        IDataProtectorTokenFactory<OrgUserInviteTokenable> orgUserInviteTokenDataFactory)
         : base(
               store,
               optionsAccessor,
@@ -137,7 +132,6 @@ public class UserService : UserManager<User>, IUserService, IDisposable
         _providerUserRepository = providerUserRepository;
         _stripeSyncService = stripeSyncService;
         _orgUserInviteTokenDataFactory = orgUserInviteTokenDataFactory;
-        _webAuthnCredentialRepository = webAuthnRepository;
     }
 
     public Guid? GetProperUserId(ClaimsPrincipal principal)
@@ -262,7 +256,7 @@ public class UserService : UserManager<User>, IUserService, IDisposable
         {
             try
             {
-                await CancelPremiumAsync(user, null, true);
+                await CancelPremiumAsync(user);
             }
             catch (GatewayException) { }
         }
@@ -546,114 +540,6 @@ public class UserService : UserManager<User>, IUserService, IDisposable
             throw new BadRequestException("Email not verified.");
         }
         await _mailService.SendHyprMagicLinkEmailAsync(user.Email, url, expirationDate);
-    }
-
-    public async Task<CredentialCreateOptions> StartWebAuthnLoginRegistrationAsync(User user)
-    {
-        var fidoUser = new Fido2User
-        {
-            DisplayName = user.Name,
-            Name = user.Email,
-            Id = user.Id.ToByteArray(),
-        };
-
-        // Get existing keys to exclude
-        var existingKeys = await _webAuthnCredentialRepository.GetManyByUserIdAsync(user.Id);
-        var excludeCredentials = existingKeys
-            .Select(k => new PublicKeyCredentialDescriptor(CoreHelpers.Base64UrlDecode(k.CredentialId)))
-            .ToList();
-
-        var authenticatorSelection = new AuthenticatorSelection
-        {
-            AuthenticatorAttachment = null,
-            RequireResidentKey = true,
-            UserVerification = UserVerificationRequirement.Required
-        };
-
-        var extensions = new AuthenticationExtensionsClientInputs { };
-
-        var options = _fido2.RequestNewCredential(fidoUser, excludeCredentials, authenticatorSelection,
-            AttestationConveyancePreference.None, extensions);
-
-        return options;
-    }
-
-    public async Task<bool> CompleteWebAuthLoginRegistrationAsync(User user, string name, CredentialCreateOptions options,
-        AuthenticatorAttestationRawResponse attestationResponse, bool supportsPrf,
-        string encryptedUserKey = null, string encryptedPublicKey = null, string encryptedPrivateKey = null)
-    {
-        var existingCredentials = await _webAuthnCredentialRepository.GetManyByUserIdAsync(user.Id);
-        if (existingCredentials.Count >= 5)
-        {
-            return false;
-        }
-
-        var existingCredentialIds = existingCredentials.Select(c => c.CredentialId);
-        IsCredentialIdUniqueToUserAsyncDelegate callback = (args, cancellationToken) => Task.FromResult(!existingCredentialIds.Contains(CoreHelpers.Base64UrlEncode(args.CredentialId)));
-
-        var success = await _fido2.MakeNewCredentialAsync(attestationResponse, options, callback);
-
-        var credential = new WebAuthnCredential
-        {
-            Name = name,
-            CredentialId = CoreHelpers.Base64UrlEncode(success.Result.CredentialId),
-            PublicKey = CoreHelpers.Base64UrlEncode(success.Result.PublicKey),
-            Type = success.Result.CredType,
-            AaGuid = success.Result.Aaguid,
-            Counter = (int)success.Result.Counter,
-            UserId = user.Id,
-            SupportsPrf = supportsPrf,
-            EncryptedUserKey = encryptedUserKey,
-            EncryptedPublicKey = encryptedPublicKey,
-            EncryptedPrivateKey = encryptedPrivateKey
-        };
-
-        await _webAuthnCredentialRepository.CreateAsync(credential);
-        return true;
-    }
-
-    public AssertionOptions StartWebAuthnLoginAssertion()
-    {
-        return _fido2.GetAssertionOptions(Enumerable.Empty<PublicKeyCredentialDescriptor>(), UserVerificationRequirement.Required);
-    }
-
-    public async Task<(User, WebAuthnCredential)> CompleteWebAuthLoginAssertionAsync(AssertionOptions options, AuthenticatorAssertionRawResponse assertionResponse)
-    {
-        if (!GuidUtilities.TryParseBytes(assertionResponse.Response.UserHandle, out var userId))
-        {
-            throw new BadRequestException("Invalid credential.");
-        }
-
-        var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
-        {
-            throw new BadRequestException("Invalid credential.");
-        }
-
-        var userCredentials = await _webAuthnCredentialRepository.GetManyByUserIdAsync(user.Id);
-        var assertedCredentialId = CoreHelpers.Base64UrlEncode(assertionResponse.Id);
-        var credential = userCredentials.FirstOrDefault(c => c.CredentialId == assertedCredentialId);
-        if (credential == null)
-        {
-            throw new BadRequestException("Invalid credential.");
-        }
-
-        // Always return true, since we've already filtered the credentials after user id
-        IsUserHandleOwnerOfCredentialIdAsync callback = (args, cancellationToken) => Task.FromResult(true);
-        var credentialPublicKey = CoreHelpers.Base64UrlDecode(credential.PublicKey);
-        var assertionVerificationResult = await _fido2.MakeAssertionAsync(
-            assertionResponse, options, credentialPublicKey, (uint)credential.Counter, callback);
-
-        // Update SignatureCounter
-        credential.Counter = (int)assertionVerificationResult.Counter;
-        await _webAuthnCredentialRepository.ReplaceAsync(credential);
-
-        if (assertionVerificationResult.Status != "ok")
-        {
-            throw new BadRequestException("Invalid credential.");
-        }
-
-        return (user, credential);
     }
 
     public async Task SendEmailVerificationAsync(User user)
@@ -1113,12 +999,6 @@ public class UserService : UserManager<User>, IUserService, IDisposable
             throw new BadRequestException("You can't subtract storage!");
         }
 
-        if ((paymentMethodType == PaymentMethodType.GoogleInApp ||
-            paymentMethodType == PaymentMethodType.AppleInApp) && additionalStorageGb > 0)
-        {
-            throw new BadRequestException("You cannot add storage with this payment method.");
-        }
-
         string paymentIntentClientSecret = null;
         IPaymentService paymentService = null;
         if (_globalSettings.SelfHosted)
@@ -1177,29 +1057,6 @@ public class UserService : UserManager<User>, IUserService, IDisposable
         }
         return new Tuple<bool, string>(string.IsNullOrWhiteSpace(paymentIntentClientSecret),
             paymentIntentClientSecret);
-    }
-
-    public async Task IapCheckAsync(User user, PaymentMethodType paymentMethodType)
-    {
-        if (paymentMethodType != PaymentMethodType.AppleInApp)
-        {
-            throw new BadRequestException("Payment method not supported for in-app purchases.");
-        }
-
-        if (user.Premium)
-        {
-            throw new BadRequestException("Already a premium user.");
-        }
-
-        if (!string.IsNullOrWhiteSpace(user.GatewayCustomerId))
-        {
-            var customerService = new Stripe.CustomerService();
-            var customer = await customerService.GetAsync(user.GatewayCustomerId);
-            if (customer != null && customer.Balance != 0)
-            {
-                throw new BadRequestException("Customer balance cannot exist when using in-app purchases.");
-            }
-        }
     }
 
     public async Task UpdateLicenseAsync(User user, UserLicense license)
@@ -1276,7 +1133,7 @@ public class UserService : UserManager<User>, IUserService, IDisposable
         }
     }
 
-    public async Task CancelPremiumAsync(User user, bool? endOfPeriod = null, bool accountDelete = false)
+    public async Task CancelPremiumAsync(User user, bool? endOfPeriod = null)
     {
         var eop = endOfPeriod.GetValueOrDefault(true);
         if (!endOfPeriod.HasValue && user.PremiumExpirationDate.HasValue &&
@@ -1284,11 +1141,11 @@ public class UserService : UserManager<User>, IUserService, IDisposable
         {
             eop = false;
         }
-        await _paymentService.CancelSubscriptionAsync(user, eop, accountDelete);
+        await _paymentService.CancelSubscriptionAsync(user, eop);
         await _referenceEventService.RaiseEventAsync(
             new ReferenceEvent(ReferenceEventType.CancelSubscription, user, _currentContext)
             {
-                EndOfPeriod = eop,
+                EndOfPeriod = eop
             });
     }
 

@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using Bit.Core.Auth.Entities;
 using Bit.Core.Auth.Enums;
 using Bit.Core.Auth.Models;
 using Bit.Core.Entities;
@@ -28,10 +27,6 @@ public interface IUserService
     Task<CredentialCreateOptions> StartWebAuthnRegistrationAsync(User user);
     Task<bool> DeleteWebAuthnKeyAsync(User user, int id);
     Task<bool> CompleteWebAuthRegistrationAsync(User user, int value, string name, AuthenticatorAttestationRawResponse attestationResponse);
-    Task<CredentialCreateOptions> StartWebAuthnLoginRegistrationAsync(User user);
-    Task<bool> CompleteWebAuthLoginRegistrationAsync(User user, string name, CredentialCreateOptions options, AuthenticatorAttestationRawResponse attestationResponse, bool supportsPrf, string encryptedUserKey = null, string encryptedPublicKey = null, string encryptedPrivateKey = null);
-    AssertionOptions StartWebAuthnLoginAssertion();
-    Task<(User, WebAuthnCredential)> CompleteWebAuthLoginAssertionAsync(AssertionOptions options, AuthenticatorAssertionRawResponse assertionResponse);
     Task SendHyprMagicLinkEmailAsync(User user, string url, DateTime expirationDate);
     Task SendEmailVerificationAsync(User user);
     Task<IdentityResult> ConfirmEmailAsync(User user, string token);
@@ -60,11 +55,10 @@ public interface IUserService
     Task<Tuple<bool, string>> SignUpPremiumAsync(User user, string paymentToken,
         PaymentMethodType paymentMethodType, short additionalStorageGb, UserLicense license,
         TaxInfo taxInfo);
-    Task IapCheckAsync(User user, PaymentMethodType paymentMethodType);
     Task UpdateLicenseAsync(User user, UserLicense license);
     Task<string> AdjustStorageAsync(User user, short storageAdjustmentGb);
     Task ReplacePaymentMethodAsync(User user, string paymentToken, PaymentMethodType paymentMethodType, TaxInfo taxInfo);
-    Task CancelPremiumAsync(User user, bool? endOfPeriod = null, bool accountDelete = false);
+    Task CancelPremiumAsync(User user, bool? endOfPeriod = null);
     Task ReinstatePremiumAsync(User user);
     Task EnablePremiumAsync(Guid userId, DateTime? expirationDate);
     Task EnablePremiumAsync(User user, DateTime? expirationDate);

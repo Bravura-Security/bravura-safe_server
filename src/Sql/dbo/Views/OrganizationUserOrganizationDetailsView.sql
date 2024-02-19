@@ -47,6 +47,7 @@ SELECT
     O.[SmServiceAccounts],
     O.[LimitCollectionCreationDeletion],
     O.[AllowAdminAccessToAllCollectionItems],
+    O.[FlexibleCollections],
     O.[Skip2faForSso],
     OU.[ForcePasswordReset]
 FROM

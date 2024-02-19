@@ -86,4 +86,24 @@
             break;
         }
     }
+
+    function unlinkProvider(id) {
+        if (confirm('Are you sure you want to unlink this organization from its provider?')) {
+            $.ajax({
+                type: "POST",
+                url: `@Url.Action("UnlinkOrganizationFromProvider", "Organizations")?id=${id}`,
+                dataType: 'json',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    alert("Successfully unlinked provider");
+                    window.location.href = `@Url.Action("Edit", "Organizations")?id=${id}`;
+                },
+                error: function (response) {
+                    alert("Error!");
+                }
+            });
+        }
+        return false;
+    }
 </script>

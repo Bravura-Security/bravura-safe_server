@@ -53,6 +53,7 @@
     @SecretsManagerBeta BIT = 0,
     @LimitCollectionCreationDeletion BIT = 1,
     @AllowAdminAccessToAllCollectionItems BIT = 1,
+    @FlexibleCollections BIT = 0,
     @Skip2faForSso BIT
 AS
 BEGIN
@@ -114,6 +115,7 @@ BEGIN
         [SecretsManagerBeta],
         [LimitCollectionCreationDeletion],
         [AllowAdminAccessToAllCollectionItems],
+        [FlexibleCollections],
         [Skip2faForSso]
     )
     VALUES
@@ -172,6 +174,7 @@ BEGIN
         @SecretsManagerBeta,
         @LimitCollectionCreationDeletion,
         @AllowAdminAccessToAllCollectionItems,
+        @FlexibleCollections,
         @Skip2faForSso
     )
 END

@@ -1,4 +1,5 @@
-﻿using Bit.Api.Auth.Models.Request;
+﻿using Api.Models.Request;
+using Bit.Api.Auth.Models.Request;
 using Bit.Api.Auth.Models.Request.Accounts;
 using Bit.Api.Models.Request;
 using Bit.Api.Models.Response;
@@ -206,16 +207,15 @@ public class DevicesController : Controller
 
     [AllowAnonymous]
     [HttpGet("knowndevice")]
-    public async Task<bool> GetByIdentifierQuery(
-        [FromHeader(Name = "X-Request-Email")] string email,
-        [FromHeader(Name = "X-Device-Identifier")] string deviceIdentifier)
+    public async Task<bool> GetByIdentifierQuery([FromHeader] KnownDeviceRequestModel request)
         {
-            if (string.IsNullOrWhiteSpace(email))// || string.IsNullOrWhiteSpace(identifier))
+            if (string.IsNullOrWhiteSpace(request.Email))// || string.IsNullOrWhiteSpace(identifier))
             {
                 return false;
             }
 
-            return await GetByIdentifier(CoreHelpers.Base64UrlDecodeString(email), deviceIdentifier);
+            return await GetByIdentifier(CoreHelpers.Base64UrlDecodeString(request.Email), request.DeviceIdentifier);
+
         }
 
     [Obsolete("Path is deprecated due to encoding issues, use /knowndevice instead.")]

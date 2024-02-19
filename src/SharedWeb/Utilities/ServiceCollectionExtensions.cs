@@ -114,13 +114,11 @@ public static class ServiceCollectionExtensions
         {
             // the non noop version is for AzureCosmos which we don't use
             services.AddSingleton<IInstallationDeviceRepository, NoopRepos.InstallationDeviceRepository>();
-            services.AddSingleton<IMetaDataRepository, NoopRepos.MetaDataRepository>();
         }
         else
         {
             services.AddSingleton<IEventRepository, TableStorageRepos.EventRepository>();
             services.AddSingleton<IInstallationDeviceRepository, TableStorageRepos.InstallationDeviceRepository>();
-            services.AddSingleton<IMetaDataRepository, TableStorageRepos.MetaDataRepository>();
         }
 
         return provider;
@@ -137,7 +135,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<IEmergencyAccessService, EmergencyAccessService>();
         services.AddSingleton<IDeviceService, DeviceService>();
-        services.AddSingleton<IAppleIapService, AppleIapService>();
         services.AddScoped<ISsoConfigService, SsoConfigService>();
         services.AddScoped<IAuthRequestService, AuthRequestService>();
         services.AddScoped<ISendService, SendService>();
@@ -545,6 +542,11 @@ public static class ServiceCollectionExtensions
         if (certificate != null)
         {
             identityServerBuilder.AddSigningCredential(certificate);
+        }
+        else if (env.IsDevelopment() && !string.IsNullOrEmpty(globalSettings.DevelopmentDirectory))
+        {
+            var developerSigningKeyPath = Path.Combine(globalSettings.DevelopmentDirectory, "signingkey.jwk");
+            identityServerBuilder.AddDeveloperSigningCredential(true, developerSigningKeyPath);
         }
         else if (env.IsDevelopment())
         {

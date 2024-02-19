@@ -60,6 +60,7 @@ public class ProfileOrganizationResponseModel : ResponseModel
         AccessSecretsManager = organization.AccessSecretsManager;
         LimitCollectionCreationDeletion = organization.LimitCollectionCreationDeletion;
         AllowAdminAccessToAllCollectionItems = organization.AllowAdminAccessToAllCollectionItems;
+        FlexibleCollections = organization.FlexibleCollections;
         Skip2faForSso = organization.Skip2faForSso;
 
         if (organization.SsoConfig != null)
@@ -117,5 +118,6 @@ public class ProfileOrganizationResponseModel : ResponseModel
     public bool AccessSecretsManager { get; set; }
     public bool LimitCollectionCreationDeletion { get; set; }
     public bool AllowAdminAccessToAllCollectionItems { get; set; }
+    public bool FlexibleCollections { get; set; }
     public bool Skip2faForSso { get; set; }
 }

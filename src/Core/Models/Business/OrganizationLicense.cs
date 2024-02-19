@@ -52,6 +52,8 @@ public class OrganizationLicense : ILicense
         UseSecretsManager = org.UseSecretsManager;
         SmSeats = org.SmSeats;
         SmServiceAccounts = org.SmServiceAccounts;
+        LimitCollectionCreationDeletion = org.LimitCollectionCreationDeletion;
+        AllowAdminAccessToAllCollectionItems = org.AllowAdminAccessToAllCollectionItems;
         Skip2faForSso = org.Skip2faForSso;
 
         if (subscriptionInfo?.Subscription == null)
@@ -136,6 +138,8 @@ public class OrganizationLicense : ILicense
     public bool UseSecretsManager { get; set; }
     public int? SmSeats { get; set; }
     public int? SmServiceAccounts { get; set; }
+    public bool LimitCollectionCreationDeletion { get; set; } = true;
+    public bool AllowAdminAccessToAllCollectionItems { get; set; } = true;
     public bool Trial { get; set; }
     public LicenseType? LicenseType { get; set; }
     public string Hash { get; set; }
@@ -148,11 +152,10 @@ public class OrganizationLicense : ILicense
     /// </summary>
     /// <remarks>Intentionally set one version behind to allow self hosted users some time to update before
     /// getting out of date license errors</remarks>
-    public const int CurrentLicenseFileVersion = 12;
-
+    public const int CurrentLicenseFileVersion = 14;
     private bool ValidLicenseVersion
     {
-        get => Version is >= 1 and <= 13;
+        get => Version is >= 1 and <= 15;
     }
 
     public byte[] GetDataBytes(bool forHash = false)
@@ -195,6 +198,10 @@ public class OrganizationLicense : ILicense
                     (Version >= 13 || !p.Name.Equals(nameof(SmServiceAccounts))) &&
                     // Skip2faForSso was added in Version 13
                     (Version >= 13 || !p.Name.Equals(nameof(Skip2faForSso))) &&
+                    // LimitCollectionCreationDeletion was added in Version 14
+                    (Version >= 14 || !p.Name.Equals(nameof(LimitCollectionCreationDeletion))) &&
+                    // AllowAdminAccessToAllCollectionItems was added in Version 15
+                    (Version >= 15 || !p.Name.Equals(nameof(AllowAdminAccessToAllCollectionItems))) &&
                     (
                         !forHash ||
                         (
@@ -342,6 +349,17 @@ public class OrganizationLicense : ILicense
                 organization.SmServiceAccounts == SmServiceAccounts &&
                 organization.Skip2faForSso == Skip2faForSso;
             }
+
+            // Restore validity check when Flexible Collections are enabled for cloud and self-host
+            // https://bitwarden.atlassian.net/browse/AC-1875
+            // if (valid && Version >= 14)
+            // {
+            //     valid = organization.LimitCollectionCreationDeletion == LimitCollectionCreationDeletion;
+            // }
+            // if (valid && Version >= 15)
+            // {
+            //     valid = organization.AllowAdminAccessToAllCollectionItems == AllowAdminAccessToAllCollectionItems;
+            // }
 
             return valid;
         }
