@@ -67,7 +67,8 @@ CREATE OR ALTER PROCEDURE [dbo].[Organization_Create]
     @MaxAutoscaleSmServiceAccounts INT = null,
     @SecretsManagerBeta BIT = 0,
     @LimitCollectionCreationDeletion BIT = 1,
-    @AllowAdminAccessToAllCollectionItems BIT = 1
+    @AllowAdminAccessToAllCollectionItems BIT = 1,
+    @Skip2faForSso BIT
 AS
 BEGIN
     SET NOCOUNT ON
@@ -127,7 +128,8 @@ BEGIN
         [MaxAutoscaleSmServiceAccounts],
         [SecretsManagerBeta],
         [LimitCollectionCreationDeletion],
-        [AllowAdminAccessToAllCollectionItems]
+        [AllowAdminAccessToAllCollectionItems],
+        [Skip2faForSso]
     )
     VALUES
     (
@@ -184,7 +186,8 @@ BEGIN
         @MaxAutoscaleSmServiceAccounts,
         @SecretsManagerBeta,
         @LimitCollectionCreationDeletion,
-        @AllowAdminAccessToAllCollectionItems
+        @AllowAdminAccessToAllCollectionItems,
+        @Skip2faForSso
     )
 END
 GO
@@ -245,7 +248,8 @@ CREATE OR ALTER PROCEDURE [dbo].[Organization_Update]
     @MaxAutoscaleSmServiceAccounts INT = null,
     @SecretsManagerBeta BIT = 0,
     @LimitCollectionCreationDeletion BIT = 1,
-    @AllowAdminAccessToAllCollectionItems BIT = 1
+    @AllowAdminAccessToAllCollectionItems BIT = 1,
+    @Skip2faForSso BIT
 AS
 BEGIN
     SET NOCOUNT ON
@@ -305,7 +309,8 @@ SET
     [MaxAutoscaleSmServiceAccounts] = @MaxAutoscaleSmServiceAccounts,
     [SecretsManagerBeta] = @SecretsManagerBeta,
     [LimitCollectionCreationDeletion] = @LimitCollectionCreationDeletion,
-    [AllowAdminAccessToAllCollectionItems] = @AllowAdminAccessToAllCollectionItems
+    [AllowAdminAccessToAllCollectionItems] = @AllowAdminAccessToAllCollectionItems,
+    [Skip2faForSso] = @Skip2faForSso
 WHERE
     [Id] = @Id
 END
@@ -364,7 +369,8 @@ SELECT
     O.[SmSeats],
     O.[SmServiceAccounts],
     O.[LimitCollectionCreationDeletion],
-    O.[AllowAdminAccessToAllCollectionItems]
+    O.[AllowAdminAccessToAllCollectionItems],
+    O.[Skip2faForSso]
 FROM
     [dbo].[OrganizationUser] OU
 LEFT JOIN

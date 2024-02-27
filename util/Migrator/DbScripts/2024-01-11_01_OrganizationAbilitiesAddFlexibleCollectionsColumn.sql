@@ -21,6 +21,7 @@ BEGIN
         [UseScim],
         [UseResetPassword],
         [UsePolicies],
+        [Skip2faForSso],
         [Enabled],
         [LimitCollectionCreationDeletion],
         [AllowAdminAccessToAllCollectionItems],

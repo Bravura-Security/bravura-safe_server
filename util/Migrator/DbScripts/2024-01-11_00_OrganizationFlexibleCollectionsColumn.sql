@@ -68,7 +68,8 @@ CREATE OR ALTER PROCEDURE [dbo].[Organization_Create]
     @SecretsManagerBeta BIT = 0,
     @LimitCollectionCreationDeletion BIT = 1,
     @AllowAdminAccessToAllCollectionItems BIT = 1,
-    @FlexibleCollections BIT = 0
+    @FlexibleCollections BIT = 0,
+    @Skip2faForSso BIT
 AS
 BEGIN
     SET NOCOUNT ON
@@ -129,7 +130,8 @@ BEGIN
         [SecretsManagerBeta],
         [LimitCollectionCreationDeletion],
         [AllowAdminAccessToAllCollectionItems],
-        [FlexibleCollections]
+        [FlexibleCollections],
+        [Skip2faForSso]
     )
     VALUES
     (
@@ -187,7 +189,8 @@ BEGIN
         @SecretsManagerBeta,
         @LimitCollectionCreationDeletion,
         @AllowAdminAccessToAllCollectionItems,
-        @FlexibleCollections
+        @FlexibleCollections,
+        @Skip2faForSso
     )
 END
 GO
@@ -249,7 +252,8 @@ CREATE OR ALTER PROCEDURE [dbo].[Organization_Update]
     @SecretsManagerBeta BIT = 0,
     @LimitCollectionCreationDeletion BIT = 1,
     @AllowAdminAccessToAllCollectionItems BIT = 1,
-    @FlexibleCollections BIT = 0
+    @FlexibleCollections BIT = 0,
+    @Skip2faForSso BIT
 AS
 BEGIN
     SET NOCOUNT ON
@@ -310,7 +314,8 @@ SET
     [SecretsManagerBeta] = @SecretsManagerBeta,
     [LimitCollectionCreationDeletion] = @LimitCollectionCreationDeletion,
     [AllowAdminAccessToAllCollectionItems] = @AllowAdminAccessToAllCollectionItems,
-    [FlexibleCollections] = @FlexibleCollections
+    [FlexibleCollections] = @FlexibleCollections,
+    [Skip2faForSso] = @Skip2faForSso
 WHERE
     [Id] = @Id
 END
@@ -370,7 +375,8 @@ SELECT
     O.[SmServiceAccounts],
     O.[LimitCollectionCreationDeletion],
     O.[AllowAdminAccessToAllCollectionItems],
-    O.[FlexibleCollections]
+    O.[FlexibleCollections],
+    O.[Skip2faForSso]
 FROM
     [dbo].[OrganizationUser] OU
 LEFT JOIN
