@@ -27,6 +27,7 @@ public static class OrganizationUserHelpers
             (nameof(OrganizationUser.Permissions), typeof(string), ou => ou.Permissions),
             (nameof(OrganizationUser.ResetPasswordKey), typeof(string), ou => ou.ResetPasswordKey),
             (nameof(OrganizationUser.AccessSecretsManager), typeof(bool), ou => ou.AccessSecretsManager),
+            (nameof(OrganizationUser.ForcePasswordReset), typeof(bool), ou => ou.ForcePasswordReset),
         };
 
         return orgUsers.BuildTable(table, columnData);
