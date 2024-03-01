@@ -392,7 +392,13 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE [dbo].[OrganizationUser_CreateWithCollections_V2]
+IF OBJECT_ID('[dbo].[OrganizationUser_CreateWithCollections_V2]') IS NOT NULL
+BEGIN
+    DROP PROCEDURE [dbo].[OrganizationUser_CreateWithCollections_V2]
+END
+GO
+
+CREATE PROCEDURE [dbo].[OrganizationUser_CreateWithCollections_V2]
     @Id UNIQUEIDENTIFIER,
     @OrganizationId UNIQUEIDENTIFIER,
     @UserId UNIQUEIDENTIFIER,
