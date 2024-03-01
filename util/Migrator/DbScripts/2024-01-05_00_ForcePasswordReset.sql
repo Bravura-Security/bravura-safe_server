@@ -392,7 +392,7 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE [dbo].[OrganizationUser_CreateWithCollections_V2]
+CREATE OR ALTER PROCEDURE [dbo].[OrganizationUser_CreateWithCollections_V2]
     @Id UNIQUEIDENTIFIER,
     @OrganizationId UNIQUEIDENTIFIER,
     @UserId UNIQUEIDENTIFIER,
@@ -484,8 +484,13 @@ BEGIN
         )
 
     -- Insert
-    INSERT INTO
-        [dbo].[CollectionUser]
+    INSERT INTO [dbo].[CollectionUser]
+    (
+        [CollectionId],
+        [OrganizationUserId],
+        [ReadOnly],
+        [HidePasswords]
+    )
     SELECT
         [Source].[Id],
         @Id,
@@ -524,7 +529,7 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE [dbo].[OrganizationUser_UpdateWithCollections_V2]
+CREATE OR ALTER PROCEDURE [dbo].[OrganizationUser_UpdateWithCollections_V2]
     @Id UNIQUEIDENTIFIER,
     @OrganizationId UNIQUEIDENTIFIER,
     @UserId UNIQUEIDENTIFIER,
