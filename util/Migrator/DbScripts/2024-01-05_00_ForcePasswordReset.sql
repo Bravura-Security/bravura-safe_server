@@ -398,7 +398,7 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE [dbo].[OrganizationUser_CreateWithCollections_V2]
+CREATE OR ALTER PROCEDURE [dbo].[OrganizationUser_CreateWithCollections_V2]
     @Id UNIQUEIDENTIFIER,
     @OrganizationId UNIQUEIDENTIFIER,
     @UserId UNIQUEIDENTIFIER,
