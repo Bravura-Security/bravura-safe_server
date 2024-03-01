@@ -24,7 +24,6 @@ public class ProviderOrganizationsController : Controller
     private readonly IProviderOrganizationRepository _providerOrganizationRepository;
     private readonly IProviderRepository _providerRepository;
     private readonly IProviderService _providerService;
-    private readonly IRemoveOrganizationFromProviderCommand _removeOrganizationFromProviderCommand;
     private readonly IRemovePaymentMethodCommand _removePaymentMethodCommand;
     private readonly IUserService _userService;
 
@@ -34,7 +33,6 @@ public class ProviderOrganizationsController : Controller
         IProviderOrganizationRepository providerOrganizationRepository,
         IProviderRepository providerRepository,
         IProviderService providerService,
-        IRemoveOrganizationFromProviderCommand removeOrganizationFromProviderCommand,
         IRemovePaymentMethodCommand removePaymentMethodCommand,
         IUserService userService)
     {
@@ -43,7 +41,6 @@ public class ProviderOrganizationsController : Controller
         _providerOrganizationRepository = providerOrganizationRepository;
         _providerRepository = providerRepository;
         _providerService = providerService;
-        _removeOrganizationFromProviderCommand = removeOrganizationFromProviderCommand;
         _removePaymentMethodCommand = removePaymentMethodCommand;
         _userService = userService;
     }
@@ -106,11 +103,6 @@ public class ProviderOrganizationsController : Controller
         var providerOrganization = await _providerOrganizationRepository.GetByIdAsync(id);
 
         var organization = await _organizationRepository.GetByIdAsync(providerOrganization.OrganizationId);
-
-        await _removeOrganizationFromProviderCommand.RemoveOrganizationFromProvider(
-            provider,
-            providerOrganization,
-            organization);
 
         await _removePaymentMethodCommand.RemovePaymentMethod(organization);
     }

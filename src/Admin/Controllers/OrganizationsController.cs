@@ -56,7 +56,6 @@ public class OrganizationsController : Controller
     private readonly IProjectRepository _projectRepository;
     private readonly IServiceAccountRepository _serviceAccountRepository;
     private readonly IProviderOrganizationRepository _providerOrganizationRepository;
-    private readonly IRemoveOrganizationFromProviderCommand _removeOrganizationFromProviderCommand;
     private readonly IRemovePaymentMethodCommand _removePaymentMethodCommand;
 
     public OrganizationsController(
@@ -83,7 +82,6 @@ public class OrganizationsController : Controller
         IProjectRepository projectRepository,
         IServiceAccountRepository serviceAccountRepository,
         IProviderOrganizationRepository providerOrganizationRepository,
-        IRemoveOrganizationFromProviderCommand removeOrganizationFromProviderCommand,
         IRemovePaymentMethodCommand removePaymentMethodCommand)
     {
         _organizationService = organizationService;
@@ -109,7 +107,6 @@ public class OrganizationsController : Controller
         _projectRepository = projectRepository;
         _serviceAccountRepository = serviceAccountRepository;
         _providerOrganizationRepository = providerOrganizationRepository;
-        _removeOrganizationFromProviderCommand = removeOrganizationFromProviderCommand;
         _removePaymentMethodCommand = removePaymentMethodCommand;
     }
 
@@ -486,11 +483,6 @@ public class OrganizationsController : Controller
         {
             return RedirectToAction("Edit", new { id });
         }
-
-        await _removeOrganizationFromProviderCommand.RemoveOrganizationFromProvider(
-            provider,
-            providerOrganization,
-            organization);
 
         await _removePaymentMethodCommand.RemovePaymentMethod(organization);
 

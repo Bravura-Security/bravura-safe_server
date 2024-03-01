@@ -17,19 +17,16 @@ public class ProviderOrganizationsController : Controller
     private readonly IProviderRepository _providerRepository;
     private readonly IProviderOrganizationRepository _providerOrganizationRepository;
     private readonly IOrganizationRepository _organizationRepository;
-    private readonly IRemoveOrganizationFromProviderCommand _removeOrganizationFromProviderCommand;
     private readonly IRemovePaymentMethodCommand _removePaymentMethodCommand;
 
     public ProviderOrganizationsController(IProviderRepository providerRepository,
         IProviderOrganizationRepository providerOrganizationRepository,
         IOrganizationRepository organizationRepository,
-        IRemoveOrganizationFromProviderCommand removeOrganizationFromProviderCommand,
         IRemovePaymentMethodCommand removePaymentMethodCommand)
     {
         _providerRepository = providerRepository;
         _providerOrganizationRepository = providerOrganizationRepository;
         _organizationRepository = organizationRepository;
-        _removeOrganizationFromProviderCommand = removeOrganizationFromProviderCommand;
         _removePaymentMethodCommand = removePaymentMethodCommand;
     }
 
@@ -54,11 +51,6 @@ public class ProviderOrganizationsController : Controller
         {
             return RedirectToAction("View", "Providers", new { id = providerId });
         }
-
-        await _removeOrganizationFromProviderCommand.RemoveOrganizationFromProvider(
-            provider,
-            providerOrganization,
-            organization);
 
         await _removePaymentMethodCommand.RemovePaymentMethod(organization);
 
