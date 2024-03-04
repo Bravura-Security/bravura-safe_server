@@ -74,8 +74,8 @@ public record BravuraEnterprise : Models.StaticStore.Plan
     {
         public EnterprisePasswordManagerFeatures()
         {
-            BaseSeats = 0;
-            BaseStorageGb = 1;
+            BaseSeats = 1000000;
+            BaseStorageGb = 100;
 
             HasAdditionalStorageOption = true;
             HasAdditionalSeatsOption = true;

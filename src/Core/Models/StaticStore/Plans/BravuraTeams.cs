@@ -67,8 +67,8 @@ public record BravuraTeams : Models.StaticStore.Plan
     {
         public TeamsPasswordManagerFeatures()
         {
-            BaseSeats = 0;
-            BaseStorageGb = 1;
+            BaseSeats = 32767;
+            BaseStorageGb = 100;
             BasePrice = 0;
 
             HasAdditionalStorageOption = true;
