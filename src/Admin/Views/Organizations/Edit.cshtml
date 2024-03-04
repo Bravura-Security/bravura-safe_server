@@ -8,16 +8,17 @@
     var canViewBillingInformation = AccessControlService.UserHasPermission(Permission.Org_BillingInformation_View);
     var canInitiateTrial = AccessControlService.UserHasPermission(Permission.Org_InitiateTrial);
     var canDelete = AccessControlService.UserHasPermission(Permission.Org_Delete);
+    var canUnlinkFromProvider = AccessControlService.UserHasPermission(Permission.Provider_Edit);
 }
 
 @section Scripts {
     @await Html.PartialAsync("_OrganizationFormScripts")
-    
+
     <script>
         (() => {
             document.getElementById('teams-trial').addEventListener('click', () => {
                 if (document.getElementById('@(nameof(Model.PlanType))').value !== '@((byte)PlanType.Free)') {
-                    alert('Team is not on a free plan.');
+                    alert('Organization is not on a free plan.');
                     return;
                 }
                 setTrialDefaults('@((byte)PlanType.TeamsAnnually)');
@@ -109,7 +110,7 @@
     }
     <div class="ml-auto d-flex">
         <div class="d-none">
-        @if (canInitiateTrial)
+        @if (canInitiateTrial && Model.Provider is null)
         {
             <button class="btn btn-secondary mr-2" type="button" id="teams-trial">
                 Teams Trial
@@ -119,6 +120,15 @@
             </button>
         }
         </div>
+        @if (canUnlinkFromProvider && Model.Provider is not null)
+        {
+            <button
+                class="btn btn-outline-danger mr-2"
+                onclick="return unlinkProvider('@Model.Organization.Id');"
+            >
+                Unlink provider
+            </button>
+        }
         @if (canDelete)
         {
             <form asp-action="Delete" asp-route-id="@Model.Organization.Id"

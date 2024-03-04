@@ -45,7 +45,11 @@ SELECT
     O.[UsePasswordManager],
     O.[SmSeats],
     O.[SmServiceAccounts],
-    O.[Skip2faForSso]
+    O.[LimitCollectionCreationDeletion],
+    O.[AllowAdminAccessToAllCollectionItems],
+    O.[FlexibleCollections],
+    O.[Skip2faForSso],
+    OU.[ForcePasswordReset]
 FROM
     [dbo].[OrganizationUser] OU
 LEFT JOIN

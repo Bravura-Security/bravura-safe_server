@@ -12,5 +12,6 @@ CREATE TYPE [dbo].[OrganizationUserType2] AS TABLE(
     [RevisionDate] DATETIME2(7),
     [Permissions] NVARCHAR(MAX),
     [ResetPasswordKey] VARCHAR(MAX),
-    [AccessSecretsManager] BIT
+    [AccessSecretsManager] BIT,
+    [ForcePasswordReset] BIT
 )

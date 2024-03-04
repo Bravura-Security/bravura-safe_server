@@ -34,10 +34,9 @@ public interface IUserService
     Task<IdentityResult> ChangeEmailAsync(User user, string masterPassword, string newEmail, string newMasterPassword,
         string token, string key);
     Task<IdentityResult> ChangePasswordAsync(User user, string masterPassword, string newMasterPassword, string passwordHint, string key);
-    Task<IdentityResult> SetPasswordAsync(User user, string newMasterPassword, string key, string orgIdentifier = null);
     Task<IdentityResult> SetKeyConnectorKeyAsync(User user, string key, string orgIdentifier);
     Task<IdentityResult> ConvertToKeyConnectorAsync(User user);
-    Task<IdentityResult> AdminResetPasswordAsync(OrganizationUserType type, Guid orgId, Guid id, string newMasterPassword, string key);
+    Task<IdentityResult> AdminResetPasswordAsync(OrganizationUserType type, Guid orgId, Guid id, string newMasterPassword, string key, bool forcePasswordReset = true);
     Task<IdentityResult> UpdateTempPasswordAsync(User user, string newMasterPassword, string key, string hint);
     Task<IdentityResult> ChangeKdfAsync(User user, string masterPassword, string newMasterPassword, string key,
         KdfType kdf, int kdfIterations, int? kdfMemory, int? kdfParallelism);
@@ -56,11 +55,10 @@ public interface IUserService
     Task<Tuple<bool, string>> SignUpPremiumAsync(User user, string paymentToken,
         PaymentMethodType paymentMethodType, short additionalStorageGb, UserLicense license,
         TaxInfo taxInfo);
-    Task IapCheckAsync(User user, PaymentMethodType paymentMethodType);
     Task UpdateLicenseAsync(User user, UserLicense license);
     Task<string> AdjustStorageAsync(User user, short storageAdjustmentGb);
     Task ReplacePaymentMethodAsync(User user, string paymentToken, PaymentMethodType paymentMethodType, TaxInfo taxInfo);
-    Task CancelPremiumAsync(User user, bool? endOfPeriod = null, bool accountDelete = false);
+    Task CancelPremiumAsync(User user, bool? endOfPeriod = null);
     Task ReinstatePremiumAsync(User user);
     Task EnablePremiumAsync(Guid userId, DateTime? expirationDate);
     Task EnablePremiumAsync(User user, DateTime? expirationDate);
@@ -75,6 +73,9 @@ public interface IUserService
     Task<bool> TwoFactorIsEnabledAsync(ITwoFactorProvidersUser user);
     Task<bool> TwoFactorProviderIsEnabledAsync(TwoFactorProviderType provider, ITwoFactorProvidersUser user);
     Task<string> GenerateSignInTokenAsync(User user, string purpose);
+
+    Task<IdentityResult> UpdatePasswordHash(User user, string newPassword,
+        bool validatePassword = true, bool refreshStamp = true);
     Task RotateApiKeyAsync(User user);
     string GetUserName(ClaimsPrincipal principal);
     Task SendOTPAsync(User user);

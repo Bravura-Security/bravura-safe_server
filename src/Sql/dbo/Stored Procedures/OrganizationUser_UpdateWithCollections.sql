@@ -13,12 +13,13 @@
     @Permissions NVARCHAR(MAX),
     @ResetPasswordKey VARCHAR(MAX),
     @Collections AS [dbo].[SelectionReadOnlyArray] READONLY,
-    @AccessSecretsManager BIT = 0
+    @AccessSecretsManager BIT = 0,
+    @ForcePasswordReset BIT = 1
 AS
 BEGIN
     SET NOCOUNT ON
 
-    EXEC [dbo].[OrganizationUser_Update] @Id, @OrganizationId, @UserId, @Email, @Key, @Status, @Type, @AccessAll, @ExternalId, @CreationDate, @RevisionDate, @Permissions, @ResetPasswordKey, @AccessSecretsManager
+    EXEC [dbo].[OrganizationUser_Update] @Id, @OrganizationId, @UserId, @Email, @Key, @Status, @Type, @AccessAll, @ExternalId, @CreationDate, @RevisionDate, @Permissions, @ResetPasswordKey, @AccessSecretsManager, @ForcePasswordReset
     -- Update
     UPDATE
         [Target]
@@ -36,9 +37,14 @@ BEGIN
             OR [Target].[HidePasswords] != [Source].[HidePasswords]
         )
 
-    -- Insert
-    INSERT INTO
-        [dbo].[CollectionUser]
+    -- Insert (with column list because a value for Manage is not being provided)
+    INSERT INTO [dbo].[CollectionUser]
+    (
+        [CollectionId],
+        [OrganizationUserId],
+        [ReadOnly],
+        [HidePasswords]
+    )
     SELECT
         [Source].[Id],
         @Id,
@@ -58,7 +64,7 @@ BEGIN
                 [CollectionId] = [Source].[Id]
                 AND [OrganizationUserId] = @Id
         )
-    
+
     -- Delete
     DELETE
         CU

@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[Organization] (
+CREATE TABLE [dbo].[Organization] (
     [Id]                            UNIQUEIDENTIFIER NOT NULL,
     [Identifier]                    NVARCHAR (50)    NULL,
     [Name]                          NVARCHAR (50)    NOT NULL,
@@ -51,6 +51,9 @@
     [MaxAutoscaleSmSeats]           INT              NULL,
     [MaxAutoscaleSmServiceAccounts] INT              NULL,
     [SecretsManagerBeta]            BIT              NOT NULL CONSTRAINT [DF_Organization_SecretsManagerBeta] DEFAULT (0),
+    [LimitCollectionCreationDeletion]   BIT              NOT NULL CONSTRAINT [DF_Organization_LimitCollectionCreationDeletion] DEFAULT (1),
+    [AllowAdminAccessToAllCollectionItems]   BIT              NOT NULL CONSTRAINT [DF_Organization_AllowAdminAccessToAllCollectionItems] DEFAULT (1),
+    [FlexibleCollections]           BIT             NOT NULL CONSTRAINT [DF_Organization_FlexibleCollections] DEFAULT (0),
     [Skip2faForSso]                 BIT              NOT NULL,
     CONSTRAINT [PK_Organization] PRIMARY KEY CLUSTERED ([Id] ASC)
 );

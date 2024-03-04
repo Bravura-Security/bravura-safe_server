@@ -1,4 +1,4 @@
-﻿CREATE VIEW [dbo].[OrganizationUserUserDetailsView]
+CREATE VIEW [dbo].[OrganizationUserUserDetailsView]
 AS
 SELECT
     OU.[Id],
@@ -18,7 +18,8 @@ SELECT
     OU.[Permissions],
     OU.[ResetPasswordKey],
     U.[UsesKeyConnector],
-    CASE WHEN U.[MasterPassword] IS NOT NULL THEN 1 ELSE 0 END AS HasMasterPassword
+    CASE WHEN U.[MasterPassword] IS NOT NULL THEN 1 ELSE 0 END AS HasMasterPassword,
+    OU.[ForcePasswordReset]
 FROM
     [dbo].[OrganizationUser] OU
 LEFT JOIN
