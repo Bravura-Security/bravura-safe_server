@@ -22,6 +22,7 @@ public record BravuraTeams : Models.StaticStore.Plan
         Has2fa = true;
         HasApi = true;
         UsersGetPremium = true;
+        HasCustomPermissions = true;
 
         UpgradeSortOrder = 2;
         DisplaySortOrder = 2;
