@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <Version>2024.1.2</Version>
+    <Version>2024.1.0</Version>
     <RootNamespace>Bit.$(MSBuildProjectName)</RootNamespace>
     <InternalVersion>2024-1.0</InternalVersion>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
