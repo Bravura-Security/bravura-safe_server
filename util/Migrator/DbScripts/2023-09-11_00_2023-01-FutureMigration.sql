@@ -196,7 +196,7 @@ CREATE OR ALTER PROCEDURE [dbo].[User_Update]
     @KdfParallelism INT = NULL,
     @CreationDate DATETIME2(7),
     @RevisionDate DATETIME2(7),
-    @ApiKey VARCHAR(30),
+    @ApiKey VARCHAR(MAX),
     @ForcePasswordReset BIT = 0,
     @UsesKeyConnector BIT = 0,
     @FailedLoginCount INT,
