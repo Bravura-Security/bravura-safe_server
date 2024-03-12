@@ -231,7 +231,7 @@ public class User : ITableObject<Guid>, ISubscriber, IStorable, IStorableSubscri
 
     public User Decrypt(byte[] cryptKey, byte[] authKey)
     {
-        if (encrypted == false || encrypted is null)
+        if (encrypted == false)
             return this;
         if (!string.IsNullOrWhiteSpace(MasterPasswordHint)) MasterPasswordHint = AESHMACEncryption.SimpleDecrypt(MasterPasswordHint, cryptKey, authKey);
         if (!string.IsNullOrWhiteSpace(TwoFactorRecoveryCode)) TwoFactorRecoveryCode = AESHMACEncryption.SimpleDecrypt(TwoFactorRecoveryCode, cryptKey, authKey);

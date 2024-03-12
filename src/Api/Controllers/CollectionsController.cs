@@ -123,6 +123,11 @@ public class CollectionsController : Controller
             return await GetManyWithDetails_vNext(orgId);
         }
 
+        var currentContextOrganization = _currentContext.GetOrganization(orgId);
+        if (currentContextOrganization.Type == OrganizationUserType.User || //user level == User type
+            currentContextOrganization.Type == OrganizationUserType.Custom) //user type === custom
+        {}
+        else
         // Old pre-flexible collections logic follows
         if (!await ViewAtLeastOneCollectionAsync(orgId) && !await _currentContext.ManageUsers(orgId) && !await _currentContext.ManageGroups(orgId))
         {
