@@ -15,6 +15,7 @@ public record BravuraTeams : Models.StaticStore.Plan
 
         TrialPeriodDays = 7;
 
+        HasPolicies = true;
         HasGroups = true;
         HasDirectory = true;
         HasEvents = true;
