@@ -19,7 +19,7 @@ public record BravuraTeams : Models.StaticStore.Plan
         HasDirectory = true;
         HasEvents = true;
         HasTotp = true;
-        Has2fa = true;
+        Has2fa = false;
         HasApi = true;
         UsersGetPremium = true;
         HasCustomPermissions = true;
