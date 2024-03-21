@@ -96,6 +96,31 @@ namespace Bit.Core.Utilities.Crypto
             }
         }
 
+        public static byte[] ConvertIfBase64String(string s, out bool bVal)
+        {
+            bVal=false;
+            // Check if the string is null or empty
+            if (string.IsNullOrEmpty(s))
+            {
+                return null;
+            }
+
+            // Try to decode the string
+            try
+            {
+                // If the decoding is successful, then it's a valid Base64 string
+                byte[] bytes = Convert.FromBase64String(s);
+                bVal=true;
+                return bytes;
+            }
+            catch (FormatException ex)
+            {
+                // If an exception is thrown, it means the string is not a valid Base64 string
+                bVal=false;
+                return null;
+            }
+        }
+
         public static string SimpleDecrypt(string encryptedMessage, byte[] cryptKey, byte[] authKey, int nonSecretPayloadLength = 0)
         {
             if (string.IsNullOrWhiteSpace(encryptedMessage))
