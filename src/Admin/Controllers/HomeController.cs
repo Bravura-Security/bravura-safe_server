@@ -11,13 +11,20 @@ namespace Bit.Admin.Controllers;
 public class HomeController : Controller
 {
     private readonly GlobalSettings _globalSettings;
-    private readonly HttpClient _httpClient = new HttpClient();
+    private readonly HttpClient _httpClient = null; // new HttpClient();
     private readonly ILogger<HomeController> _logger;
 
     public HomeController(GlobalSettings globalSettings, ILogger<HomeController> logger)
     {
         _globalSettings = globalSettings;
         _logger = logger;
+
+        // Create an instance of HttpClient with the custom HttpClientHandler
+        // when using a self signed cert
+        _httpClient = new HttpClient(new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+        });
     }
 
     [Authorize]
@@ -43,7 +50,7 @@ public class HomeController : Controller
     public async Task<IActionResult> GetLatestVersion(ProjectType project, CancellationToken cancellationToken)
     {
         //var requestUri = $"https://selfhost.bitwarden.com/version.json";
-        var requestUri = $"{_globalSettings.BaseServiceUri.InternalVault}/version.json";
+        var requestUri = $"{_globalSettings.BaseServiceUri.Vault}/version.json";
         try
         {
             var response = await _httpClient.GetAsync(requestUri, cancellationToken);
@@ -60,6 +67,10 @@ public class HomeController : Controller
         }
         catch (HttpRequestException e)
         {
+            Console.WriteLine("\n\n\n ******");
+            Console.WriteLine("\n\n\n Using request URI: " + requestUri);
+            Console.WriteLine("\n\n\n ******");
+
             _logger.LogError(e, $"Error encountered while sending GET request to {requestUri}");
             return new JsonResult("Unable to fetch latest version") { StatusCode = StatusCodes.Status500InternalServerError };
         }
@@ -69,7 +80,7 @@ public class HomeController : Controller
 
     public async Task<IActionResult> GetInstalledWebVersion(CancellationToken cancellationToken)
     {
-        var requestUri = $"{_globalSettings.BaseServiceUri.InternalVault}/version.json";
+        var requestUri = $"{_globalSettings.BaseServiceUri.Vault}/version.json";
         try
         {
             var response = await _httpClient.GetAsync(requestUri, cancellationToken);
@@ -87,6 +98,9 @@ public class HomeController : Controller
         }
         catch(Exception)
         {
+            Console.WriteLine("\n\n\n ******");
+            Console.WriteLine("\n\n\n Using request URI: " + requestUri);
+            Console.WriteLine("\n\n\n ******");
             return new JsonResult("Unable to get installed version") { StatusCode = StatusCodes.Status500InternalServerError };
         }
 
