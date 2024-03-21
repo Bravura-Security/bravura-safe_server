@@ -1,7 +1,7 @@
 ﻿using Bit.Core.Auth.Models.Data;
 using Bit.Core.Auth.Repositories;
-using Duende.IdentityServer.Models;
-using Duende.IdentityServer.Stores;
+using IdentityServer4.Models;
+using IdentityServer4.Stores;
 
 namespace Bit.Identity.IdentityServer;
 

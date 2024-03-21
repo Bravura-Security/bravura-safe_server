@@ -33,10 +33,10 @@ using Bit.Core.Vault.Services;
 using Bit.Infrastructure.Dapper;
 using Bit.Infrastructure.EntityFramework;
 using DnsClient;
-using Duende.IdentityServer.Configuration;
 using IdentityModel;
+using IdentityServer4.AccessTokenValidation;
+using IdentityServer4.Configuration;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -467,24 +467,16 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services, GlobalSettings globalSettings, IWebHostEnvironment environment,
         Action<AuthorizationOptions> addAuthorization)
     {
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+        services
+            .AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+            .AddIdentityServerAuthentication(options =>
             {
-                options.MapInboundClaims = false;
                 options.Authority = globalSettings.BaseServiceUri.InternalIdentity;
                 options.RequireHttpsMetadata = !environment.IsDevelopment() &&
                     globalSettings.BaseServiceUri.InternalIdentity.StartsWith("https");
-                options.TokenValidationParameters.ValidateAudience = false;
-                options.TokenValidationParameters.ValidTypes = new[] { "at+jwt" };
-                options.TokenValidationParameters.NameClaimType = ClaimTypes.Email;
-                options.Events = new JwtBearerEvents
-                {
-                    OnMessageReceived = (context) =>
-                    {
-                        context.Token = TokenRetrieval.FromAuthorizationHeaderOrQueryString()(context.Request);
-                        return Task.CompletedTask;
-                    }
-                };
+                options.TokenRetriever = TokenRetrieval.FromAuthorizationHeaderOrQueryString();
+                options.NameClaimType = ClaimTypes.Email;
+                options.SupportedTokens = SupportedTokens.Jwt;
             });
 
         if (addAuthorization != null)

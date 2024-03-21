@@ -1,5 +1,5 @@
 ﻿using Bit.Core.Settings;
-using Duende.IdentityServer.Models;
+using IdentityServer4.Models;
 
 namespace Bit.Identity.IdentityServer;
 
