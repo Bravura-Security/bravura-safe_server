@@ -1,5 +1,4 @@
-﻿#nullable enable
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Bit.Core.Auth.Models.Data;
 using Duende.IdentityServer.Models;
 
@@ -25,19 +24,19 @@ public class Grant : IGrant
 
     public int Id { get; set; }
     [MaxLength(200)]
-    public string Key { get; set; } = null!;
+    public string Key { get; set; }
     [MaxLength(50)]
-    public string Type { get; set; } = null!;
+    public string Type { get; set; }
     [MaxLength(200)]
-    public string? SubjectId { get; set; }
+    public string SubjectId { get; set; }
     [MaxLength(100)]
-    public string? SessionId { get; set; }
+    public string SessionId { get; set; }
     [MaxLength(200)]
-    public string ClientId { get; set; } = null!;
+    public string ClientId { get; set; }
     [MaxLength(200)]
-    public string? Description { get; set; }
-    public DateTime CreationDate { get; set; } = DateTime.UtcNow;
+    public string Description { get; set; }
+    public DateTime CreationDate { get; set; }
     public DateTime? ExpirationDate { get; set; }
     public DateTime? ConsumedDate { get; set; }
-    public string Data { get; set; } = null!;
+    public string Data { get; set; }
 }

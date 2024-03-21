@@ -16,10 +16,14 @@
 
 
 GO
+CREATE NONCLUSTERED INDEX [IX_Grant_SubjectId_ClientId_Type]
+    ON [dbo].[Grant]([SubjectId] ASC, [ClientId] ASC, [Type] ASC);
+
+GO
+CREATE NONCLUSTERED INDEX [IX_Grant_SubjectId_SessionId_Type]
+    ON [dbo].[Grant]([SubjectId] ASC, [SessionId] ASC, [Type] ASC);
+
+GO
 CREATE NONCLUSTERED INDEX [IX_Grant_ExpirationDate]
     ON [dbo].[Grant]([ExpirationDate] ASC);
 
-GO
-
-CREATE UNIQUE INDEX [IX_Grant_Key]
-    ON [dbo].[Grant]([Key]);
