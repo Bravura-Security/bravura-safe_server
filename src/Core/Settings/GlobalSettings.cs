@@ -335,6 +335,7 @@ public class GlobalSettings : IGlobalSettings
         public string CertificateThumbprint { get; set; }
         public string CertificatePassword { get; set; }
         public string RedisConnectionString { get; set; }
+        public string CosmosConnectionString { get; set; }
     }
 
     public class DataProtectionSettings
