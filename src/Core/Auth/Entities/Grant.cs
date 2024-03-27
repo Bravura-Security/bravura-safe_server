@@ -1,7 +1,6 @@
-﻿#nullable enable
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Bit.Core.Auth.Models.Data;
-using Duende.IdentityServer.Models;
+using IdentityServer4.Models;
 
 namespace Bit.Core.Auth.Entities;
 

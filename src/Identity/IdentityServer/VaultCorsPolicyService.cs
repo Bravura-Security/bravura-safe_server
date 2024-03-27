@@ -1,6 +1,6 @@
 ﻿using Bit.Core.Settings;
 using Bit.Core.Utilities;
-using Duende.IdentityServer.Services;
+using IdentityServer4.Services;
 
 namespace Bit.Identity.IdentityServer;
 

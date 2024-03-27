@@ -10,7 +10,7 @@ using Bit.Core.Settings;
 using Bit.Core.Utilities;
 using Bit.Identity.Utilities;
 using Bit.SharedWeb.Utilities;
-using Duende.IdentityServer.Extensions;
+using IdentityServer4.Extensions;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.OpenApi.Models;

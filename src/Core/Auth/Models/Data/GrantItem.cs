@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using Bit.Core.Auth.Repositories.Cosmos;
-using Duende.IdentityServer.Models;
+using IdentityServer4.Models;
 
 namespace Bit.Core.Auth.Models.Data;
 

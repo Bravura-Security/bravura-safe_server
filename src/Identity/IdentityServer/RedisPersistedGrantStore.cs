@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
-using Duende.IdentityServer.Models;
-using Duende.IdentityServer.Stores;
+using IdentityServer4.Models;
+using IdentityServer4.Stores;
 using MessagePack;
 using StackExchange.Redis;
 

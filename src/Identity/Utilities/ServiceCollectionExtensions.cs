@@ -4,9 +4,9 @@ using Bit.Core.Settings;
 using Bit.Core.Utilities;
 using Bit.Identity.IdentityServer;
 using Bit.SharedWeb.Utilities;
-using Duende.IdentityServer.ResponseHandling;
-using Duende.IdentityServer.Services;
-using Duende.IdentityServer.Stores;
+using IdentityServer4.ResponseHandling;
+using IdentityServer4.Services;
+using IdentityServer4.Stores;
 using StackExchange.Redis;
 
 namespace Bit.Identity.Utilities;
@@ -26,7 +26,6 @@ public static class ServiceCollectionExtensions
         var identityServerBuilder = services
             .AddIdentityServer(options =>
             {
-                options.LicenseKey = globalSettings.IdentityServer.LicenseKey;
                 options.Endpoints.EnableIntrospectionEndpoint = false;
                 options.Endpoints.EnableEndSessionEndpoint = false;
                 options.Endpoints.EnableUserInfoEndpoint = false;
@@ -39,7 +38,6 @@ public static class ServiceCollectionExtensions
                     options.Authentication.CookieSameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode.Unspecified;
                 }
                 options.InputLengthRestrictions.UserName = 256;
-                options.KeyManagement.Enabled = false;
             })
             .AddInMemoryCaching()
             .AddInMemoryApiResources(ApiResources.GetApiResources())

@@ -1,8 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Bit.Identity.IdentityServer;
 using Bit.Infrastructure.Dapper.Auth.Repositories;
-using Duende.IdentityServer.Models;
-using Duende.IdentityServer.Stores;
+using IdentityServer4.Models;
+using IdentityServer4.Stores;
 using Microsoft.Extensions.Logging.Abstractions;
 using StackExchange.Redis;
 

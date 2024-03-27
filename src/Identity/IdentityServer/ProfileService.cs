@@ -5,8 +5,8 @@ using Bit.Core.Identity;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
 using Bit.Core.Utilities;
-using Duende.IdentityServer.Models;
-using Duende.IdentityServer.Services;
+using IdentityServer4.Models;
+using IdentityServer4.Services;
 
 namespace Bit.Identity.IdentityServer;
 

@@ -1,4 +1,4 @@
-﻿using Duende.IdentityServer.Models;
+﻿using IdentityServer4.Models;
 
 namespace Bit.Core.IdentityServer;
 

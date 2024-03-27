@@ -14,7 +14,7 @@ using Bit.Core.Auth.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections;
-using Duende.IdentityServer.Extensions;
+using IdentityServer4.Extensions;
 
 namespace Bit.Core.Services;
 
