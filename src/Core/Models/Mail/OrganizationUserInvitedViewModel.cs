@@ -24,6 +24,7 @@ public class OrganizationUserInvitedViewModel : BaseTitleContactUsMailModel
             TitleFirst = orgInvitesInfo.IsFreeOrg ? freeOrgTitle : "Join ",
             TitleSecondBold = orgInvitesInfo.IsFreeOrg ? string.Empty : CoreHelpers.SanitizeForEmail(orgInvitesInfo.OrganizationName, false),
             TitleThird = orgInvitesInfo.IsFreeOrg ? string.Empty : " and start securing your passwords!",
+            WebVaultUrlForImage = globalSettings.BaseServiceUri.Vault,
             OrganizationName = CoreHelpers.SanitizeForEmail(orgInvitesInfo.OrganizationName, false) + orgUser.Status,
             Email = WebUtility.UrlEncode(orgUser.Email),
             OrganizationId = orgUser.OrganizationId.ToString(),
