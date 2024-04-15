@@ -145,6 +145,11 @@ public class User : ITableObject<Guid>, ISubscriber, IStorable, IStorableSubscri
         }
     }
 
+    public bool? HasValidEncryptedFields()
+    {
+        return ValidEncryptedFields;
+    }
+
     public Guid? GetUserId()
     {
         return Id;
