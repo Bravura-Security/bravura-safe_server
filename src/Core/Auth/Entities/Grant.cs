@@ -22,7 +22,6 @@ public class Grant : IGrant
         Data = pGrant.Data;
     }
 
-    public int Id { get; set; }
     [MaxLength(200)]
     public string Key { get; set; } = null!;
     [MaxLength(50)]

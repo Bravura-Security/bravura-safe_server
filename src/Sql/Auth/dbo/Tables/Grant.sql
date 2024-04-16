@@ -1,6 +1,5 @@
 ﻿CREATE TABLE [dbo].[Grant]
 (
-    [Id] INT NOT NULL IDENTITY(1,1),
     [Key] NVARCHAR (200) NOT NULL,
     [Type] NVARCHAR (50) NOT NULL,
     [SubjectId] NVARCHAR (200) NULL,
@@ -11,7 +10,7 @@
     [ExpirationDate] DATETIME2 (7) NULL,
     [ConsumedDate] DATETIME2 (7) NULL,
     [Data] NVARCHAR (MAX) NOT NULL,
-    CONSTRAINT [PK_Grant] PRIMARY KEY CLUSTERED ([Id] ASC)
+    CONSTRAINT [PK_Grant] PRIMARY KEY CLUSTERED ([Key] ASC)
 );
 
 

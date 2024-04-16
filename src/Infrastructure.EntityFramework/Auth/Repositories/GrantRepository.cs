@@ -87,7 +87,6 @@ public class GrantRepository : BaseEntityFrameworkRepository, IGrantRepository
                                        select g).FirstOrDefaultAsync();
             if (existingGrant != null)
             {
-                gObj.Id = existingGrant.Id;
                 dbContext.Entry(existingGrant).CurrentValues.SetValues(gObj);
             }
             else
