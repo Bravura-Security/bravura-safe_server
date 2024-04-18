@@ -112,7 +112,7 @@ public class CipherDetailsResponseModel : CipherResponseModel
     {
         if (collectionCiphers?.ContainsKey(cipher.Id) ?? false)
         {
-            CollectionIds = collectionCiphers[cipher.Id].Select(c => c.CollectionId);
+            CollectionIds = collectionCiphers[cipher.Id].Select(c => c.CollectionId).Distinct();
         }
         else
         {
@@ -124,7 +124,7 @@ public class CipherDetailsResponseModel : CipherResponseModel
         IEnumerable<CollectionCipher> collectionCiphers, string obj = "cipherDetails")
         : base(cipher, globalSettings, obj)
     {
-        CollectionIds = collectionCiphers?.Select(c => c.CollectionId) ?? new List<Guid>();
+        CollectionIds = collectionCiphers?.Select(c => c.CollectionId).Distinct() ?? new List<Guid>();
     }
 
     public IEnumerable<Guid> CollectionIds { get; set; }
@@ -138,7 +138,7 @@ public class CipherMiniDetailsResponseModel : CipherMiniResponseModel
     {
         if (collectionCiphers?.ContainsKey(cipher.Id) ?? false)
         {
-            CollectionIds = collectionCiphers[cipher.Id].Select(c => c.CollectionId);
+            CollectionIds = collectionCiphers[cipher.Id].Select(c => c.CollectionId).Distinct();
         }
         else
         {

@@ -124,8 +124,8 @@ public class CollectionsController : Controller
         }
 
         var currentContextOrganization = _currentContext.GetOrganization(orgId);
-        if (currentContextOrganization.Type == OrganizationUserType.User || //user level == User type
-            currentContextOrganization.Type == OrganizationUserType.Custom) //user type === custom
+        if ( (currentContextOrganization != null ) && (currentContextOrganization.Type == OrganizationUserType.User || regular user
+            currentContextOrganization.Type == OrganizationUserType.Custom) )// custom user
         {}
         else
         // Old pre-flexible collections logic follows
