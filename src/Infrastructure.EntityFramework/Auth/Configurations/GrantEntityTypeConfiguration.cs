@@ -9,17 +9,8 @@ public class GrantEntityTypeConfiguration : IEntityTypeConfiguration<Grant>
     public void Configure(EntityTypeBuilder<Grant> builder)
     {
         builder
-            .HasKey(s => s.Id)
-            .HasName("PK_Grant")
-            .IsClustered();
-
-        builder
-            .Property(s => s.Id)
-            .UseIdentityColumn();
-
-        builder
-            .HasIndex(s => s.Key)
-            .IsUnique(true);
+            .HasKey(s => s.Key)
+            .HasName("PK_Grant");
 
         builder.ToTable(nameof(Grant));
     }
