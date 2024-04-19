@@ -128,7 +128,7 @@ public class OrganizationsControllerTests : IDisposable
         var exception = await Assert.ThrowsAsync<BadRequestException>(
             () => _sut.Leave(orgId.ToString()));
 
-        Assert.Contains("Your organization's Single Sign-On settings prevent you from leaving.",
+        Assert.Contains("Your team's Single Sign-On settings prevent you from leaving.",
             exception.Message);
 
         await _organizationService.DidNotReceiveWithAnyArgs().DeleteUserAsync(default, default);
