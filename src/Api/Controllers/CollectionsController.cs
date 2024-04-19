@@ -124,7 +124,7 @@ public class CollectionsController : Controller
         }
 
         var currentContextOrganization = _currentContext.GetOrganization(orgId);
-        if ( (currentContextOrganization != null ) && (currentContextOrganization.Type == OrganizationUserType.User || regular user
+        if ( (currentContextOrganization != null ) && (currentContextOrganization.Type == OrganizationUserType.User || //regular user
             currentContextOrganization.Type == OrganizationUserType.Custom) )// custom user
         {}
         else
