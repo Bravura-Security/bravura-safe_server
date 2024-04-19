@@ -8,6 +8,7 @@ using Bit.Core.AdminConsole.OrganizationFeatures.Groups.Interfaces;
 using Bit.Core.AdminConsole.Repositories;
 using Bit.Core.AdminConsole.Services;
 using Bit.Core.Context;
+using Bit.Core.Enums;
 using Bit.Core.Exceptions;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
@@ -87,6 +88,12 @@ public class GroupsController : Controller
             return await Get_vNext(orgId);
         }
 
+        var currentContextOrganization = _currentContext.GetOrganization(orgId);
+        if ( (currentContextOrganization != null ) && (currentContextOrganization.Type == OrganizationUserType.User || // regular user
+            currentContextOrganization.Type == OrganizationUserType.Custom) )// custom user
+        {}
+        else
+        {
         // Old pre-flexible collections logic follows
         var canAccess = await _currentContext.ManageGroups(orgId) ||
                         await _currentContext.ViewAssignedCollections(orgId) ||
@@ -96,6 +103,7 @@ public class GroupsController : Controller
         if (!canAccess)
         {
             throw new NotFoundException();
+        }
         }
 
         var groups = await _groupRepository.GetManyWithCollectionsByOrganizationIdAsync(orgId);
