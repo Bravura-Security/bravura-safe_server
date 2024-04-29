@@ -195,7 +195,12 @@ public class Program
         var migrator = new DbMigrator(vaultConnectionString, null);
         migrator.GrafanaDBUser = grafanaDBUser;
         migrator.GrafanaDBUserPWD = grafanaDBUserPwd;
-        migrator.MigrateMsSqlDatabaseWithRetries(false);
+
+        var log = false;
+
+        migrator.MigrateMsSqlDatabaseWithRetries(log);
+
+        migrator.MigrateMsSqlDatabaseWithRetries(log, true, MigratorConstants.TransitionMigrationsFolderName);
     }
 
     private static bool ValidateInstallation()

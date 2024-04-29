@@ -1,10 +1,10 @@
 ﻿using System.Net;
 using System.Reflection;
+using Bit.Core.AdminConsole.Entities;
+using Bit.Core.AdminConsole.Entities.Provider;
 using Bit.Core.Auth.Entities;
-using Bit.Core.Auth.Models.Business;
 using Bit.Core.Auth.Models.Mail;
 using Bit.Core.Entities;
-using Bit.Core.Entities.Provider;
 using Bit.Core.Models.Mail;
 using Bit.Core.Models.Mail.FamiliesForEnterprise;
 using Bit.Core.Models.Mail.Provider;
@@ -207,36 +207,20 @@ public class HandlebarsMailService : IMailService
         await _mailDeliveryService.SendEmailAsync(message);
     }
 
-    public Task SendOrganizationInviteEmailAsync(string organizationName, OrganizationUser orgUser, ExpiringToken token, bool isFreeOrg, bool initOrganization = false) =>
-        BulkSendOrganizationInviteEmailAsync(organizationName, new[] { (orgUser, token) }, isFreeOrg, initOrganization);
-
-    public async Task BulkSendOrganizationInviteEmailAsync(string organizationName, IEnumerable<(OrganizationUser orgUser, ExpiringToken token)> invites, bool isFreeOrg, bool initOrganization = false)
+    public async Task SendOrganizationInviteEmailsAsync(OrganizationInvitesInfo orgInvitesInfo)
     {
         MailQueueMessage CreateMessage(string email, object model)
         {
-            var message = CreateDefaultMessage($"Join {organizationName}", email);
+            var message = CreateDefaultMessage($"Join {orgInvitesInfo.OrganizationName}", email);
             return new MailQueueMessage(message, "OrganizationUserInvited", model);
         }
-        var freeOrgTitle = "A member invited you to a team. Join now to start securing your passwords!";
-        var messageModels = invites.Select(invite => CreateMessage(invite.orgUser.Email,
-            new OrganizationUserInvitedViewModel
-            {
-                TitleFirst = isFreeOrg ? freeOrgTitle : "Join ",
-                TitleSecondBold = isFreeOrg ? string.Empty : CoreHelpers.SanitizeForEmail(organizationName, false),
-                TitleThird = isFreeOrg ? string.Empty : " and start securing your passwords!",
-                OrganizationName = CoreHelpers.SanitizeForEmail(organizationName, false) + invite.orgUser.Status,
-                Email = WebUtility.UrlEncode(invite.orgUser.Email),
-                OrganizationId = invite.orgUser.OrganizationId.ToString(),
-                OrganizationUserId = invite.orgUser.Id.ToString(),
-                Token = WebUtility.UrlEncode(invite.token.Token),
-                ExpirationDate = $"{invite.token.ExpirationDate.ToLongDateString()} {invite.token.ExpirationDate.ToShortTimeString()} UTC",
-                OrganizationNameUrlEncoded = WebUtility.UrlEncode(organizationName),
-                WebVaultUrl = _globalSettings.BaseServiceUri.VaultWithHash,
-                SiteName = _globalSettings.SiteName,
-                InitOrganization = initOrganization,
-                WebVaultUrlForImage = _globalSettings.BaseServiceUri.Vault
-            }
-        ));
+
+        var messageModels = orgInvitesInfo.OrgUserTokenPairs.Select(orgUserTokenPair =>
+        {
+            var orgUserInviteViewModel = OrganizationUserInvitedViewModel.CreateFromInviteInfo(
+                orgInvitesInfo, orgUserTokenPair.OrgUser, orgUserTokenPair.Token, _globalSettings);
+            return CreateMessage(orgUserTokenPair.OrgUser.Email, orgUserInviteViewModel);
+        });
 
         await EnqueueMailAsync(messageModels);
     }
@@ -287,10 +271,21 @@ public class HandlebarsMailService : IMailService
         await _mailDeliveryService.SendEmailAsync(message);
     }
 
-    public async Task SendInvoiceUpcomingAsync(string email, decimal amount, DateTime dueDate,
-        List<string> items, bool mentionInvoices)
+    public async Task SendInvoiceUpcoming(
+        string email,
+        decimal amount,
+        DateTime dueDate,
+        List<string> items,
+        bool mentionInvoices) => await SendInvoiceUpcoming(new List<string> { email }, amount, dueDate, items, mentionInvoices);
+
+    public async Task SendInvoiceUpcoming(
+        IEnumerable<string> emails,
+        decimal amount,
+        DateTime dueDate,
+        List<string> items,
+        bool mentionInvoices)
     {
-        var message = CreateDefaultMessage("Your Subscription Will Renew Soon", email);
+        var message = CreateDefaultMessage("Your Subscription Will Renew Soon", emails);
         var model = new InvoiceUpcomingViewModel
         {
             WebVaultUrl = _globalSettings.BaseServiceUri.VaultWithHash,
@@ -406,7 +401,7 @@ public class HandlebarsMailService : IMailService
 
     public async Task SendAdminResetPasswordEmailAsync(string email, string userName, string orgName)
     {
-        var message = CreateDefaultMessage("Your admin has initiated account recovery", email);
+        var message = CreateDefaultMessage("Your admin has initiated master password reset", email);
         var model = new AdminResetPasswordViewModel()
         {
             UserName = GetUserIdentifier(email, userName),
@@ -757,6 +752,30 @@ public class HandlebarsMailService : IMailService
         };
         await AddMessageContentAsync(message, "Provider.ProviderUserRemoved", model);
         message.Category = "ProviderUserRemoved";
+        await _mailDeliveryService.SendEmailAsync(message);
+    }
+
+    public async Task SendProviderUpdatePaymentMethod(
+        Guid organizationId,
+        string organizationName,
+        string providerName,
+        IEnumerable<string> emails)
+    {
+        var message = CreateDefaultMessage("Update your billing information", emails);
+
+        var model = new ProviderUpdatePaymentMethodViewModel
+        {
+            OrganizationId = organizationId.ToString(),
+            OrganizationName = CoreHelpers.SanitizeForEmail(organizationName),
+            ProviderName = CoreHelpers.SanitizeForEmail(providerName),
+            SiteName = _globalSettings.SiteName,
+            WebVaultUrl = _globalSettings.BaseServiceUri.VaultWithHash
+        };
+
+        await AddMessageContentAsync(message, "Provider.ProviderUpdatePaymentMethod", model);
+
+        message.Category = "ProviderUpdatePaymentMethod";
+
         await _mailDeliveryService.SendEmailAsync(message);
     }
 

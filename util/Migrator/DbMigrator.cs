@@ -2,6 +2,7 @@
 using System.Reflection;
 using Bit.Core;
 using DbUp;
+using DbUp.Helpers;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 
@@ -29,6 +30,8 @@ public class DbMigrator
     }
 
     public bool MigrateMsSqlDatabaseWithRetries(bool enableLogging = true,
+        bool repeatable = false,
+        string folderName = MigratorConstants.DefaultMigrationsFolderName,
         CancellationToken cancellationToken = default(CancellationToken))
     {
         var attempt = 1;
@@ -37,7 +40,7 @@ public class DbMigrator
         {
             try
             {
-                var success = MigrateDatabase(enableLogging, cancellationToken);
+                var success = MigrateDatabase(enableLogging, repeatable, folderName, cancellationToken);
                 return success;
             }
             catch (SqlException ex)
@@ -132,6 +135,8 @@ public class DbMigrator
     }
 
     public bool MigrateDatabase(bool enableLogging = true,
+        bool repeatable = false,
+        string folderName = MigratorConstants.DefaultMigrationsFolderName,
         CancellationToken cancellationToken = default(CancellationToken))
     {
         if (_logger != null)
@@ -206,11 +211,19 @@ public class DbMigrator
         cancellationToken.ThrowIfCancellationRequested();
         var builder = DeployChanges.To
             .SqlDatabase(_connectionString)
-            .JournalToSqlTable("dbo", "Migration")
             .WithScriptsAndCodeEmbeddedInAssembly(Assembly.GetExecutingAssembly(),
-                s => s.Contains($".DbScripts.") && !s.Contains(".Archive."))
+                s => s.Contains($".{folderName}.") && !s.Contains(".Archive."))
             .WithTransaction()
             .WithExecutionTimeout(new TimeSpan(0, 5, 0));
+
+        if (repeatable)
+        {
+            builder.JournalTo(new NullJournal());
+        }
+        else
+        {
+            builder.JournalToSqlTable("dbo", MigratorConstants.SqlTableJournalName);
+        }
 
         if (enableLogging)
         {

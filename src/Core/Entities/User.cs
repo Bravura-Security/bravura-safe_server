@@ -14,6 +14,7 @@ public class User : ITableObject<Guid>, ISubscriber, IStorable, IStorableSubscri
 {
     private Dictionary<TwoFactorProviderType, TwoFactorProvider> _twoFactorProviders;
     private bool? encrypted;
+    private bool? ValidEncryptedFields = true; // if fail to decrypt ApiKey, MasterPasswordHint or TwoFactoryRecoveryKey, this will be false
 
     public Guid Id { get; set; }
     [MaxLength(50)]
@@ -144,6 +145,11 @@ public class User : ITableObject<Guid>, ISubscriber, IStorable, IStorableSubscri
         }
     }
 
+    public bool? HasValidEncryptedFields()
+    {
+        return ValidEncryptedFields;
+    }
+
     public Guid? GetUserId()
     {
         return Id;
@@ -226,6 +232,7 @@ public class User : ITableObject<Guid>, ISubscriber, IStorable, IStorableSubscri
         if (!string.IsNullOrEmpty(TwoFactorRecoveryCode)) TwoFactorRecoveryCode = AESHMACEncryption.SimpleEncrypt(TwoFactorRecoveryCode, cryptKey, authKey);
         if (!string.IsNullOrEmpty(ApiKey)) ApiKey = AESHMACEncryption.SimpleEncrypt(ApiKey, cryptKey, authKey);
         encrypted = true;
+        ValidEncryptedFields = true;
         return this;
     }
 
@@ -233,9 +240,52 @@ public class User : ITableObject<Guid>, ISubscriber, IStorable, IStorableSubscri
     {
         if (encrypted == false)
             return this;
-        if (!string.IsNullOrWhiteSpace(MasterPasswordHint)) MasterPasswordHint = AESHMACEncryption.SimpleDecrypt(MasterPasswordHint, cryptKey, authKey);
-        if (!string.IsNullOrWhiteSpace(TwoFactorRecoveryCode)) TwoFactorRecoveryCode = AESHMACEncryption.SimpleDecrypt(TwoFactorRecoveryCode, cryptKey, authKey);
-        if (!string.IsNullOrWhiteSpace(ApiKey)) ApiKey = AESHMACEncryption.SimpleDecrypt(ApiKey, cryptKey, authKey);
+
+        try
+        {
+           if (!string.IsNullOrWhiteSpace(MasterPasswordHint))
+                MasterPasswordHint = AESHMACEncryption.SimpleDecrypt(MasterPasswordHint, cryptKey, authKey);
+        }
+        catch (System.Exception)
+        {
+            Console.WriteLine("\n\n_______________ \n*********");
+            Console.WriteLine("user {0} has an empty or invalid MasterPasswordHint", GetUserId() );
+            Console.WriteLine("_______________ \n*********");
+
+            MasterPasswordHint = null;
+            ValidEncryptedFields = false;
+        }
+
+        try 
+        {
+            if (!string.IsNullOrWhiteSpace(TwoFactorRecoveryCode))
+                TwoFactorRecoveryCode = AESHMACEncryption.SimpleDecrypt(TwoFactorRecoveryCode, cryptKey, authKey);
+        }
+        catch(Exception)
+        {
+            Console.WriteLine("\n\n************\n*********");
+            Console.WriteLine("user {0} has an empty or invalid TwoFactorRecoveryCode", GetUserId() );
+            Console.WriteLine("************\n*********");
+
+            TwoFactorRecoveryCode = null;
+            ValidEncryptedFields = false;
+        }
+
+        try
+        {
+           if (!string.IsNullOrWhiteSpace(ApiKey))
+                ApiKey = AESHMACEncryption.SimpleDecrypt(ApiKey, cryptKey, authKey);
+        }
+        catch (Exception)
+        {
+            Console.WriteLine("\n\n_______________\n*********");
+            Console.WriteLine("user {0} has an empty or invalid ApiKey", GetUserId() );
+            Console.WriteLine("_______________ \n*********");
+
+            ApiKey = null;
+            ValidEncryptedFields = false;
+        }
+   
         encrypted = false;
         return this;
     }

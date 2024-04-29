@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Bit.Core.AdminConsole.Services;
 using Bit.Core.Auth.Identity;
 using Bit.Core.Auth.Models.Api.Response;
 using Bit.Core.Auth.Models.Business.Tokenables;
@@ -43,11 +44,13 @@ public class CustomTokenRequestValidator : BaseRequestValidator<CustomTokenReque
         IUserRepository userRepository,
         IPolicyService policyService,
         IDataProtectorTokenFactory<SsoEmail2faSessionTokenable> tokenDataFactory,
-        IFeatureService featureService)
+        IFeatureService featureService,
+        IUserDecryptionOptionsBuilder userDecryptionOptionsBuilder)
         : base(userManager, deviceRepository, deviceService, userService, eventService,
             organizationDuoWebTokenProvider, organizationHyprWebTokenProvider, organizationRepository, organizationUserRepository,
             applicationCacheService, mailService, logger, currentContext, globalSettings,
-            userRepository, policyService, tokenDataFactory, featureService, ssoConfigRepository)
+            userRepository, policyService, tokenDataFactory, featureService, ssoConfigRepository,
+            userDecryptionOptionsBuilder)
     {
         _userManager = userManager;
     }

@@ -124,11 +124,11 @@ CREATE TABLE `User` (
     `Email` character varying(256) COLLATE postgresIndetermanisticCollation NOT NULL,
     `EmailVerified` boolean NOT NULL,
     `MasterPassword` character varying(300) NULL,
-    `MasterPasswordHint` character varying(50) NULL,
+    `MasterPasswordHint` character varying(MAX) NULL,
     `Culture` character varying(10) NULL,
     `SecurityStamp` character varying(50) NOT NULL,
     `TwoFactorProviders` text NULL,
-    `TwoFactorRecoveryCode` character varying(32) NULL,
+    `TwoFactorRecoveryCode` character varying(MAX) NULL,
     `EquivalentDomains` text NULL,
     `ExcludedGlobalEquivalentDomains` text NULL,
     `AccountRevisionDate` timestamp without time zone NOT NULL,
@@ -145,7 +145,7 @@ CREATE TABLE `User` (
     `GatewaySubscriptionId` character varying(50) NULL,
     `ReferenceData` text NULL,
     `LicenseKey` character varying(100) NULL,
-    `ApiKey` character varying(30) NOT NULL,
+    `ApiKey` character varying(MAX) NOT NULL,
     `Kdf` smallint NOT NULL,
     `KdfIterations` integer NOT NULL,
     `CreationDate` timestamp without time zone NOT NULL,
@@ -492,7 +492,7 @@ START TRANSACTION;
 
 ALTER TABLE `ProviderOrganizationProviderUser` DROP FOREIGN KEY `FK_ProviderOrganizationProviderUser_ProviderOrganization_Provi~`;
 
-ALTER TABLE `User` MODIFY COLUMN `TwoFactorRecoveryCode` varchar(32) CHARACTER SET utf8mb4 NULL;
+ALTER TABLE `User` MODIFY COLUMN `TwoFactorRecoveryCode` varchar(MAX) CHARACTER SET utf8mb4 NULL;
 
 ALTER TABLE `User` MODIFY COLUMN `TwoFactorProviders` longtext CHARACTER SET utf8mb4 NULL;
 
@@ -514,7 +514,7 @@ ALTER TABLE `User` MODIFY COLUMN `Premium` tinyint(1) NOT NULL;
 
 ALTER TABLE `User` MODIFY COLUMN `Name` varchar(50) CHARACTER SET utf8mb4 NULL;
 
-ALTER TABLE `User` MODIFY COLUMN `MasterPasswordHint` varchar(50) CHARACTER SET utf8mb4 NULL;
+ALTER TABLE `User` MODIFY COLUMN `MasterPasswordHint` varchar(MAX) CHARACTER SET utf8mb4 NULL;
 
 ALTER TABLE `User` MODIFY COLUMN `MasterPassword` varchar(300) CHARACTER SET utf8mb4 NULL;
 
@@ -544,7 +544,7 @@ ALTER TABLE `User` MODIFY COLUMN `Culture` varchar(10) CHARACTER SET utf8mb4 NUL
 
 ALTER TABLE `User` MODIFY COLUMN `CreationDate` datetime(6) NOT NULL;
 
-ALTER TABLE `User` MODIFY COLUMN `ApiKey` varchar(30) CHARACTER SET utf8mb4 NOT NULL;
+ALTER TABLE `User` MODIFY COLUMN `ApiKey` varchar(MAX) CHARACTER SET utf8mb4 NOT NULL;
 
 ALTER TABLE `User` MODIFY COLUMN `AccountRevisionDate` datetime(6) NOT NULL;
 

@@ -9,6 +9,3 @@ $params = @{
 
 $params['Subject'] = 'CN=Bravura Safe Identity Server Dev';
 New-SelfSignedCertificate @params;
-
-$params['Subject'] = 'CN=Bravura Safe Data Protection Dev';
-New-SelfSignedCertificate @params;

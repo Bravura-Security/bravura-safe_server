@@ -19,8 +19,12 @@ BEGIN
         [UseKeyConnector],
         [UseScim],
         [UseResetPassword],
+        [UsePolicies],
         [Skip2faForSso],
-        [Enabled]
+        [Enabled],
+        [LimitCollectionCreationDeletion],
+        [AllowAdminAccessToAllCollectionItems],
+        [FlexibleCollections]
     FROM
         [dbo].[Organization]
 END

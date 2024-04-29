@@ -1,4 +1,6 @@
 ﻿using System.Security.Claims;
+using Bit.Core;
+using Bit.Core.AdminConsole.Services;
 using Bit.Core.Auth.Identity;
 using Bit.Core.Auth.Models.Business.Tokenables;
 using Bit.Core.Auth.Repositories;
@@ -45,11 +47,12 @@ public class ResourceOwnerPasswordValidator : BaseRequestValidator<ResourceOwner
         IPolicyService policyService,
         IDataProtectorTokenFactory<SsoEmail2faSessionTokenable> tokenDataFactory,
         IFeatureService featureService,
-        ISsoConfigRepository ssoConfigRepository)
+        ISsoConfigRepository ssoConfigRepository,
+        IUserDecryptionOptionsBuilder userDecryptionOptionsBuilder)
         : base(userManager, deviceRepository, deviceService, userService, eventService,
               organizationDuoWebTokenProvider, organizationHyprWebTokenProvider, organizationRepository, organizationUserRepository,
               applicationCacheService, mailService, logger, currentContext, globalSettings, userRepository, policyService,
-              tokenDataFactory, featureService, ssoConfigRepository)
+              tokenDataFactory, featureService, ssoConfigRepository, userDecryptionOptionsBuilder)
     {
         _userManager = userManager;
         _userService = userService;
@@ -143,7 +146,7 @@ public class ResourceOwnerPasswordValidator : BaseRequestValidator<ResourceOwner
         List<Claim> claims, Dictionary<string, object> customResponse)
     {
         context.Result = new GrantValidationResult(user.Id.ToString(), "Application",
-            identityProvider: "bitwarden",
+            identityProvider: Constants.IdentityProvider,
             claims: claims.Count > 0 ? claims : null,
             customResponse: customResponse);
         return Task.CompletedTask;

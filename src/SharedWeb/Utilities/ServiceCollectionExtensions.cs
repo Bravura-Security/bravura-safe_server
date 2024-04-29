@@ -3,6 +3,9 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using AspNetCoreRateLimit;
+using Bit.Core.AdminConsole.Services;
+using Bit.Core.AdminConsole.Services.Implementations;
+using Bit.Core.AdminConsole.Services.NoopImplementations;
 using Bit.Core.Auth.Enums;
 using Bit.Core.Auth.Identity;
 using Bit.Core.Auth.IdentityServer;
@@ -10,6 +13,7 @@ using Bit.Core.Auth.LoginFeatures;
 using Bit.Core.Auth.Models.Business.Tokenables;
 using Bit.Core.Auth.Services;
 using Bit.Core.Auth.Services.Implementations;
+using Bit.Core.Auth.UserFeatures;
 using Bit.Core.Entities;
 using Bit.Core.Enums;
 using Bit.Core.HostedServices;
@@ -110,13 +114,11 @@ public static class ServiceCollectionExtensions
         {
             // the non noop version is for AzureCosmos which we don't use
             services.AddSingleton<IInstallationDeviceRepository, NoopRepos.InstallationDeviceRepository>();
-            services.AddSingleton<IMetaDataRepository, NoopRepos.MetaDataRepository>();
         }
         else
         {
             services.AddSingleton<IEventRepository, TableStorageRepos.EventRepository>();
             services.AddSingleton<IInstallationDeviceRepository, TableStorageRepos.InstallationDeviceRepository>();
-            services.AddSingleton<IMetaDataRepository, TableStorageRepos.MetaDataRepository>();
         }
 
         return provider;
@@ -125,7 +127,7 @@ public static class ServiceCollectionExtensions
     public static void AddBaseServices(this IServiceCollection services, IGlobalSettings globalSettings)
     {
         services.AddScoped<ICipherService, CipherService>();
-        services.AddScoped<IUserService, UserService>();
+        services.AddUserServices(globalSettings);
         services.AddOrganizationServices(globalSettings);
         services.AddScoped<ICollectionService, CollectionService>();
         services.AddScoped<IGroupService, GroupService>();
@@ -133,7 +135,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<IEmergencyAccessService, EmergencyAccessService>();
         services.AddSingleton<IDeviceService, DeviceService>();
-        services.AddSingleton<IAppleIapService, AppleIapService>();
         services.AddScoped<ISsoConfigService, SsoConfigService>();
         services.AddScoped<IAuthRequestService, AuthRequestService>();
         services.AddScoped<ISendService, SendService>();
@@ -150,6 +151,7 @@ public static class ServiceCollectionExtensions
             serviceProvider.GetDataProtectionProvider(),
             serviceProvider.GetRequiredService<ILogger<DataProtectorTokenFactory<EmergencyAccessInviteTokenable>>>())
         );
+
         services.AddSingleton<IDataProtectorTokenFactory<HCaptchaTokenable>>(serviceProvider =>
             new DataProtectorTokenFactory<HCaptchaTokenable>(
                 HCaptchaTokenable.ClearTextPrefix,
@@ -157,18 +159,39 @@ public static class ServiceCollectionExtensions
             serviceProvider.GetDataProtectionProvider(),
             serviceProvider.GetRequiredService<ILogger<DataProtectorTokenFactory<HCaptchaTokenable>>>())
         );
+
         services.AddSingleton<IDataProtectorTokenFactory<SsoTokenable>>(serviceProvider =>
             new DataProtectorTokenFactory<SsoTokenable>(
                 SsoTokenable.ClearTextPrefix,
                 SsoTokenable.DataProtectorPurpose,
             serviceProvider.GetDataProtectionProvider(),
             serviceProvider.GetRequiredService<ILogger<DataProtectorTokenFactory<SsoTokenable>>>()));
+        services.AddSingleton<IDataProtectorTokenFactory<WebAuthnCredentialCreateOptionsTokenable>>(serviceProvider =>
+            new DataProtectorTokenFactory<WebAuthnCredentialCreateOptionsTokenable>(
+                WebAuthnCredentialCreateOptionsTokenable.ClearTextPrefix,
+                WebAuthnCredentialCreateOptionsTokenable.DataProtectorPurpose,
+                serviceProvider.GetDataProtectionProvider(),
+                serviceProvider.GetRequiredService<ILogger<DataProtectorTokenFactory<WebAuthnCredentialCreateOptionsTokenable>>>()));
+        services.AddSingleton<IDataProtectorTokenFactory<WebAuthnLoginAssertionOptionsTokenable>>(serviceProvider =>
+            new DataProtectorTokenFactory<WebAuthnLoginAssertionOptionsTokenable>(
+                WebAuthnLoginAssertionOptionsTokenable.ClearTextPrefix,
+                WebAuthnLoginAssertionOptionsTokenable.DataProtectorPurpose,
+                serviceProvider.GetDataProtectionProvider(),
+                serviceProvider.GetRequiredService<ILogger<DataProtectorTokenFactory<WebAuthnLoginAssertionOptionsTokenable>>>()));
         services.AddSingleton<IDataProtectorTokenFactory<SsoEmail2faSessionTokenable>>(serviceProvider =>
             new DataProtectorTokenFactory<SsoEmail2faSessionTokenable>(
                 SsoEmail2faSessionTokenable.ClearTextPrefix,
                 SsoEmail2faSessionTokenable.DataProtectorPurpose,
                 serviceProvider.GetDataProtectionProvider(),
                 serviceProvider.GetRequiredService<ILogger<DataProtectorTokenFactory<SsoEmail2faSessionTokenable>>>()));
+
+        services.AddSingleton<IOrgUserInviteTokenableFactory, OrgUserInviteTokenableFactory>();
+        services.AddSingleton<IDataProtectorTokenFactory<OrgUserInviteTokenable>>(serviceProvider =>
+            new DataProtectorTokenFactory<OrgUserInviteTokenable>(
+                OrgUserInviteTokenable.ClearTextPrefix,
+                OrgUserInviteTokenable.DataProtectorPurpose,
+                serviceProvider.GetDataProtectionProvider(),
+                serviceProvider.GetRequiredService<ILogger<DataProtectorTokenFactory<OrgUserInviteTokenable>>>()));
     }
 
     public static void AddDefaultServices(this IServiceCollection services, GlobalSettings globalSettings)
@@ -511,6 +534,11 @@ public static class ServiceCollectionExtensions
         if (certificate != null)
         {
             identityServerBuilder.AddSigningCredential(certificate);
+        }
+        else if (env.IsDevelopment() && !string.IsNullOrEmpty(globalSettings.DevelopmentDirectory))
+        {
+            var developerSigningKeyPath = Path.Combine(globalSettings.DevelopmentDirectory, "signingkey.jwk");
+            identityServerBuilder.AddDeveloperSigningCredential(true, developerSigningKeyPath);
         }
         else if (env.IsDevelopment())
         {

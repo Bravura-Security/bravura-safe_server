@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Amazon.Runtime;
 using Bit.Api.Auth.Models.Request.Accounts;
+using Bit.Core.AdminConsole.Entities;
 using Bit.Core.Auth.Enums;
 using Bit.Core.Auth.Models;
 using Bit.Core.Auth.Utilities;
@@ -204,7 +205,7 @@ public class TwoFactorEmailRequestModel : SecretVerificationRequestModel
     [StringLength(256)]
     public string Email { get; set; }
     public string AuthRequestId { get; set; }
-    // An auth session token used for obtaining email and as an authN factor for the sending of emailed 2FA OTPs.  
+    // An auth session token used for obtaining email and as an authN factor for the sending of emailed 2FA OTPs.
     public string SsoEmail2FaSessionToken { get; set; }
     public User ToUser(User existingUser)
     {
