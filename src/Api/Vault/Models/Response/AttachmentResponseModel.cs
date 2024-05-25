@@ -16,6 +16,7 @@ public class AttachmentResponseModel : ResponseModel
         Key = data.Data.Key;
         Size = data.Data.Size.ToString();
         SizeName = CoreHelpers.ReadableBytesSize(data.Data.Size);
+        Validated = data.Data.Validated;
     }
 
     public AttachmentResponseModel(string id, CipherAttachment.MetaData data, Cipher cipher,
@@ -28,6 +29,7 @@ public class AttachmentResponseModel : ResponseModel
         Key = data.Key;
         Size = data.Size.ToString();
         SizeName = CoreHelpers.ReadableBytesSize(data.Size);
+        Validated = data.Validated;
     }
 
     public string Id { get; set; }
@@ -36,6 +38,7 @@ public class AttachmentResponseModel : ResponseModel
     public string Key { get; set; }
     public string Size { get; set; }
     public string SizeName { get; set; }
+    public bool Validated { get; set; }
 
     public static IEnumerable<AttachmentResponseModel> FromCipher(Cipher cipher, IGlobalSettings globalSettings)
     {

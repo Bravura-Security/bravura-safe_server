@@ -217,6 +217,7 @@ namespace Bit.Core.Vault.Services;
             });
             cipher.AddAttachment(attachmentId, data);
             await _pushService.PushSyncCipherUpdateAsync(cipher, null);
+            data.Validated = true;
 
             return (attachmentId, uploadUrl);
         }
@@ -355,7 +356,7 @@ namespace Bit.Core.Vault.Services;
 
             if (!valid || realSize > MAX_FILE_SIZE)
             {
-                // File reported differs in size from that promised. Must be a rogue client. Delete Send
+                // File reported differs in size from that promised. Must be a rogue client. Delete Cipher
                 await DeleteAttachmentAsync(cipher, attachmentData);
                 return false;
             }

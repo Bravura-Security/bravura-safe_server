@@ -14,6 +14,7 @@ public class SendFileModel
         FileName = data.FileName;
         Size = data.Size;
         SizeName = CoreHelpers.ReadableBytesSize(data.Size);
+        Validated = data.Validated;
     }
 
     public string Id { get; set; }
@@ -23,4 +24,5 @@ public class SendFileModel
     [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString)]
     public long? Size { get; set; }
     public string SizeName { get; set; }
+    public bool Validated { get; set; }
 }
