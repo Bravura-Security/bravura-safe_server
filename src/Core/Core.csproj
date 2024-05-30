@@ -68,6 +68,8 @@
     <PackageReference Include="YubicoDotNetClient" Version="1.2.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.25" />
     <PackageReference Include="LaunchDarkly.ServerSdk" Version="8.0.0" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.60.3" />
   </ItemGroup>
 
   <ItemGroup>
