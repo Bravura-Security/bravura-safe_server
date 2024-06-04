@@ -161,4 +161,24 @@ public class UsersController : Controller
 
         return RedirectToAction("Index");
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequirePermission(Permission.User_FixApiKey)]
+    public async Task<IActionResult> FixApiKey(Guid id)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user != null)
+        {
+        // Same code as userService.RotateApiKeyAsync(user)
+        user.ApiKey = CoreHelpers.SecureRandomString(30);
+        user.RevisionDate = DateTime.UtcNow;
+        await _userRepository.ReplaceAsync(user);
+        }
+
+        TempData["status"] = "success";
+        TempData["message"] = $"Fixed key for {user.Name}";
+
+        return RedirectToAction("Index");
+    }
 }
