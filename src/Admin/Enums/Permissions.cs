@@ -6,6 +6,7 @@ public enum Permission
     User_UserInformation_View,
     User_GeneralDetails_View,
     User_Delete,
+    User_FixApiKey,
     User_UpgradePremium,
     User_BillingInformation_View,
     User_BillingInformation_DownloadInvoice,

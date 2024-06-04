@@ -19,6 +19,15 @@
     <dt class="col-sm-4 col-lg-3">Items</dt>
     <dd class="col-sm-8 col-lg-9">@Model.CipherCount</dd>
 
+    <dt class="col-sm-4 col-lg-3">Valid Master Password Hint</dt>
+    <dd class="col-sm-8 col-lg-9">@(Model.User.HasValidMasterPasswordHint() == true ? "Yes" : "No")</dd>
+
+    <dt class="col-sm-4 col-lg-3">Valid Two Factor Recovery Code</dt>
+    <dd class="col-sm-8 col-lg-9">@(Model.User.HasValidTwoFactorRecoveryCode() == true ? "Yes" : "No")</dd>
+
+    <dt class="col-sm-4 col-lg-3">Valid Api Key</dt>
+    <dd class="col-sm-8 col-lg-9">@(Model.User.HasValidApiKey() == true ? "Yes" : "No")</dd>
+
     <dt class="col-sm-4 col-lg-3">Vault Modified</dt>
     <dd class="col-sm-8 col-lg-9">@Model.User.AccountRevisionDate.ToString()</dd>
 
