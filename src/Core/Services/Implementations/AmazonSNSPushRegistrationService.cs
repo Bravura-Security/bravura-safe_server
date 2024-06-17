@@ -227,7 +227,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
         {
             deviceRegistration = new Entities.AmazonSNSDevice
             {
-                DeviceID = strippedDeviceId,
+                DeviceId = strippedDeviceId,
                 EndpointARN = endpointARN,
                 SubscriptionARN = subscriptionARN
             };
