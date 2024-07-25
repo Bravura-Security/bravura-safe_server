@@ -44,5 +44,8 @@ public class ProfileProviderOrganizationResponseModel : ProfileOrganizationRespo
         ProviderName = organization.ProviderName;
         PlanProductType = StaticStore.GetPlan(organization.PlanType).Product;
         Skip2faForSso = organization.Skip2faForSso;
+        LimitCollectionCreationDeletion = organization.LimitCollectionCreationDeletion;
+        AllowAdminAccessToAllCollectionItems = organization.AllowAdminAccessToAllCollectionItems;
+        FlexibleCollections = organization.FlexibleCollections;
     }
 }

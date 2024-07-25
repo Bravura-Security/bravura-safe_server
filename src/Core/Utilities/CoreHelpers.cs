@@ -32,6 +32,7 @@ public static class CoreHelpers
     private static readonly Random _random = new Random();
     private static string _internalVersion;
     private static readonly string RealConnectingIp = "X-Connecting-IP";
+    private static readonly Regex _whiteSpaceRegex = new Regex(@"\s+");
 
     /// <summary>
     /// Generate sequential Guid for Sql Server.
@@ -880,5 +881,10 @@ public static class CoreHelpers
         }
 
         return null;
+    }
+
+    public static string ReplaceWhiteSpace(string input, string newValue)
+    {
+        return _whiteSpaceRegex.Replace(input, newValue);
     }
 }

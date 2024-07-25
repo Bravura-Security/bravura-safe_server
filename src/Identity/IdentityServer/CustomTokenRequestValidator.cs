@@ -32,6 +32,7 @@ public class CustomTokenRequestValidator : BaseRequestValidator<CustomTokenReque
         IUserService userService,
         IEventService eventService,
         IOrganizationDuoWebTokenProvider organizationDuoWebTokenProvider,
+        ITemporaryDuoWebV4SDKService duoWebV4SDKService,
         IOrganizationHyprWebTokenProvider organizationHyprWebTokenProvider,
         IOrganizationRepository organizationRepository,
         IOrganizationUserRepository organizationUserRepository,
@@ -47,7 +48,7 @@ public class CustomTokenRequestValidator : BaseRequestValidator<CustomTokenReque
         IFeatureService featureService,
         IUserDecryptionOptionsBuilder userDecryptionOptionsBuilder)
         : base(userManager, deviceRepository, deviceService, userService, eventService,
-            organizationDuoWebTokenProvider, organizationHyprWebTokenProvider, organizationRepository, organizationUserRepository,
+            organizationDuoWebTokenProvider, duoWebV4SDKService, organizationHyprWebTokenProvider, organizationRepository, organizationUserRepository,
             applicationCacheService, mailService, logger, currentContext, globalSettings,
             userRepository, policyService, tokenDataFactory, featureService, ssoConfigRepository,
             userDecryptionOptionsBuilder)

@@ -291,6 +291,7 @@ public class UpgradeOrganizationPlanCommand : IUpgradeOrganizationPlanCommand
 
         if (success)
         {
+            var upgradePath = GetUpgradePath(existingPlan.Product, newPlan.Product);
             await _referenceEventService.RaiseEventAsync(
                 new ReferenceEvent(ReferenceEventType.UpgradePlan, organization, _currentContext)
                 {
@@ -299,6 +300,8 @@ public class UpgradeOrganizationPlanCommand : IUpgradeOrganizationPlanCommand
                     OldPlanName = existingPlan.Name,
                     OldPlanType = existingPlan.Type,
                     Seats = organization.Seats,
+                    SignupInitiationPath = "Upgrade in-product",
+                    PlanUpgradePath = upgradePath,
                     Storage = organization.MaxStorageGb,
                     // TODO: add reference events for SmSeats and Service Accounts - see AC-1481
                 });
@@ -350,4 +353,26 @@ public class UpgradeOrganizationPlanCommand : IUpgradeOrganizationPlanCommand
     {
         return await _organizationRepository.GetByIdAsync(id);
     }
+
+    private static string GetUpgradePath(ProductType oldProductType, ProductType newProductType)
+    {
+        var oldDescription = _upgradePath.TryGetValue(oldProductType, out var description)
+            ? description
+            : $"{oldProductType:G}";
+
+        var newDescription = _upgradePath.TryGetValue(newProductType, out description)
+            ? description
+            : $"{newProductType:G}";
+
+        return $"{oldDescription} → {newDescription}";
+    }
+
+    private static readonly Dictionary<ProductType, string> _upgradePath = new()
+    {
+        [ProductType.Free] = "2-person org",
+        [ProductType.Families] = "Families",
+        [ProductType.TeamsStarter] = "Teams Starter",
+        [ProductType.Teams] = "Teams",
+        [ProductType.Enterprise] = "Enterprise"
+    };
 }

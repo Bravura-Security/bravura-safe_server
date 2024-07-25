@@ -33,6 +33,7 @@ public class ResourceOwnerPasswordValidator : BaseRequestValidator<ResourceOwner
         IUserService userService,
         IEventService eventService,
         IOrganizationDuoWebTokenProvider organizationDuoWebTokenProvider,
+        ITemporaryDuoWebV4SDKService duoWebV4SDKService,
         IOrganizationHyprWebTokenProvider organizationHyprWebTokenProvider,
         IOrganizationRepository organizationRepository,
         IOrganizationUserRepository organizationUserRepository,
@@ -50,7 +51,7 @@ public class ResourceOwnerPasswordValidator : BaseRequestValidator<ResourceOwner
         ISsoConfigRepository ssoConfigRepository,
         IUserDecryptionOptionsBuilder userDecryptionOptionsBuilder)
         : base(userManager, deviceRepository, deviceService, userService, eventService,
-              organizationDuoWebTokenProvider, organizationHyprWebTokenProvider, organizationRepository, organizationUserRepository,
+              organizationDuoWebTokenProvider, duoWebV4SDKService, organizationHyprWebTokenProvider, organizationRepository, organizationUserRepository,
               applicationCacheService, mailService, logger, currentContext, globalSettings, userRepository, policyService,
               tokenDataFactory, featureService, ssoConfigRepository, userDecryptionOptionsBuilder)
     {

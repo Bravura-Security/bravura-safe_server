@@ -12,44 +12,39 @@ public class DbMigrator
 {
     private readonly string _connectionString;
     private readonly ILogger<DbMigrator> _logger;
-    private readonly string _masterConnectionString;
 
     public string GrafanaDBUser { get; set; }
     public string GrafanaDBUserPWD { get; set; }
 
     private bool bContainedDB = false;
 
-    public DbMigrator(string connectionString, ILogger<DbMigrator> logger)
+    public DbMigrator(string connectionString, ILogger<DbMigrator> logger = null)
     {
         _connectionString = connectionString;
-        _logger = logger;
-        _masterConnectionString = new SqlConnectionStringBuilder(connectionString)
-        {
-            InitialCatalog = "master"
-        }.ConnectionString;
+        _logger = logger ?? CreateLogger();
     }
 
     public bool MigrateMsSqlDatabaseWithRetries(bool enableLogging = true,
         bool repeatable = false,
         string folderName = MigratorConstants.DefaultMigrationsFolderName,
-        CancellationToken cancellationToken = default(CancellationToken))
+        CancellationToken cancellationToken = default)
     {
         var attempt = 1;
-
         while (attempt < 10)
         {
             try
             {
+                PrepareDatabase(cancellationToken);
+
                 var success = MigrateDatabase(enableLogging, repeatable, folderName, cancellationToken);
                 return success;
             }
             catch (SqlException ex)
             {
-                if (ex.Message.Contains("Server is in script upgrade mode"))
+                if (ex.Message.Contains("Server is in script upgrade mode."))
                 {
                     attempt++;
-                    _logger.LogInformation("Database is in script upgrade mode. " +
-                        $"Trying again (attempt #{attempt})...");
+                    _logger.LogInformation($"Database is in script upgrade mode, trying again (attempt #{attempt}).");
                     Thread.Sleep(20000);
                 }
                 else
@@ -86,7 +81,7 @@ public class DbMigrator
     END;
     ";
 
-    private bool CreateGrafanaUser(string userName, string userPWD, CancellationToken cancellationToken = default(CancellationToken))
+    public bool CreateGrafanaUser(string userName, string userPWD, CancellationToken cancellationToken = default(CancellationToken))
     {
         if (string.IsNullOrWhiteSpace(userName))
         {
@@ -100,8 +95,13 @@ public class DbMigrator
             return false;
         }
 
+        var masterConnectionString = new SqlConnectionStringBuilder(_connectionString)
+        {
+            InitialCatalog = "master"
+        }.ConnectionString;
+
         // create grafana user
-        using (var connection = new SqlConnection(_masterConnectionString))
+        using (var connection = new SqlConnection(masterConnectionString))
         {
             var databaseName = new SqlConnectionStringBuilder(_connectionString).InitialCatalog;
             if (string.IsNullOrWhiteSpace(databaseName))
@@ -134,17 +134,14 @@ public class DbMigrator
         return true;
     }
 
-    public bool MigrateDatabase(bool enableLogging = true,
-        bool repeatable = false,
-        string folderName = MigratorConstants.DefaultMigrationsFolderName,
-        CancellationToken cancellationToken = default(CancellationToken))
+    private void PrepareDatabase(CancellationToken cancellationToken = default)
     {
-        if (_logger != null)
+        var masterConnectionString = new SqlConnectionStringBuilder(_connectionString)
         {
-            _logger.LogInformation(Constants.BypassFiltersEventId, "Migrating database.");
-        }
+            InitialCatalog = "master"
+        }.ConnectionString;
 
-        using (var connection = new SqlConnection(_masterConnectionString))
+        using (var connection = new SqlConnection(masterConnectionString))
         {
             var databaseName = new SqlConnectionStringBuilder(_connectionString).InitialCatalog;
             if (string.IsNullOrWhiteSpace(databaseName))
@@ -197,9 +194,10 @@ public class DbMigrator
         }
 
         cancellationToken.ThrowIfCancellationRequested();
+
         using (var connection = new SqlConnection(_connectionString))
         {
-            // Rename old migration scripts to new namespace.
+            // rename old migration scripts to new namespace
             var command = new SqlCommand(
                 "IF OBJECT_ID('Migration','U') IS NOT NULL " +
                 "UPDATE [dbo].[Migration] SET " +
@@ -209,6 +207,20 @@ public class DbMigrator
         }
 
         cancellationToken.ThrowIfCancellationRequested();
+    }
+
+    private bool MigrateDatabase(bool enableLogging = true,
+        bool repeatable = false,
+        string folderName = MigratorConstants.DefaultMigrationsFolderName,
+        CancellationToken cancellationToken = default)
+    {
+        if (enableLogging)
+        {
+            _logger.LogInformation(Constants.BypassFiltersEventId, "Migrating database.");
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
         var builder = DeployChanges.To
             .SqlDatabase(_connectionString)
             .WithScriptsAndCodeEmbeddedInAssembly(Assembly.GetExecutingAssembly(),
@@ -227,20 +239,13 @@ public class DbMigrator
 
         if (enableLogging)
         {
-            if (_logger != null)
-            {
                 builder.LogTo(new DbUpLogger(_logger));
             }
-            else
-            {
-                builder.LogToConsole();
-            }
-        }
 
         var upgrader = builder.Build();
         var result = upgrader.PerformUpgrade();
 
-        if (_logger != null)
+        if (enableLogging)
         {
             if (result.Successful)
             {
@@ -266,4 +271,19 @@ public class DbMigrator
 
         return result.Successful;
     }
+
+    private ILogger<DbMigrator> CreateLogger()
+    {
+        var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder
+                .AddFilter("Microsoft", LogLevel.Warning)
+                .AddFilter("System", LogLevel.Warning)
+                .AddConsole();
+
+            builder.AddFilter("DbMigrator.DbMigrator", LogLevel.Information);
+        });
+
+        return loggerFactory.CreateLogger<DbMigrator>();
+}
 }

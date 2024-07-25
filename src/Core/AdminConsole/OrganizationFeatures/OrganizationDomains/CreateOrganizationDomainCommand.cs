@@ -47,7 +47,7 @@ public class CreateOrganizationDomainCommand : ICreateOrganizationDomainCommand
                 organizationDomain.DomainName);
         if (duplicateOrgDomain is not null)
         {
-            throw new ConflictException("A domain already exists for this organization.");
+            throw new ConflictException("A domain already exists for this team.");
         }
 
         try
@@ -59,7 +59,7 @@ public class CreateOrganizationDomainCommand : ICreateOrganizationDomainCommand
         }
         catch (Exception e)
         {
-            _logger.LogError("Error verifying Organization domain.", e);
+            _logger.LogError(e, "Error verifying team domain.");
         }
 
         organizationDomain.SetNextRunDate(_globalSettings.DomainVerification.VerificationInterval);

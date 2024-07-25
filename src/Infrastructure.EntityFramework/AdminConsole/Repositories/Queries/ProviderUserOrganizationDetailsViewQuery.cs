@@ -44,7 +44,10 @@ public class ProviderUserOrganizationDetailsViewQuery : IQuery<ProviderUserOrgan
             ProviderId = x.p.Id,
             ProviderName = x.p.Name,
             PlanType = x.o.PlanType,
-            Skip2faForSso = x.o.Skip2faForSso
+            Skip2faForSso = x.o.Skip2faForSso,
+            LimitCollectionCreationDeletion = x.o.LimitCollectionCreationDeletion,
+            AllowAdminAccessToAllCollectionItems = x.o.AllowAdminAccessToAllCollectionItems,
+            FlexibleCollections = x.o.FlexibleCollections
         });
     }
 }

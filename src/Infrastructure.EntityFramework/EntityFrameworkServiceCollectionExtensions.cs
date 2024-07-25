@@ -1,5 +1,6 @@
 ﻿using Bit.Core.AdminConsole.Repositories;
 using Bit.Core.Auth.Repositories;
+using Bit.Core.Billing.Repositories;
 using Bit.Core.Enums;
 using Bit.Core.Repositories;
 using Bit.Core.SecretsManager.Repositories;
@@ -7,6 +8,7 @@ using Bit.Core.Tools.Repositories;
 using Bit.Core.Vault.Repositories;
 using Bit.Infrastructure.EntityFramework.AdminConsole.Repositories;
 using Bit.Infrastructure.EntityFramework.Auth.Repositories;
+using Bit.Infrastructure.EntityFramework.Billing.Repositories;
 using Bit.Infrastructure.EntityFramework.Repositories;
 using Bit.Infrastructure.EntityFramework.SecretsManager.Repositories;
 using Bit.Infrastructure.EntityFramework.Tools.Repositories;
@@ -87,6 +89,7 @@ public static class EntityFrameworkServiceCollectionExtensions
         services.AddSingleton<IWebAuthnCredentialRepository, WebAuthnCredentialRepository>();
         services.AddSingleton<IAmazonSNSDeviceRepository, AmazonSNSDeviceRepository>();
         services.AddSingleton<IHubConnectionRepository, HubConnectionRepository>();
+        services.AddSingleton<IProviderPlanRepository, ProviderPlanRepository>();
 
         if (selfHosted)
         {

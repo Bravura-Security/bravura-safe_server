@@ -17,6 +17,7 @@ public class Program
         {
             Args = args
         };
+
         ParseParameters();
 
         if (_context.Parameters.ContainsKey("q"))
@@ -152,7 +153,7 @@ public class Program
 
         if (_context.Parameters.ContainsKey("db"))
         {
-            MigrateDatabase();
+            PrepareAndMigrateDatabase();
         }
         else
         {
@@ -182,7 +183,7 @@ public class Program
         Console.WriteLine("\n");
     }
 
-    private static void MigrateDatabase(int attempt = 1)
+    private static void PrepareAndMigrateDatabase()
     {
         var vaultConnectionString = Helpers.GetValueFromEnvFile("global",
             "globalSettings__sqlServer__connectionString");
@@ -192,15 +193,17 @@ public class Program
 
         var grafanaDBUserPwd = Helpers.GetValueFromEnvFile("grafana",
             "globalSettings__grafana__dBUserPassword");
-        var migrator = new DbMigrator(vaultConnectionString, null);
+        var migrator = new DbMigrator(vaultConnectionString);
         migrator.GrafanaDBUser = grafanaDBUser;
         migrator.GrafanaDBUserPWD = grafanaDBUserPwd;
 
-        var log = false;
+        var enableLogging = false;
 
-        migrator.MigrateMsSqlDatabaseWithRetries(log);
+        // execute all general migration scripts (will detect those not yet applied)
+        migrator.MigrateMsSqlDatabaseWithRetries(enableLogging);
 
-        migrator.MigrateMsSqlDatabaseWithRetries(log, true, MigratorConstants.TransitionMigrationsFolderName);
+        // execute explicit transition migration scripts, per EDD
+        migrator.MigrateMsSqlDatabaseWithRetries(enableLogging, true, MigratorConstants.TransitionMigrationsFolderName);
     }
 
     private static bool ValidateInstallation()
