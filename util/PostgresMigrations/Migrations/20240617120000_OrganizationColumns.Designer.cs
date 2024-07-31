@@ -1675,16 +1675,18 @@ namespace Bit.PostgresMigrations.Migrations
             modelBuilder.Entity("AmazonSNSDevice", b =>
                 {
                     b.Property<long?>("Id")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint generated always as identity");
 
                     b.Property<Guid>("DeviceId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("EndpointARN")
-                        .HasColumnType("text");
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<string>("SubscriptionARN")
-                        .HasColumnType("text");
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("timestamp with time zone");
@@ -1698,7 +1700,7 @@ namespace Bit.PostgresMigrations.Migrations
             modelBuilder.Entity("HubConnection", b =>
                 {
                     b.Property<long?>("Id")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint generated always as identity");
 
                     b.Property<string>("ConnectionId")
                         .HasMaxLength(2048)

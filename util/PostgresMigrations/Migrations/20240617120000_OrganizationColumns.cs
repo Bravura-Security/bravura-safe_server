@@ -14,10 +14,10 @@ public partial class OrganizationColumns : Migration
             name: "AmazonSNSDevice",
             columns: table => new
             {
-                Id = table.Column<long>(type: "bigint", nullable: false),
+                Id = table.Column<long>(type: "bigint generated always as identity", nullable: false),
                 DeviceId = table.Column<Guid>(type: "uuid", nullable: false),
                 EndpointARN = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: false),
-                SubscriptionARN = table.Column<string>(type: "character varying(32)", maxLength: 2048, nullable: true),
+                SubscriptionARN = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: false),
                 CreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
             },
             constraints: table =>
@@ -35,7 +35,7 @@ public partial class OrganizationColumns : Migration
             name: "HubConnection",
             columns: table => new
             {
-                Id = table.Column<long>(type: "bigint", nullable: true),
+                Id = table.Column<long>(type: "bigint generated always as identity", nullable: false),
                 ConnectionId = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: false),
                 Token = table.Column<Guid>(type: "uuid", nullable: false),
                 MessageType = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: true),

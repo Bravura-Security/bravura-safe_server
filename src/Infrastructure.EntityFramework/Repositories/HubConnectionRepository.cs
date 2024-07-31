@@ -51,8 +51,29 @@ public class HubConnectionRepository: Repository<Core.Entities.HubConnection, Hu
 
     async Task IHubConnectionRepository.SaveNotificationPayload(Guid token, string msgType, string jsonPayload)
     {
-        Console.WriteLine("**** this is very very very bad ****************************************");
-        throw new NotImplementedException();
+        using (var scope = ServiceScopeFactory.CreateScope())
+        {
+            var dbContext = GetDatabaseContext(scope);
+            var query = dbContext.HubConnections.Where(c => c.Token == token);
+            var connection = await query.FirstOrDefaultAsync();
+            if(connection == null){
+                // Create entry
+                HubConnection obj = new HubConnection();
+                obj.ConnectionId = "REPLACEME";
+                obj.Token = token;
+                obj.MessageType = msgType;
+                obj.MessagePayload = jsonPayload;
+                var entity = Mapper.Map<Core.Entities.HubConnection>(obj);
+                dbContext.Add(entity);
+                await dbContext.SaveChangesAsync();
+            }
+            else {
+                // Update entry
+                connection.MessageType = msgType;
+                connection.MessagePayload = jsonPayload;
+                await dbContext.SaveChangesAsync();
+            }
+        }
     }
 
     async Task<ICollection<Core.Entities.HubConnection>> IHubConnectionRepository.GetConnectionByTokenDateAsync(Guid token, DateTime newerThan)
