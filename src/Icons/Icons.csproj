@@ -12,7 +12,6 @@
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'Icons' " />
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="1.0.7" />
-    <PackageReference Include="Npgsql" Version="8.0.3" />
   </ItemGroup>
 
   <ItemGroup>

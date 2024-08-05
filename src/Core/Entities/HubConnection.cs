@@ -14,11 +14,9 @@ public class HubConnection: ITableObject<long>
 	[Required]
     public Guid Token { get; set; }
 
-    [Required]
     [MaxLength(32)]
     public string MessageType { get; set; }
 
-    [Required]
     [MaxLength(2048)]
     public string MessagePayload { get; set; }
 
