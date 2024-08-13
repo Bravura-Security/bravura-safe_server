@@ -1,5 +1,26 @@
 #!/usr/bin/env bash
 set -e
+# Get the current directory
+current_dir=$(pwd)
+
+# Get the file system type of the current directory
+fs_type=$(df -T "$current_dir" | tail -1 | awk '{print $1}')
+
+if [[ "$fs_type" == "drvfs" ]]; then
+    echo ""
+    echo ""
+    echo "**************************************************************************"
+    echo "You are on a Windows file system."
+	echo "If using postgres, please beware of the following"
+	echo "Postgres container will not start correctly on a windows file system"
+	echo "The postgres data folder must be on the Linux FS"
+	echo "Please fix the docker compose yaml or add an override file"
+	echo "**************************************************************************"
+	echo ""
+	echo ""
+else
+    echo ""
+fi
 
 cat << "EOF"
 BRAVURA-SECURITY

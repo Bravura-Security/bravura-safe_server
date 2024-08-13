@@ -46,6 +46,8 @@ public class DockerComposeBuilder
             {
                 ComposeVersion = context.Config.ComposeVersion;
             }
+            UsePostgresDocker = context.Config.UsePostgresDocker;
+            PostgresDataDockerVolume = context.Config.PostgresDataDockerVolume;
             UseMssqlDocker = context.Config.UseMssqlDocker;
             MssqlDataDockerVolume = context.Config.DatabaseDockerVolume;
             EnableKeyConnector = context.Config.EnableKeyConnector;
@@ -84,5 +86,7 @@ public class DockerComposeBuilder
         public bool UseCustomMaildev { get; set; }
         public bool MaildevWebUserPassword { get; set; }
         public bool UseGrafanaDocker { get; set; }
+        public bool UsePostgresDocker { get; set; }
+        public bool PostgresDataDockerVolume { get; set; }
     }
 }
