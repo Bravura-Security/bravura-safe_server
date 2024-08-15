@@ -1703,7 +1703,7 @@ namespace Bit.PostgresMigrations.Migrations
                     b.ToTable("ProjectSecret");
                 });
 
-            modelBuilder.Entity("AmazonSNSDevice", b =>
+            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.AmazonSNSDevice", b =>
                 {
                     b.Property<long?>("Id")
                         .HasColumnType("bigint");
@@ -1726,7 +1726,7 @@ namespace Bit.PostgresMigrations.Migrations
                     b.ToTable("AmazonSNSDevice");
                 });
 
-            modelBuilder.Entity("HubConnection", b =>
+            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.HubConnection", b =>
                 {
                     b.Property<long?>("Id")
                         .HasColumnType("bigint");
