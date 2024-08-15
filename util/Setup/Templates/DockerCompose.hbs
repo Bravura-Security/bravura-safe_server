@@ -353,8 +353,7 @@ volumes:
       - no-new-privileges:true
     restart: unless-stopped
     depends_on:
-      admin:
-        condition: service_healthy
+      - admin
     ports:
       - '3000:3000'
     networks:
