@@ -1,4 +1,4 @@
-﻿#
+#
 # Useful references:
 # https://docs.docker.com/compose/compose-file/
 # https://docs.docker.com/compose/reference/overview/#use--f-to-specify-name-and-path-of-one-or-more-compose-files
@@ -39,14 +39,51 @@ services:
     networks:
       - default
       - public
-
+{{/if}}
+{{#if UsePostgresDocker}}
+  postgres:
+    image: postgres:16-alpine
+    container_name: bravura_vault-postgres_16
+    restart: unless-stopped
+    stop_grace_period: 60s
+    # when running postgres on WSL and using a mounted windows volumes
+    # - ../postgresql_16/data:/var/lib/postgresql/data
+    # relative path fails since container is unable to set perms on a windows mount
+    # using the ~ ex: ~/postgresql_16/data:/var/lib/postgresql/data
+    # makes the data folder in the home folder of the user so it will work
+    volumes:
+{{#if PostgresDataDockerVolume}}
+      - postgres_data:/var/lib/postgresql/data
+{{else}}
+      - ../postgresql/data:/var/lib/postgresql/data
+{{/if}}
+      - ../logs/postgres:/var/log/postgresql
+    ports:
+      - '5432:5432'
+    env_file:
+      - pgsql.env
+      - ../env/uid.env
+      - ../env/pgsql.override.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      - default
+      - public
 {{/if}}
   web:
     image: bravura_vault/web:{{{WebVersion}}}
     container_name: bravura_vault-web
     restart: always
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+      identity:
+        condition: service_started
+      admin:
+        condition: service_healthy
     volumes:
       - ../web:/etc/bitwarden/web
     env_file:
@@ -67,6 +104,17 @@ services:
     image: bravura_vault/api:{{{CoreVersion}}}
     container_name: bravura_vault-api
     restart: always
+    depends_on:
+      identity:
+        condition: service_started
+{{#if UseMssqlDocker}}
+      mssql:
+        condition: service_healthy
+{{/if}}
+{{#if UsePostgresDocker}}
+      postgres:
+        condition: service_healthy
+{{/if}}
     volumes:
       - ../core:/etc/bitwarden/core
       - ../ca-certificates:/etc/bitwarden/ca-certificates
@@ -101,9 +149,15 @@ services:
     container_name: bravura_vault-admin
     restart: always
     depends_on:
-      - api
+      api:
+        condition: service_started
 {{#if UseMssqlDocker}}
-      - mssql
+      mssql:
+        condition: service_healthy
+{{/if}}
+{{#if UsePostgresDocker}}
+      postgres:
+        condition: service_healthy
 {{/if}}
     volumes:
       - ../core:/etc/bitwarden/core
@@ -135,6 +189,9 @@ services:
     image: bravura_vault/notifications:{{{CoreVersion}}}
     container_name: bravura_vault-notifications
     restart: always
+    depends_on:
+      api:
+        condition: service_healthy
     volumes:
       - ../ca-certificates:/etc/bitwarden/ca-certificates
       - ../logs/notifications:/etc/bitwarden/logs
@@ -271,11 +328,19 @@ services:
 
 {{#if UseMssqlDocker}}
 {{#if MssqlDataDockerVolume}}
-
 volumes:
   mssql_data:
     labels:
       com.bitwarden.product: bitwarden
+{{/if}}
+{{/if}}
+
+{{#if UsePostgresDocker}}
+{{#if PostgresDataDockerVolume}}
+volumes:
+  postgres_data:
+    labels:
+      com.bitwarden.product: bitwarden_psql
 {{/if}}
 {{/if}}
 
@@ -289,14 +354,14 @@ volumes:
     restart: unless-stopped
     depends_on:
       - admin
+    ports:
+      - '3000:3000'
     networks:
       - default
       - public
-    
     volumes:
       - ../appdata/grafana:/var/lib/grafana
       - ../appdata/datasources:/etc/grafana/provisioning/datasources
-      
     env_file:
       - ../env/uid.env
       - ../env/global.override.env

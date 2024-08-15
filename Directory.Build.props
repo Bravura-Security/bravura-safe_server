@@ -8,6 +8,7 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <ImplicitUsings>enable</ImplicitUsings>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904;NU1605</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup

@@ -103,6 +103,13 @@ public class Context
                         continue;
                     }
 
+                    if (paramParts[0] == "# Parameter:PostgresDataDockerVolume" &&
+                        bool.TryParse(paramParts[1], out var pgsqlDataDockerVolume))
+                    {
+                        Config.DatabaseDockerVolume = pgsqlDataDockerVolume;
+                        continue;
+                    }
+
                     if (paramParts[0] == "# Parameter:HttpPort" && int.TryParse(paramParts[1], out var httpPort))
                     {
                         Config.HttpPort = httpPort == 0 ? null : httpPort.ToString();
