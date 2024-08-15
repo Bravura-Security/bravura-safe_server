@@ -2,10 +2,18 @@
 set -e
 
 # Setup
+# Check if docker-compose is installed
 if command -v docker-compose &> /dev/null
 then
     dccmd='docker-compose'
-else
+fi
+
+# Check if Docker Compose v2 (as a plugin) is installed
+if docker compose version &> /dev/null
+then
+    echo "Docker Compose v2 is installed"
+    echo "________________________________"
+    echo ""
     dccmd='docker compose'
 fi
 
@@ -110,13 +118,13 @@ function install() {
 function dockerComposeUp() {
     dockerComposeFiles
     dockerComposeVolumes
-    docker-compose up -d
+    $dccmd up -d
 }
 
 function dockerComposeDown() {
     dockerComposeFiles
-    if [ $(docker-compose ps | wc -l) -gt 2 ]; then
-        docker-compose down
+    if [ $($dccmd ps | wc -l) -gt 2 ]; then
+        $dccmd down
     fi
 }
 
@@ -124,7 +132,7 @@ function dockerComposePull() {
     dockerComposeFiles
     if [ ! $TESTBUILD == "1" ]
     then
-        docker-compose pull
+        $dccmd pull
     fi
 }
 

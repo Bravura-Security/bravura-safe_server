@@ -41,10 +41,18 @@ then
     OUTPUT=$2
 fi
 
+# Check if docker-compose is installed
 if command -v docker-compose &> /dev/null
 then
     dccmd='docker-compose'
-else
+fi
+
+# Check if Docker Compose v2 (as a plugin) is installed
+if docker compose version &> /dev/null
+then
+    echo "Docker Compose v2 is installed"
+    echo "________________________________"
+    echo ""
     dccmd='docker compose'
 fi
 
@@ -141,7 +149,7 @@ case $1 in
         echo "*****"
         echo "Please remember after a fresh install to correctly set email username/password"
         echo "in the docker/docker-compose.yml if you wish to correctly relay emails via AWS SES"
-	echo "Otherwise all emails will be sent only to maildev container and will never reach intended recipient."
+        echo "Otherwise all emails will be sent only to maildev container and will never reach intended recipient."
         echo "Then restart containers if any setup changes are made."
         echo "*****"
         echo "*****"
