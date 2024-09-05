@@ -84,6 +84,11 @@ public class EmergencyAccessService : IEmergencyAccessService
             throw new BadRequestException("You cannot use Emergency Access Takeover because you are using Key Connector.");
         }
 
+        if (waitTime < 1 || waitTime > 90)
+        {
+            throw new BadRequestException("Wait time should be between 1 day and 90 days.");
+        }
+
         var emergencyAccess = new EmergencyAccess
         {
             GrantorId = invitingUser.Id,

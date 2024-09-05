@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Security.Cryptography.Xml" Version="7.0.2" />
+    <PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'Server' " />

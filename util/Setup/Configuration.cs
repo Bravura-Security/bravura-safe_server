@@ -113,6 +113,15 @@ public class Configuration
     [Description("Use the grafana container for visualizations pulling latest from docker hub.")]
     public bool UseGrafanaDocker { get; set; } = true;
 
+    [Description("Bypass setting up a PostgreSql docker image. Intended for use with external PostgreSql stores.")]
+    public bool UsePostgresDocker { get; set; }
+
+    [Description("Use a docker volume (`postgres_data`) instead of a host-mapped volume for the persisted " +
+        "database.\n" +
+        "WARNING: Changing this value will cause you to lose access to the existing persisted database.\n" +
+        "Learn more: https://docs.docker.com/storage/volumes/")]
+    public bool PostgresDataDockerVolume { get; set; }
+
     [YamlIgnore]
     public string Domain
     {
