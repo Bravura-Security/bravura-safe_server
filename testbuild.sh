@@ -33,8 +33,8 @@ then
     docker push $REPO/server:$TAG
     docker push $REPO/attachments:$TAG
 	
-	echo "======================================="
-	echo "Finished: Pushed api identity server attachments"
+    echo "======================================="
+    echo "Finished: Pushed api identity server attachments"
     echo "======================================="
 	
     docker push $REPO/icons:$TAG
@@ -42,24 +42,29 @@ then
     docker push $REPO/events:$TAG
     docker push $REPO/admin:$TAG
 	
-	echo "======================================="
-	echo "Finished: Pushed icons notifications events admin"
+    echo "======================================="
+    echo "Finished: Pushed icons notifications events admin"
     echo "======================================="
 	
     docker push $REPO/nginx:$TAG
     docker push $REPO/sso:$TAG
     docker push $REPO/grafana:$TAG
 	
-	echo "======================================="
-	echo "Finished: Pushed nginx sso"
     echo "======================================="
-	
+    echo "Finished: Pushed nginx sso"
+    echo "======================================="
+    
+    
+    echo "================================================="
+    echo "Pushing mailrelay, mssql and setup"
+    echo "If pushing to prod ECR, safe to ignore errors"
+    echo "================================================="
     docker push $REPO/mailrelay:$TAG
     docker push $REPO/mssql:$TAG
     docker push $REPO/setup:$TAG
 	
-	echo "======================================="
-	echo "Finished: docker push completed"
+    echo "======================================="
+    echo "Finished: docker push completed"
     echo "======================================="
 
 elif [ $# -gt 1 -a "$1" == "pull" ]
@@ -84,6 +89,7 @@ then
     docker pull $REPO/mssql:$TAG
     docker pull $REPO/setup:$TAG
     docker pull $REPO/mailrelay:$TAG
+    docker pull $REPO/web:$TAG
 
     docker tag $REPO/api:$TAG bravura_vault/api:$TAG
     docker tag $REPO/identity:$TAG bravura_vault/identity:$TAG
@@ -99,6 +105,7 @@ then
     docker tag $REPO/mssql:$TAG bravura_vault/mssql:$TAG
     docker tag $REPO/setup:$TAG bravura_vault/setup:$TAG
     docker tag $REPO/mailrelay:$TAG bravura_vault/mailrelay:$TAG
+    docker tag $REPO/web:$TAG bravura_vault/web:$TAG
 
 elif [ $# -gt 1 -a "$1" == "aws-create" ]
 then
