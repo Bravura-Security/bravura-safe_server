@@ -126,7 +126,7 @@ public class EnvironmentFileBuilder
                 }
                 else
                 {
-                    dbPgSqlPort = Helpers.ReadInput("Enter your Postrges DB Server port to use [5432]");
+                    dbPgSqlPort = Helpers.ReadInput("Enter your Postgres DB Server port to use [5432]");
                     dbUser = Helpers.ReadInput("Enter your Database User name [postgres]");
                 }
 
@@ -135,6 +135,14 @@ public class EnvironmentFileBuilder
                     _context.Config.UsePostgresDocker = true;
                     dbUser = "postgres";
                     dbSource = "postgres";
+                    var tmp = Helpers.ReadInput("Use a docker volume for Postgres DB data [Y/n]");
+                    if (string.IsNullOrEmpty(tmp))
+                        tmp = "y";
+                    
+                    if (tmp.ToLower().StartsWith("n"))
+                        _context.Config.PostgresDataDockerVolume = false;
+                    else
+                        _context.Config.PostgresDataDockerVolume = true;
                 }
             }
             else
@@ -144,6 +152,8 @@ public class EnvironmentFileBuilder
 
             dbPassword = _context.Stub ? "RANDOM_DATABASE_PASSWORD" : Helpers.ReadInput("Enter your Database User password [<randomly generated>]");
             dbCatalog = Helpers.ReadInput("Enter your Database name [vault]");
+            if (string.IsNullOrEmpty(dbCatalog))
+                dbCatalog = "vault";
 
             var customMailDev = Helpers.ReadInput("Use custom maildev container? [Y/n]");
             if (string.IsNullOrEmpty(customMailDev))
