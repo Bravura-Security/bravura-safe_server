@@ -111,7 +111,7 @@ public class EnvironmentFileBuilder
             {
                 dbSource = Helpers.ReadInput("Enter your Database Server name. Default will use a local mssql docker. [tcp:mssql,1433]");
                 if (string.IsNullOrEmpty(dbSource))
-                    Helpers.WriteLine(_context, "Default local docker will be used. The Database User will be sa.");
+                    Helpers.WriteLine(_context, "Default local docker will be used. The Database User will be sa.\n");
                 else
                     dbUser = Helpers.ReadInput("Enter your Database User name [sa]");
                 
@@ -122,7 +122,7 @@ public class EnvironmentFileBuilder
                 dbSource = Helpers.ReadInput("Enter your Postgres Database Server name. Default will use a local postgresql docker. [postgres]");
                 if (string.IsNullOrEmpty(dbSource))
                 {
-                    Helpers.WriteLine(_context, "Default local docker will be used. The Database User will be postgres.");
+                    Helpers.WriteLine(_context, "Default local docker will be used. The Database User will be postgres.\n");
                 }
                 else
                 {

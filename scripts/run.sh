@@ -162,6 +162,9 @@ function dockerComposeVolumes() {
     createDir "logs/portal"
     createDir "mssql/backups"
     createDir "mssql/data"
+    createDir "postgresql/backups"
+    createDir "postgresql/data"
+    createDir "logs/postgres"
 }
 
 function createDir() {
@@ -175,6 +178,9 @@ function createDir() {
 function dockerPrune() {
     docker image prune --all --force --filter="label=com.hitachi.product=bravura_vault" \
         --filter="label!=com.hitachi.project=setup"
+    
+    # next line also purges the setup container
+    docker image prune --all --force --filter="label=com.hitachi.product=bravura_vault"
 }
 
 function updateLetsEncrypt() {
@@ -271,6 +277,9 @@ function uninstall() {
         rm -R $OUTPUT_DIR
         echo "Removing MSSQL docker volume."
         docker volume prune --force --filter="label=com.bitwarden.product=bitwarden"
+
+        echo "Removing PostgreSQL docker volume."
+        docker volume prune --force --filter="label=com.bitwarden.product=bitwarden_psql"
         echo "Bravura Safe uninstall complete!"
     else
         echo -e -n "${CYAN}(!) Bravura Safe uninstall canceled. ${NC}"
