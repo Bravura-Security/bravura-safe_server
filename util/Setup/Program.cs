@@ -78,9 +78,7 @@ public class Program
         }
         if (_context.Parameters.ContainsKey("dbname"))
         {
-            var tmp = _context.Parameters["dbname"];
-            if (tmp.ToLower().CompareTo("vaultDB_replaceme".ToLower())!=0)
-                _context.Install.Database = _context.Parameters["dbname"];
+            _context.Install.Database = _context.Parameters["dbname"];
         }
 
         // Automatically stub out Installation ID and Key.

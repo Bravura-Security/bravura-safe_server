@@ -317,8 +317,8 @@ public class EnvironmentFileBuilder
             _pgsqlOverrideValues = new Dictionary<string, string>
             {
                 ["POSTGRES_USER"] = dbUser,
-                ["POSTGRES_PASSWORD"] = dbPassword,
-                ["POSTGRES_DB"] = _context.Install?.Database ?? "vault"
+                ["POSTGRES_PASSWORD"] = dbPassword //,
+                //["POSTGRES_DB"] = _context.Install?.Database ?? "vault"
             };
         }
         else { }
