@@ -48,17 +48,17 @@ then
 	
     docker push $REPO/nginx:$TAG
     docker push $REPO/sso:$TAG
-    docker push $REPO/grafana:$TAG
-	
+
     echo "======================================="
     echo "Finished: Pushed nginx sso"
     echo "======================================="
     
     
-    echo "================================================="
-    echo "Pushing mailrelay, mssql and setup"
-    echo "If pushing to prod ECR, safe to ignore errors"
-    echo "================================================="
+    echo "===================================================================="
+    echo "Pushing grafana, mailrelay, mssql and setup"
+    echo "If pushing to prod ECR, safe to ignore errors since not used in prod"
+    echo "===================================================================="
+    docker push $REPO/grafana:$TAG
     docker push $REPO/mailrelay:$TAG
     docker push $REPO/mssql:$TAG
     docker push $REPO/setup:$TAG
