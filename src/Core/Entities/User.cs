@@ -15,6 +15,9 @@ public class User : ITableObject<Guid>, IStorableSubscriber, IRevisable, ITwoFac
     private Dictionary<TwoFactorProviderType, TwoFactorProvider> _twoFactorProviders;
     private bool? encrypted;
     private bool? ValidEncryptedFields = true; // if fail to decrypt ApiKey, MasterPasswordHint or TwoFactoryRecoveryKey, this will be false
+    private bool? ValidMasterPasswordHint = true;
+    private bool? ValidTwoFactorRecoveryCode = true;
+    private bool? ValidApiKey = true;
 
     public Guid Id { get; set; }
     [MaxLength(50)]
@@ -156,6 +159,21 @@ public class User : ITableObject<Guid>, IStorableSubscriber, IRevisable, ITwoFac
         }
     }
 
+    public bool? HasValidMasterPasswordHint()
+    {
+        return ValidMasterPasswordHint;
+    }
+
+    public bool? HasValidTwoFactorRecoveryCode()
+    {
+        return ValidTwoFactorRecoveryCode;
+    }
+
+    public bool? HasValidApiKey()
+    {
+        return ValidApiKey;
+    }
+
     public bool? HasValidEncryptedFields()
     {
         return ValidEncryptedFields;
@@ -244,6 +262,7 @@ public class User : ITableObject<Guid>, IStorableSubscriber, IRevisable, ITwoFac
         if (!string.IsNullOrEmpty(ApiKey)) ApiKey = AESHMACEncryption.SimpleEncrypt(ApiKey, cryptKey, authKey);
         encrypted = true;
         ValidEncryptedFields = true;
+        ValidMasterPasswordHint = ValidTwoFactorRecoveryCode = ValidApiKey = true;
         return this;
     }
 
@@ -252,6 +271,7 @@ public class User : ITableObject<Guid>, IStorableSubscriber, IRevisable, ITwoFac
         if (encrypted == false)
             return this;
 
+        ValidMasterPasswordHint = true;
         try
         {
            if (!string.IsNullOrWhiteSpace(MasterPasswordHint))
@@ -264,9 +284,10 @@ public class User : ITableObject<Guid>, IStorableSubscriber, IRevisable, ITwoFac
             Console.WriteLine("_______________ \n*********");
 
             MasterPasswordHint = null;
-            ValidEncryptedFields = false;
+            ValidMasterPasswordHint = false;
         }
 
+        ValidTwoFactorRecoveryCode = true;
         try 
         {
             if (!string.IsNullOrWhiteSpace(TwoFactorRecoveryCode))
@@ -279,9 +300,10 @@ public class User : ITableObject<Guid>, IStorableSubscriber, IRevisable, ITwoFac
             Console.WriteLine("************\n*********");
 
             TwoFactorRecoveryCode = null;
-            ValidEncryptedFields = false;
+            ValidTwoFactorRecoveryCode = false;
         }
 
+        ValidApiKey = true;
         try
         {
            if (!string.IsNullOrWhiteSpace(ApiKey))
@@ -290,13 +312,15 @@ public class User : ITableObject<Guid>, IStorableSubscriber, IRevisable, ITwoFac
         catch (Exception)
         {
             Console.WriteLine("\n\n_______________\n*********");
-            Console.WriteLine("user {0} has an empty or invalid ApiKey", GetUserId() );
+            Console.WriteLine("user {0} has an invalid ApiKey", GetUserId() );
             Console.WriteLine("_______________ \n*********");
 
             ApiKey = null;
-            ValidEncryptedFields = false;
+            ValidApiKey = false;
         }
-   
+
+        ValidEncryptedFields = ValidMasterPasswordHint & ValidTwoFactorRecoveryCode & ValidApiKey;
+
         encrypted = false;
         return this;
     }

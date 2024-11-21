@@ -183,8 +183,36 @@ public class Program
         Console.WriteLine("\n");
     }
 
+    private static void MigratePostgresDatabase(int attempt = 1)
+    {
+        var vaultConnectionString = Helpers.GetValueFromEnvFile("global",
+            "globalSettings__postgreSql__connectionString");
+        var migrator = new PostgresDbMigrator(vaultConnectionString, null);
+        if (migrator.MigrateDatabase(false))
+        {
+            Console.WriteLine("Database created/available.");
+        }
+    }
+
     private static void PrepareAndMigrateDatabase()
     {
+        var dbProvider = Helpers.GetValueFromEnvFile("global", "globalSettings__databaseProvider");
+        if (string.IsNullOrEmpty(dbProvider)==false)
+        {
+            // if the provider is sql server, no need to do anything
+            switch (dbProvider.ToLower())
+            {
+                case "postgres":
+                case "postgresql":
+                    MigratePostgresDatabase();
+                    return;
+
+                case "sqlserver": //this is the default case and no need to do anything.
+                default:
+                    break;
+            }
+        }
+
         var vaultConnectionString = Helpers.GetValueFromEnvFile("global",
             "globalSettings__sqlServer__connectionString");
 

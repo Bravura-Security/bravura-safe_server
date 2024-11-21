@@ -6,7 +6,7 @@ namespace Bit.Core.Entities;
 public class AmazonSNSDevice: ITableObject<long>
 {
     public long Id { get; set; }
-    public Guid DeviceID { get; set; }
+    public Guid DeviceId { get; set; }
     [MaxLength(2048)]
     public string EndpointARN { get; set; }
     [MaxLength(2048)]

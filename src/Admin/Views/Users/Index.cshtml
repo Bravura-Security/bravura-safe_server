@@ -94,6 +94,20 @@
                                         </button>
                                     </form>
                                 </li>
+                                @if(user.HasValidApiKey() == false)
+                                {
+                                <li>
+                                    <button id="fixApiKeyModalButton" type="button" class="btn text-primary dropdown-item" data-toggle="modal" data-target="#fixApiKeyModal" data-id="@user.Id" data-type="user">
+                                        <i class="fa fa-fw fa-key" aria-hidden="true"></i>
+                                        Fix API Key
+                                    </button>
+                                    <form asp-controller="Users" asp-action="FixApiKey" asp-route-id="@user.Id" data-id="@user.Id">
+                                        <button class="btn text-danger dropdown-item d-none" type="submit">
+                                            <i class="fa fa-fw fa-key" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                </li>
+                                }
                             </ul>
                         </div>
                     </td>
@@ -141,3 +155,4 @@
 }
 
 @await Html.PartialAsync("_DeleteModal")
+@await Html.PartialAsync("_FixApiKeyModal")

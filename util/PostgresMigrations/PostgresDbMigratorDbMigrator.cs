@@ -25,6 +25,7 @@ public class PostgresDbMigrator : IDbMigrator
         {
             _logger.LogInformation(Constants.BypassFiltersEventId, "Migrating database.");
         }
+        Console.WriteLine("PostgresDbMigrator: Migrating database.");
 
         using var scope = _serviceScopeFactory.CreateScope();
         var databaseContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
@@ -34,6 +35,7 @@ public class PostgresDbMigrator : IDbMigrator
         {
             _logger.LogInformation(Constants.BypassFiltersEventId, "Migration successful.");
         }
+        Console.WriteLine("PostgresDbMigrator: Migration successful.");
 
         cancellationToken.ThrowIfCancellationRequested();
         return true;

@@ -12,6 +12,9 @@ RUN npm install \
 
 # Prod
 FROM base as prod
+
+LABEL com.hitachi.product="bravura_vault"
+
 USER node
 WORKDIR /home/node
 COPY --chown=node:node . /home/node
@@ -21,5 +24,5 @@ ENV MAILDEV_WEB_PORT 1080
 ENV MAILDEV_SMTP_PORT 1025
 RUN chmod +x bin/maildev
 ENTRYPOINT ["bin/maildev"]
-HEALTHCHECK --interval=10s --timeout=1s \
-  CMD wget -O - http://localhost:1080/healthz || exit 1
+HEALTHCHECK --interval=10s --timeout=5s --retries=3 \
+  CMD wget -O - http://127.0.0.1:1080/healthz || exit 1

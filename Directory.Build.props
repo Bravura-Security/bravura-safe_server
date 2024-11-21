@@ -6,10 +6,11 @@
     <Version>2024.3.1</Version>
 
     <RootNamespace>Bit.$(MSBuildProjectName)</RootNamespace>
-    <InternalVersion>2024-1.0</InternalVersion>
+    <InternalVersion>2024-3.0</InternalVersion>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <ImplicitUsings>enable</ImplicitUsings>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904;NU1605</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup

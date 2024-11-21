@@ -15,7 +15,7 @@ public class AmazonSNSDeviceRepository : Repository<Core.Entities.AmazonSNSDevic
         using (var scope = ServiceScopeFactory.CreateScope())
         {
             var dbContext = GetDatabaseContext(scope);
-            var entity = await GetDbSet(dbContext).SingleOrDefaultAsync(su => su.DeviceID == deviceID);
+            var entity = await GetDbSet(dbContext).SingleOrDefaultAsync(su => su.DeviceId == deviceID);
             dbContext.Entry(entity).State = EntityState.Deleted;
             await dbContext.SaveChangesAsync();
         }
@@ -26,7 +26,7 @@ public class AmazonSNSDeviceRepository : Repository<Core.Entities.AmazonSNSDevic
         using (var scope = ServiceScopeFactory.CreateScope())
         {
             var dbContext = GetDatabaseContext(scope);
-            var query = dbContext.AmazonSNSDevices.Where(d => d.DeviceID == deviceID);
+            var query = dbContext.AmazonSNSDevices.Where(d => d.DeviceId == deviceID);
             var amazonsnsdevice = await query.FirstOrDefaultAsync();
             return Mapper.Map<Core.Entities.AmazonSNSDevice>(amazonsnsdevice);
         }

@@ -444,11 +444,14 @@ public class OrganizationUserRepository : Repository<Core.Entities.OrganizationU
     public async override Task ReplaceAsync(Core.Entities.OrganizationUser organizationUser)
     {
         await base.ReplaceAsync(organizationUser);
+        if(organizationUser.UserId.HasValue)
+        {
         using (var scope = ServiceScopeFactory.CreateScope())
         {
             var dbContext = GetDatabaseContext(scope);
             await dbContext.UserBumpAccountRevisionDateAsync(organizationUser.UserId.GetValueOrDefault());
             await dbContext.SaveChangesAsync();
+        }
         }
     }
 

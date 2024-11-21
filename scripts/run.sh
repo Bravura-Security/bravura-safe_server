@@ -2,10 +2,18 @@
 set -e
 
 # Setup
+# Check if docker-compose is installed
 if command -v docker-compose &> /dev/null
 then
     dccmd='docker-compose'
-else
+fi
+
+# Check if Docker Compose v2 (as a plugin) is installed
+if docker compose version &> /dev/null
+then
+    echo "Docker Compose v2 is installed"
+    echo "________________________________"
+    echo ""
     dccmd='docker compose'
 fi
 
@@ -110,13 +118,13 @@ function install() {
 function dockerComposeUp() {
     dockerComposeFiles
     dockerComposeVolumes
-    docker-compose up -d
+    $dccmd up -d
 }
 
 function dockerComposeDown() {
     dockerComposeFiles
-    if [ $(docker-compose ps | wc -l) -gt 2 ]; then
-        docker-compose down
+    if [ $($dccmd ps | wc -l) -gt 2 ]; then
+        $dccmd down
     fi
 }
 
@@ -124,7 +132,7 @@ function dockerComposePull() {
     dockerComposeFiles
     if [ ! $TESTBUILD == "1" ]
     then
-        docker-compose pull
+        $dccmd pull
     fi
 }
 
@@ -154,6 +162,9 @@ function dockerComposeVolumes() {
     createDir "logs/portal"
     createDir "mssql/backups"
     createDir "mssql/data"
+    createDir "postgresql/backups"
+    createDir "postgresql/data"
+    createDir "logs/postgres"
 }
 
 function createDir() {
@@ -167,6 +178,9 @@ function createDir() {
 function dockerPrune() {
     docker image prune --all --force --filter="label=com.hitachi.product=bravura_vault" \
         --filter="label!=com.hitachi.project=setup"
+    
+    # next line also purges the setup container
+    docker image prune --all --force --filter="label=com.hitachi.product=bravura_vault"
 }
 
 function updateLetsEncrypt() {
@@ -263,6 +277,9 @@ function uninstall() {
         rm -R $OUTPUT_DIR
         echo "Removing MSSQL docker volume."
         docker volume prune --force --filter="label=com.bitwarden.product=bitwarden"
+
+        echo "Removing PostgreSQL docker volume."
+        docker volume prune --force --filter="label=com.bitwarden.product=bitwarden_psql"
         echo "Bravura Safe uninstall complete!"
     else
         echo -e -n "${CYAN}(!) Bravura Safe uninstall canceled. ${NC}"

@@ -18,9 +18,24 @@
     <i class="fa fa-fw fa-trash" aria-hidden="true"></i>
     Delete
 </button>
+&nbsp;
+@if(@Model.User.HasValidApiKey() == false)
+{
+<button id="fixApiKeyModalButton" type="button" class="btn btn-primary" data-toggle="modal" data-target="#fixApiKeyModal"
+    data-id="@Model.User.Id" data-type="user">
+    <i class="fa fa-fw fa-key" aria-hidden="true"></i>
+    Fix API Key
+</button>
+}
+
 <form class="d-flex justify-content-between" asp-action="Delete" asp-route-id="@Model.User.Id" data-id="@Model.User.Id">
+    <button class="btn btn-danger d-none" type="submit">
+    </button>
+</form>
+<form class="d-flex justify-content-between" asp-action="FixApiKey" asp-route-id="@Model.User.Id" data-id="@Model.User.Id">
     <button class="btn btn-danger d-none" type="submit">
     </button>
 </form>
 
 @await Html.PartialAsync("_DeleteModal")
+@await Html.PartialAsync("_FixApiKeyModal")

@@ -279,6 +279,27 @@
                 }
             });
 
+            // Add fix api key modal for user index page
+            $(document).on('click', '#fixApiKeyModalButton', function () {
+                var id = $(this).data('id');
+                $('#fixApiKeyButton').attr('data-id', id);
+                $('#fixApiKeyModal div.modal-dialog div.modal-content div.modal-body p').text('Are you sure you want to fix the API key for this user?');
+            });
+
+            var fixApiKeyModalConfirm = function (callback) {
+                $('#fixApiKeyButton').on('click', function () {
+                    var id = $(this).data('id');
+                    callback(id);
+                    $('#fixApiKeyModal').modal('hide');
+                });
+            }
+
+            fixApiKeyModalConfirm(function (id) {
+                if (id) {
+                    $('form[data-id=' + id + '][action*=fixapikey] > button').click();
+                }
+            });
+
             // display toast message
             var toastStatus = $('#toast').data('status');
             var toastMessage = $('#toast').data('message');

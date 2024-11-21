@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
+using Npgsql;
 
 namespace Bit.Setup;
 
@@ -14,6 +15,8 @@ public class EnvironmentFileBuilder
     //private IDictionary<string, string> _awsSNSOverrideValues;
 
     private IDictionary<string, string> _grafanaOverrideValues;
+    private IDictionary<string, string> _pgsqlValues;
+    private IDictionary<string, string> _pgsqlOverrideValues;
 
     public EnvironmentFileBuilder(Context context)
     {
@@ -32,6 +35,14 @@ public class EnvironmentFileBuilder
             ["MSSQL_PID"] = "Express",
             ["SA_PASSWORD"] = "SECRET",
         };
+
+        _pgsqlValues = new Dictionary<string, string>
+        {
+            ["POSTGRES_PASSWORD"] = "SECRET",
+        };
+
+        _mssqlOverrideValues = new Dictionary<string, string>(); //init to empty
+        _pgsqlOverrideValues = new Dictionary<string, string>(); //init to empty
     }
 
     public void BuildForInstaller()
@@ -45,7 +56,8 @@ public class EnvironmentFileBuilder
     {
         Init(false);
         LoadExistingValues(_globalOverrideValues, "/bitwarden/env/global.override.env");
-        LoadExistingValues(_mssqlOverrideValues, "/bitwarden/env/mssql.override.env");
+        if (_mssqlOverrideValues?.Count > 0) LoadExistingValues(_mssqlOverrideValues, "/bitwarden/env/mssql.override.env");
+        if (_pgsqlOverrideValues?.Count > 0) LoadExistingValues(_pgsqlOverrideValues, "/bitwarden/env/pgsql.override.env");
         LoadExistingValues(_keyConnectorOverrideValues, "/bitwarden/env/key-connector.override.env");
 
         if (_context.Config.PushNotifications &&
@@ -68,18 +80,80 @@ public class EnvironmentFileBuilder
         var dbGrafanaDBUser = "";
         var dbGrafanaDBUserPassword = "";
         var grafanaDefaultAdminPassword = "";
+        var dbProvider = "";
+        var dbPgSqlPort = "";
 
         if (forInstall)
         {
-            dbSource = Helpers.ReadInput("Enter your Database Server name. Default will use a local mssql docker. [tcp:mssql,1433]");
-            if (string.IsNullOrEmpty(dbSource))
-                Helpers.WriteLine(_context, "Default local docker will be used. The Database User will be sa.");
+            // Get from input which DB provider will be using.
+            dbProvider = Helpers.ReadInput("Enter your Database Provider.\n 1. Sql Server (Default) \n 2. PostgreSQL\n Default will use mssql (ie sqlserver). [sqlserver/postgres]");
+            if (string.IsNullOrEmpty(dbProvider))
+            {
+                dbProvider = "sqlserver";
+            }
+
+            switch (dbProvider.ToLowerInvariant())
+            {
+                case "postgres":
+                case "postgresql":
+                case "2":
+                    dbProvider = "postgres";
+                    break;
+
+                case "sqlserver":
+                case "1":
+                default:
+                    dbProvider = "sqlserver";
+                    break;
+            }
+
+            if (dbProvider.CompareTo("sqlserver") == 0)
+            {
+                dbSource = Helpers.ReadInput("Enter your Database Server name. Default will use a local mssql docker. [tcp:mssql,1433]");
+                if (string.IsNullOrEmpty(dbSource))
+                    Helpers.WriteLine(_context, "Default local docker will be used. The Database User will be sa.\n");
+                else
+                    dbUser = Helpers.ReadInput("Enter your Database User name [sa]");
+                
+                _context.Config.UseMssqlDocker = string.IsNullOrEmpty(dbSource) & string.IsNullOrEmpty(dbUser);
+            }
+            else if (dbProvider.CompareTo("postgres") == 0)
+            {
+                dbSource = Helpers.ReadInput("Enter your Postgres Database Server name. Default will use a local postgresql docker. [postgres]");
+                if (string.IsNullOrEmpty(dbSource))
+                {
+                    Helpers.WriteLine(_context, "Default local docker will be used. The Database User will be postgres.\n");
+                }
+                else
+                {
+                    dbPgSqlPort = Helpers.ReadInput("Enter your Postgres DB Server port to use [5432]");
+                    dbUser = Helpers.ReadInput("Enter your Database User name [postgres]");
+                }
+
+                if (string.IsNullOrEmpty(dbSource) && string.IsNullOrEmpty(dbUser))
+                {
+                    _context.Config.UsePostgresDocker = true;
+                    dbUser = "postgres";
+                    dbSource = "postgres";
+                    var tmp = Helpers.ReadInput("Use a docker volume for Postgres DB data [Y/n]");
+                    if (string.IsNullOrEmpty(tmp))
+                        tmp = "y";
+                    
+                    if (tmp.ToLower().StartsWith("n"))
+                        _context.Config.PostgresDataDockerVolume = false;
+                    else
+                        _context.Config.PostgresDataDockerVolume = true;
+                }
+            }
             else
-                dbUser = Helpers.ReadInput("Enter your Database User name [sa]");
+            {
+                Helpers.WriteLine(_context, "Fatal Error: Invalid database provider.");
+            }
+
             dbPassword = _context.Stub ? "RANDOM_DATABASE_PASSWORD" : Helpers.ReadInput("Enter your Database User password [<randomly generated>]");
             dbCatalog = Helpers.ReadInput("Enter your Database name [vault]");
-
-            _context.Config.UseMssqlDocker = string.IsNullOrEmpty(dbSource) & string.IsNullOrEmpty(dbUser);
+            if (string.IsNullOrEmpty(dbCatalog))
+                dbCatalog = "vault";
 
             var customMailDev = Helpers.ReadInput("Use custom maildev container? [Y/n]");
             if (string.IsNullOrEmpty(customMailDev))
@@ -102,7 +176,7 @@ public class EnvironmentFileBuilder
             // for now always include grafana so don't bother to ask.
             _context.Config.UseGrafanaDocker = true;
 
-            dbGrafanaDBUser = dbCatalog + "_grafana";
+            dbGrafanaDBUser = (string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog) + "_grafana";
             dbGrafanaDBUserPassword = Helpers.ReadInput("Enter your: " + dbGrafanaDBUser + " password otherwise default to [0P@ssWord!!!]");
             if (string.IsNullOrEmpty(dbGrafanaDBUserPassword))
                 dbGrafanaDBUserPassword = "0P@ssWord!!!";
@@ -127,28 +201,59 @@ public class EnvironmentFileBuilder
             //["GRAFANA_DB_PASSWORD"] = "${globalSettings__grafana__dBUserPassword}"
         };
 
-        SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
-        {
-            DataSource = string.IsNullOrEmpty(dbSource) ? "tcp:mssql,1433" : dbSource,
-            InitialCatalog = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog,
-            UserID = string.IsNullOrEmpty(dbUser) ? "sa" : dbUser,
-            Password = string.IsNullOrEmpty(dbPassword) ? Helpers.SecureRandomString(32) : dbPassword,
-            MultipleActiveResultSets = false,
-            Encrypt = true,
-            ConnectTimeout = 30,
-            TrustServerCertificate = true,
-            PersistSecurityInfo = false
-        };
-
-        var dbConnectionString = builder.ConnectionString;
-
-        _globalOverrideValues = new Dictionary<string, string>
+        var baseServiceInfo = new Dictionary<string, string>
         {
             ["globalSettings__baseServiceUri__vault"] = _context.Config.Url,
             ["globalSettings__baseServiceUri__cloudRegion"] = _context.Install?.CloudRegion.ToString(),
-            ["globalSettings__sqlServer__connectionString"] = $"\"{dbConnectionString.Replace("\"", "\\\"")}\"",
-            ["globalSettings__sqlServer__cryptKey"] = Convert.ToBase64String(Helpers.GenerateNewKey()),
-            ["globalSettings__sqlServer__authKey"] = Convert.ToBase64String(Helpers.GenerateNewKey()),
+        };
+
+        dbPassword = string.IsNullOrEmpty(dbPassword) ? Helpers.SecureRandomString(32) : dbPassword;
+
+        var dbConnectionInfo = new Dictionary<string, string>();
+        if (dbProvider.CompareTo("sqlserver") == 0)
+        {
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
+            {
+                DataSource = string.IsNullOrEmpty(dbSource) ? "tcp:mssql,1433" : dbSource,
+                InitialCatalog = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog,
+                UserID = string.IsNullOrEmpty(dbUser) ? "sa" : dbUser,
+                Password = dbPassword,
+                MultipleActiveResultSets = false,
+                Encrypt = true,
+                ConnectTimeout = 30,
+                TrustServerCertificate = true,
+                PersistSecurityInfo = false
+            };
+
+            var dbConnectionString = builder.ConnectionString;
+
+            dbConnectionInfo.Add("globalSettings__sqlServer__connectionString", $"\"{dbConnectionString.Replace("\"", "\\\"")}\"");
+            dbConnectionInfo.Add("globalSettings__sqlServer__cryptKey", Convert.ToBase64String(Helpers.GenerateNewKey()) );
+            dbConnectionInfo.Add("globalSettings__sqlServer__authKey", Convert.ToBase64String(Helpers.GenerateNewKey()) );
+        }
+        else if (dbProvider.CompareTo("postgres") == 0)
+        {
+            // Create a new instance of NpgsqlConnectionStringBuilder
+            var connectionStringBuilder = new NpgsqlConnectionStringBuilder
+            {
+                Host = string.IsNullOrEmpty(dbSource) ? "postgres" : dbSource,         // e.g., "localhost"
+                Port = string.IsNullOrEmpty(dbPgSqlPort) ? 5432 : int.Parse(dbPgSqlPort), // Default port for PostgreSQL
+                Database = string.IsNullOrEmpty(dbCatalog) ? "vault" : dbCatalog,  // Your database name
+                Username = string.IsNullOrEmpty(dbUser) ? "postgres" : dbUser,        // Your username
+                Password = dbPassword,        // Your password
+                SslMode = SslMode.Prefer,          // SSL mode (None, Prefer, Require, etc.)
+                TrustServerCertificate = true      // Trust the server certificate (true/false)
+            };
+
+            var dbConnectionString = connectionStringBuilder.ConnectionString;
+            dbConnectionInfo.Add("globalSettings__databaseProvider", dbProvider); // this one only needed for non sql server back ends
+            dbConnectionInfo.Add("globalSettings__postgreSql__connectionString", $"\"{dbConnectionString.Replace("\"", "\\\"")}\"");
+            dbConnectionInfo.Add("globalSettings__postgreSql__cryptKey", Convert.ToBase64String(Helpers.GenerateNewKey()));
+            dbConnectionInfo.Add("globalSettings__postgreSql__authKey", Convert.ToBase64String(Helpers.GenerateNewKey()));
+        }
+
+        var tmp_globalOverrideValues = new Dictionary<string, string>
+        {
             ["globalSettings__identityServer__certificatePassword"] = _context.Install?.IdentityCertPassword,
             ["globalSettings__internalIdentityKey"] = _context.Stub ? "RANDOM_IDENTITY_KEY" :
                 Helpers.SecureRandomString(64, alpha: true, numeric: true),
@@ -177,16 +282,46 @@ public class EnvironmentFileBuilder
             ["adminSettings__admins"] = string.Empty,
         };
 
+        _globalOverrideValues = new Dictionary<string, string>();
+        foreach (var kvp in baseServiceInfo)
+        {
+            _globalOverrideValues[kvp.Key] = kvp.Value;
+        }
+
+        foreach (var kvp in dbConnectionInfo)
+        {
+            _globalOverrideValues[kvp.Key] = kvp.Value;
+        }
+
+        foreach (var kvp in tmp_globalOverrideValues)
+        {
+            _globalOverrideValues[kvp.Key] = kvp.Value;
+        }
+
         if (!_context.Config.PushNotifications)
         {
             _globalOverrideValues.Add("globalSettings__pushRelayBaseUri", "REPLACE");
         }
 
-        _mssqlOverrideValues = new Dictionary<string, string>
+        if (dbProvider.CompareTo("sqlserver") == 0)
         {
-            ["SA_PASSWORD"] = dbPassword,
-            ["DATABASE"] = _context.Install?.Database ?? "vault"
-        };
+            _mssqlOverrideValues = new Dictionary<string, string>
+            {
+                ["SA_PASSWORD"] = dbPassword,
+                ["DATABASE"] = _context.Install?.Database ?? "vault"
+            };
+        }
+
+        if (dbProvider.CompareTo("postgres") == 0)
+        {
+            _pgsqlOverrideValues = new Dictionary<string, string>
+            {
+                ["POSTGRES_USER"] = dbUser,
+                ["POSTGRES_PASSWORD"] = dbPassword //,
+                //["POSTGRES_DB"] = _context.Install?.Database ?? "vault"
+            };
+        }
+        else { }
 
         _keyConnectorOverrideValues = new Dictionary<string, string>
         {
@@ -208,7 +343,7 @@ public class EnvironmentFileBuilder
             _globalOverrideValues.Add("globalSettings__amazon__region", "replaceme");
             _globalOverrideValues.Add("globalSettings__amazon__sNSPlatformARNAndroid", "arn:aws:sns:us-east-1:1234567890:app/GCM/BravuraSafeAndroid_REPLACEWHOLELINE");
             _globalOverrideValues.Add("globalSettings__amazon__sNSPlatformARNIOS", "arn:aws:sns:us-east-1:1234567890:app/APNS/BravuraSafe_iOSREPLACEWHOLELINE");
-            _globalOverrideValues.Add("globalSettings__amazon__sNSTopicARN", "arn:aws:sns:us-east-1:1234567890:BravuraSafeTestTope_ReplaceWholeLine");
+            _globalOverrideValues.Add("globalSettings__amazon__sNSTopicARN", "arn:aws:sns:us-east-1:1234567890:BravuraSafeTestTopic_ReplaceWholeLine");
         }
 
         //grafana settings
@@ -269,11 +404,14 @@ public class EnvironmentFileBuilder
         }
         Helpers.Exec("chmod 600 /bitwarden/docker/global.env");
 
-        using (var sw = File.CreateText("/bitwarden/docker/mssql.env"))
+        if (_mssqlOverrideValues.Count > 0) // know this seems weird by only generate base file if actually will override them later
         {
-            sw.Write(template(new TemplateModel(_mssqlValues)));
+            using (var sw = File.CreateText("/bitwarden/docker/mssql.env"))
+            {
+                sw.Write(template(new TemplateModel(_mssqlValues)));
+            }
+            Helpers.Exec("chmod 600 /bitwarden/docker/mssql.env");
         }
-        Helpers.Exec("chmod 600 /bitwarden/docker/mssql.env");
 
         Helpers.WriteLine(_context, "Building docker environment override files.");
         Directory.CreateDirectory("/bitwarden/env/");
@@ -283,11 +421,29 @@ public class EnvironmentFileBuilder
         }
         Helpers.Exec("chmod 600 /bitwarden/env/global.override.env");
 
-        using (var sw = File.CreateText("/bitwarden/env/mssql.override.env"))
+        if (_mssqlOverrideValues.Count > 0)
         {
-            sw.Write(template(new TemplateModel(_mssqlOverrideValues)));
+            using (var sw = File.CreateText("/bitwarden/env/mssql.override.env"))
+            {
+                sw.Write(template(new TemplateModel(_mssqlOverrideValues)));
+            }
+            Helpers.Exec("chmod 600 /bitwarden/env/mssql.override.env");
         }
-        Helpers.Exec("chmod 600 /bitwarden/env/mssql.override.env");
+
+        if (_pgsqlOverrideValues.Count > 0)
+        {
+            using (var sw = File.CreateText("/bitwarden/docker/pgsql.env"))
+            {
+                sw.Write(template(new TemplateModel(_pgsqlValues)));
+            }
+            Helpers.Exec("chmod 600 /bitwarden/docker/pgsql.env");
+
+            using (var sw = File.CreateText("/bitwarden/env/pgsql.override.env"))
+            {
+                sw.Write(template(new TemplateModel(_pgsqlOverrideValues)));
+            }
+            Helpers.Exec("chmod 600 /bitwarden/env/pgsql.override.env");
+        }
 
         if (_context.Config.EnableKeyConnector)
         {
