@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
 
 LABEL com.hitachi.product="bravura_vault" com.hitachi.project="setup"
 

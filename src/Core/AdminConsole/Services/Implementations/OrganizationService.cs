@@ -461,7 +461,7 @@ public class OrganizationService : IOrganizationService
             BillingEmail = signup.BillingEmail,
             BusinessName = signup.BusinessName,
             PlanType = plan!.Type,
-            Seats = (short)(plan.PasswordManager.BaseSeats),
+            Seats = (plan.PasswordManager.BaseSeats),
             MaxCollections = plan.PasswordManager.MaxCollections,
             MaxStorageGb = !plan.PasswordManager.BaseStorageGb.HasValue ?
                 (short?)null : (short)(plan.PasswordManager.BaseStorageGb.Value + signup.AdditionalStorageGb),

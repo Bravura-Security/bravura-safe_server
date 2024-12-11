@@ -30,7 +30,7 @@ public enum PlanType : byte
     EnterpriseAnnually2020 = 11,
     [Display(Name = "Bravura Teams")]
     BravuraTeams = 12,
-    [Display(Name = "Bravura Enterprise (Primary)")]
+    [Display(Name = "Bravura Enterprise")]
     BravuraEnterprise = 13,
     [Display(Name = "Teams (Monthly)")]
     TeamsMonthly = 14,

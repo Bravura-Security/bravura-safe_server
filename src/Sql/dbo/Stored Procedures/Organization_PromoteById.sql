@@ -8,7 +8,7 @@ BEGIN
     UPDATE
         [dbo].[Organization]
     SET
-        [Plan] = 'Enterprise',
+        [Plan] = 'Bravura Enterprise',
         [PlanType] = 13,
         [Seats] = 1000000,
         [Use2fa] = 1,

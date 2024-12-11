@@ -16,6 +16,7 @@ public record BravuraTeams : Models.StaticStore.Plan
         TrialPeriodDays = 7;
 
         HasPolicies = true;
+        HasSelfHost = true;
         HasGroups = true;
         HasDirectory = true;
         HasEvents = true;
@@ -24,45 +25,12 @@ public record BravuraTeams : Models.StaticStore.Plan
         HasApi = true;
         UsersGetPremium = true;
         HasCustomPermissions = true;
+        HasSkip2faForSso = false;
 
         UpgradeSortOrder = 2;
         DisplaySortOrder = 2;
 
         PasswordManager = new TeamsPasswordManagerFeatures();
-        SecretsManager = new TeamsSecretsManagerFeatures();
-    }
-
-    private record TeamsSecretsManagerFeatures : SecretsManagerPlanFeatures
-    {
-        public TeamsSecretsManagerFeatures()
-        {
-            BaseSeats = 0;
-            BasePrice = 0;
-            BaseServiceAccount = 50;
-
-            HasAdditionalSeatsOption = true;
-            HasAdditionalServiceAccountOption = true;
-
-            AllowSeatAutoscale = true;
-            AllowServiceAccountsAutoscale = true;
-
-            /*
-            if (isAnnual)
-            {
-                StripeSeatPlanId = "secrets-manager-teams-seat-annually";
-                StripeServiceAccountPlanId = "secrets-manager-service-account-annually";
-                SeatPrice = 72;
-                AdditionalPricePerServiceAccount = 6;
-            }
-            else
-            {
-                StripeSeatPlanId = "secrets-manager-teams-seat-monthly";
-                StripeServiceAccountPlanId = "secrets-manager-service-account-monthly";
-                SeatPrice = 7;
-                AdditionalPricePerServiceAccount = 0.5M;
-            }
-            */
-        }
     }
 
     private record TeamsPasswordManagerFeatures : PasswordManagerPlanFeatures
@@ -71,29 +39,11 @@ public record BravuraTeams : Models.StaticStore.Plan
         {
             BaseSeats = 32767;
             BaseStorageGb = 100;
-            BasePrice = 0;
 
             HasAdditionalStorageOption = true;
             HasAdditionalSeatsOption = true;
 
             AllowSeatAutoscale = true;
-
-            /*
-            if (isAnnual)
-            {
-                StripeStoragePlanId = "storage-gb-annually";
-                StripeSeatPlanId = "bravura-teams-org-seat-annually";
-                SeatPrice = 48;
-                AdditionalStoragePricePerGb = 4;
-            }
-            else
-            {
-                StripeSeatPlanId = "bravura-teams-org-seat-monthly";
-                StripeStoragePlanId = "storage-gb-monthly";
-                SeatPrice = 5;
-                AdditionalStoragePricePerGb = 0.5M;
-            }
-            */
         }
     }
 }

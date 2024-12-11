@@ -11,8 +11,6 @@ public class SqlServerDbMigrator : IDbMigrator
     private string GrafanaDBUser { get; set; }
     private string GrafanaDBUserPWD { get; set; }
 
-    private bool bContainedDB = false;
-
     public SqlServerDbMigrator(GlobalSettings globalSettings, ILogger<DbMigrator> logger)
     {
         _migrator = new DbMigrator(globalSettings.SqlServer.ConnectionString, logger);
@@ -20,31 +18,6 @@ public class SqlServerDbMigrator : IDbMigrator
         GrafanaDBUser = globalSettings.Grafana.DBUser;
         GrafanaDBUserPWD = globalSettings.Grafana.DBUserPassword;
     }
-
-    private string DBUSER_CREATE_LOGIN = @"USE %databaseNameQuoted%
-    IF SUSER_ID (N'%grafanaUser%') IS NULL
-    BEGIN
-            CREATE LOGIN %grafanaUser% WITH PASSWORD = N'%userPWD%' , DEFAULT_DATABASE = %databaseNameQuoted%, CHECK_POLICY = OFF, CHECK_EXPIRATION = OFF ;
-            CREATE USER %grafanaUser% FOR LOGIN %grafanaUser% ;
-            GRANT select ON Schema:: [DBO] TO %grafanaUser% ;
-            USE [master];
-            DENY VIEW ANY DATABASE TO [%grafanaUser%];
-    END ";
-
-    private string DBUSER_CREATE_LOGIN_CONTAINED_WCHECK =@"
-    USE %databaseNameQuoted%;
-
-    IF NOT EXISTS (
-        SELECT 1
-        FROM sys.database_principals
-        WHERE name = '%grafanaUser%' AND type_desc = 'SQL_USER'
-    )
-    BEGIN
-        CREATE USER %grafanaUser% WITH PASSWORD = N'%userPWD%';
-        -- Grant necessary permissions here
-        GRANT select ON Schema:: [DBO] TO %grafanaUser% ;
-    END;
-    ";
 
     private bool CreateGrafanaUser(string userName, string userPWD, CancellationToken cancellationToken = default(CancellationToken))
     {
