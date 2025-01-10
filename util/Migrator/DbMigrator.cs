@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Reflection;
+using System.Text;
 using Bit.Core;
 using DbUp;
 using DbUp.Helpers;
@@ -12,21 +13,25 @@ public class DbMigrator
 {
     private readonly string _connectionString;
     private readonly ILogger<DbMigrator> _logger;
+    private readonly bool _skipDatabasePreparation;
 
     public string GrafanaDBUser { get; set; }
     public string GrafanaDBUserPWD { get; set; }
 
     private bool bContainedDB = false;
 
-    public DbMigrator(string connectionString, ILogger<DbMigrator> logger = null)
+    public DbMigrator(string connectionString, ILogger<DbMigrator> logger = null,
+        bool skipDatabasePreparation = false)
     {
         _connectionString = connectionString;
         _logger = logger ?? CreateLogger();
+        _skipDatabasePreparation = skipDatabasePreparation;
     }
 
     public bool MigrateMsSqlDatabaseWithRetries(bool enableLogging = true,
         bool repeatable = false,
         string folderName = MigratorConstants.DefaultMigrationsFolderName,
+        bool dryRun = false,
         CancellationToken cancellationToken = default)
     {
         var attempt = 1;
@@ -34,9 +39,12 @@ public class DbMigrator
         {
             try
             {
+                if (!_skipDatabasePreparation)
+                {
                 PrepareDatabase(cancellationToken);
+                }
 
-                var success = MigrateDatabase(enableLogging, repeatable, folderName, cancellationToken);
+                var success = MigrateDatabase(enableLogging, repeatable, folderName, dryRun, cancellationToken);
                 return success;
             }
             catch (SqlException ex)
@@ -212,6 +220,7 @@ public class DbMigrator
     private bool MigrateDatabase(bool enableLogging = true,
         bool repeatable = false,
         string folderName = MigratorConstants.DefaultMigrationsFolderName,
+        bool dryRun = false,
         CancellationToken cancellationToken = default)
     {
         if (enableLogging)
@@ -243,6 +252,19 @@ public class DbMigrator
             }
 
         var upgrader = builder.Build();
+
+        if (dryRun)
+        {
+            var scriptsToExec = upgrader.GetScriptsToExecute();
+            var stringBuilder = new StringBuilder("Scripts that will be applied:");
+            foreach (var script in scriptsToExec)
+            {
+                stringBuilder.AppendLine(script.Name);
+            }
+            _logger.LogInformation(Constants.BypassFiltersEventId, stringBuilder.ToString());
+            return true;
+        }
+
         var result = upgrader.PerformUpgrade();
 
         if (enableLogging)

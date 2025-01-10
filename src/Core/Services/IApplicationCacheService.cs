@@ -16,4 +16,5 @@ public interface IApplicationCacheService
     Task UpsertProviderAbilityAsync(Provider provider);
     Task DeleteOrganizationAbilityAsync(Guid organizationId);
     Task VoidCaches(bool refreshNow = false);
+    Task DeleteProviderAbilityAsync(Guid providerId);
 }

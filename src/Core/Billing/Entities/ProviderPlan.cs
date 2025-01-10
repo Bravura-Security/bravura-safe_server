@@ -1,5 +1,5 @@
-﻿using Bit.Core.Entities;
-using Bit.Core.Enums;
+﻿using Bit.Core.Billing.Enums;
+using Bit.Core.Entities;
 using Bit.Core.Utilities;
 
 namespace Bit.Core.Billing.Entities;
@@ -20,4 +20,6 @@ public class ProviderPlan : ITableObject<Guid>
             Id = CoreHelpers.GenerateComb();
         }
     }
+
+    public bool IsConfigured() => SeatMinimum.HasValue && PurchasedSeats.HasValue && AllocatedSeats.HasValue;
 }

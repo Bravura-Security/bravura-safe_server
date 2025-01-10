@@ -13,7 +13,8 @@ public class SqlServerDbMigrator : IDbMigrator
 
     public SqlServerDbMigrator(GlobalSettings globalSettings, ILogger<DbMigrator> logger)
     {
-        _migrator = new DbMigrator(globalSettings.SqlServer.ConnectionString, logger);
+        _migrator = new DbMigrator(globalSettings.SqlServer.ConnectionString, logger,
+            globalSettings.SqlServer.SkipDatabasePreparation);
 
         GrafanaDBUser = globalSettings.Grafana.DBUser;
         GrafanaDBUserPWD = globalSettings.Grafana.DBUserPassword;

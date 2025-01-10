@@ -42,10 +42,6 @@ public class DockerComposeBuilder
     {
         public TemplateModel(Context context)
         {
-            if (!string.IsNullOrWhiteSpace(context.Config.ComposeVersion))
-            {
-                ComposeVersion = context.Config.ComposeVersion;
-            }
             UsePostgresDocker = context.Config.UsePostgresDocker;
             PostgresDataDockerVolume = context.Config.PostgresDataDockerVolume;
             UseMssqlDocker = context.Config.UseMssqlDocker;
@@ -72,7 +68,6 @@ public class DockerComposeBuilder
             }
         }
 
-        public string ComposeVersion { get; set; } = "3";
         public bool UseMssqlDocker { get; set; }
         public bool MssqlDataDockerVolume { get; set; }
         public bool EnableKeyConnector { get; set; }

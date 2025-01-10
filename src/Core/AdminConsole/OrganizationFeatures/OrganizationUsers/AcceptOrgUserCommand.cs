@@ -1,6 +1,7 @@
 ﻿using Bit.Core.AdminConsole.Enums;
 using Bit.Core.AdminConsole.Services;
 using Bit.Core.Auth.Models.Business.Tokenables;
+using Bit.Core.Billing.Enums;
 using Bit.Core.Entities;
 using Bit.Core.Enums;
 using Bit.Core.Exceptions;
@@ -115,13 +116,13 @@ public class AcceptOrgUserCommand : IAcceptOrgUserCommand
         var org = await _organizationRepository.GetByIdentifierAsync(orgSsoIdentifier);
         if (org == null)
         {
-            throw new BadRequestException("Organization invalid.");
+            throw new BadRequestException("Team invalid.");
         }
 
         var orgUser = await _organizationUserRepository.GetByOrganizationAsync(org.Id, user.Id);
         if (orgUser == null)
         {
-            throw new BadRequestException("User not found within organization.");
+            throw new BadRequestException("User not found within team.");
         }
 
         return await AcceptOrgUserAsync(orgUser, user, userService);
@@ -132,13 +133,13 @@ public class AcceptOrgUserCommand : IAcceptOrgUserCommand
         var org = await _organizationRepository.GetByIdAsync(organizationId);
         if (org == null)
         {
-            throw new BadRequestException("Organization invalid.");
+            throw new BadRequestException("Bravura Safe invalid.");
         }
 
         var orgUser = await _organizationUserRepository.GetByOrganizationAsync(org.Id, user.Id);
         if (orgUser == null)
         {
-            throw new BadRequestException("User not found within organization.");
+            throw new BadRequestException("User not found within team.");
         }
 
         return await AcceptOrgUserAsync(orgUser, user, userService);
@@ -149,7 +150,7 @@ public class AcceptOrgUserCommand : IAcceptOrgUserCommand
     {
         if (orgUser.Status == OrganizationUserStatusType.Revoked)
         {
-            throw new BadRequestException("Your organization access has been revoked.");
+            throw new BadRequestException("Your team access has been revoked.");
         }
 
         if (orgUser.Status != OrganizationUserStatusType.Invited)
@@ -166,7 +167,7 @@ public class AcceptOrgUserCommand : IAcceptOrgUserCommand
                     user.Id);
                 if (adminCount > 0)
                 {
-                    throw new BadRequestException("You can only be an admin of one free organization.");
+                    throw new BadRequestException("You can only be an admin of one free team.");
                 }
             }
         }

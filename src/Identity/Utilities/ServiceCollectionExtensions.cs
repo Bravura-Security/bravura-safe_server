@@ -37,6 +37,7 @@ public static class ServiceCollectionExtensions
                     options.Authentication.CookieSameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode.Unspecified;
                 }
                 options.InputLengthRestrictions.UserName = 256;
+                options.UserInteraction.LoginUrl = "/sso/Login";
             })
             .AddInMemoryCaching()
             .AddInMemoryApiResources(ApiResources.GetApiResources())

@@ -1,4 +1,6 @@
-﻿@model OrganizationViewModel
+﻿@using Bit.Core.Billing.Enums
+
+@model OrganizationViewModel
 <dl class="row">
     <dt class="col-sm-4 col-lg-3">Id</dt>
     <dd class="col-sm-8 col-lg-9"><code>@Model.Organization.Id</code></dd>
@@ -15,7 +17,7 @@
     <dd class="col-sm-8 col-lg-9">@(string.IsNullOrWhiteSpace(Model.Owners) ? "None" : Model.Owners)</dd>
 
     <dt class="col-sm-4 col-lg-3">Enterprise Team</dt>
-    <dd class="col-sm-8 col-lg-9">@(Model.Organization.PlanType == Bit.Core.Enums.PlanType.BravuraEnterprise ? "Yes" : "No")</dd>
+    <dd class="col-sm-8 col-lg-9">@(Model.Organization.PlanType == PlanType.BravuraEnterprise ? "Yes" : "No")</dd>
 
     <dt class="col-sm-4 col-lg-3">Admins</dt>
     <dd class="col-sm-8 col-lg-9">@(string.IsNullOrWhiteSpace(Model.Admins) ? "None" : Model.Admins)</dd>

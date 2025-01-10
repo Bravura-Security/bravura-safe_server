@@ -147,7 +147,8 @@ public class SelfHostedOrganizationDetails : Organization
             LimitCollectionCreationDeletion = LimitCollectionCreationDeletion,
             AllowAdminAccessToAllCollectionItems = AllowAdminAccessToAllCollectionItems,
             Skip2faForSso = Skip2faForSso,
-            FlexibleCollections = FlexibleCollections
+            FlexibleCollections = FlexibleCollections,
+            Status = Status
         };
     }
 }

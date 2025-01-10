@@ -2,7 +2,7 @@
 using Bit.Admin.Utilities;
 using Bit.Core.AdminConsole.Providers.Interfaces;
 using Bit.Core.AdminConsole.Repositories;
-using Bit.Core.Billing.Commands;
+using Bit.Core.Exceptions;
 using Bit.Core.Repositories;
 using Bit.Core.Utilities;
 using Microsoft.AspNetCore.Authorization;
@@ -17,17 +17,14 @@ public class ProviderOrganizationsController : Controller
     private readonly IProviderRepository _providerRepository;
     private readonly IProviderOrganizationRepository _providerOrganizationRepository;
     private readonly IOrganizationRepository _organizationRepository;
-    private readonly IRemovePaymentMethodCommand _removePaymentMethodCommand;
 
     public ProviderOrganizationsController(IProviderRepository providerRepository,
         IProviderOrganizationRepository providerOrganizationRepository,
-        IOrganizationRepository organizationRepository,
-        IRemovePaymentMethodCommand removePaymentMethodCommand)
+        IOrganizationRepository organizationRepository)
     {
         _providerRepository = providerRepository;
         _providerOrganizationRepository = providerOrganizationRepository;
         _organizationRepository = organizationRepository;
-        _removePaymentMethodCommand = removePaymentMethodCommand;
     }
 
     [HttpPost]
@@ -51,8 +48,6 @@ public class ProviderOrganizationsController : Controller
         {
             return RedirectToAction("View", "Providers", new { id = providerId });
         }
-
-        await _removePaymentMethodCommand.RemovePaymentMethod(organization);
 
         return Json(null);
     }

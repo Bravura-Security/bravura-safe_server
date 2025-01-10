@@ -70,6 +70,7 @@ public class DatabaseContext : DbContext
     public DbSet<AmazonSNSDevice> AmazonSNSDevices { get; set; }
     public DbSet<HubConnection> HubConnections { get; set; }
     public DbSet<ProviderPlan> ProviderPlans { get; set; }
+    public DbSet<ProviderInvoiceItem> ProviderInvoiceItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

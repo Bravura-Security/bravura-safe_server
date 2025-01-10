@@ -9,7 +9,7 @@ BEGIN
         [dbo].[Organization]
     SET
         [Plan] = 'Bravura Enterprise',
-        [PlanType] = 13,
+        [PlanType] = 99,
         [Seats] = 1000000,
         [Use2fa] = 1,
         [UseSso] = 1,

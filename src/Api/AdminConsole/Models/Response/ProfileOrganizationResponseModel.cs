@@ -2,6 +2,7 @@
 using Bit.Core.AdminConsole.Enums.Provider;
 using Bit.Core.Auth.Enums;
 using Bit.Core.Auth.Models.Data;
+using Bit.Core.Billing.Enums;
 using Bit.Core.Enums;
 using Bit.Core.Models.Api;
 using Bit.Core.Models.Data;
@@ -48,12 +49,13 @@ public class ProfileOrganizationResponseModel : ResponseModel
         Permissions = CoreHelpers.LoadClassFromJsonData<Permissions>(organization.Permissions);
         ResetPasswordEnrolled = organization.ResetPasswordKey != null;
         UserId = organization.UserId;
+        OrganizationUserId = organization.OrganizationUserId;
         ProviderId = organization.ProviderId;
         ProviderName = organization.ProviderName;
         ProviderType = organization.ProviderType;
         FamilySponsorshipFriendlyName = organization.FamilySponsorshipFriendlyName;
         FamilySponsorshipAvailable = false;
-        PlanProductType = StaticStore.GetPlan(organization.PlanType).Product;
+        ProductTierType = StaticStore.GetPlan(organization.PlanType).ProductTier;
         PlanType = organization.PlanType;
         FamilySponsorshipLastSyncDate = organization.FamilySponsorshipLastSyncDate;
         FamilySponsorshipToDelete = organization.FamilySponsorshipToDelete;
@@ -74,7 +76,7 @@ public class ProfileOrganizationResponseModel : ResponseModel
         if (FlexibleCollections)
         {
             // Downgrade Custom users with no other permissions than 'Edit/Delete Assigned Collections' to User
-            if (Type == OrganizationUserType.Custom)
+            if (Type == OrganizationUserType.Custom && Permissions is not null)
             {
                 if ((Permissions.EditAssignedCollections || Permissions.DeleteAssignedCollections) &&
                     Permissions is
@@ -98,9 +100,12 @@ public class ProfileOrganizationResponseModel : ResponseModel
             }
 
             // Set 'Edit/Delete Assigned Collections' custom permissions to false
+            if (Permissions is not null)
+            {
             Permissions.EditAssignedCollections = false;
             Permissions.DeleteAssignedCollections = false;
         }
+    }
     }
 
     public Guid Id { get; set; }
@@ -135,6 +140,7 @@ public class ProfileOrganizationResponseModel : ResponseModel
     public Permissions Permissions { get; set; }
     public bool ResetPasswordEnrolled { get; set; }
     public Guid? UserId { get; set; }
+    public Guid OrganizationUserId { get; set; }
     public bool HasPublicAndPrivateKeys { get; set; }
     public Guid? ProviderId { get; set; }
     [JsonConverter(typeof(HtmlEncodingStringConverter))]
@@ -142,7 +148,7 @@ public class ProfileOrganizationResponseModel : ResponseModel
     public ProviderType? ProviderType { get; set; }
     public string FamilySponsorshipFriendlyName { get; set; }
     public bool FamilySponsorshipAvailable { get; set; }
-    public ProductType PlanProductType { get; set; }
+    public ProductTierType ProductTierType { get; set; }
     public PlanType PlanType { get; set; }
     public bool KeyConnectorEnabled { get; set; }
     public string KeyConnectorUrl { get; set; }
