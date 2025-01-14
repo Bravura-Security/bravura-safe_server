@@ -65,13 +65,12 @@ public class OrganizationUserOrganizationDetailsViewQuery : IQuery<OrganizationU
                         AccessSecretsManager = ou.AccessSecretsManager,
                         UsePasswordManager = o.UsePasswordManager,
                         SmSeats = o.SmSeats,
-
                         SmServiceAccounts = o.SmServiceAccounts,
-                        Skip2faForSso = o.Skip2faForSso,
-                        ForcePasswordReset = ou.ForcePasswordReset,
                         LimitCollectionCreationDeletion = o.LimitCollectionCreationDeletion,
                         AllowAdminAccessToAllCollectionItems = o.AllowAdminAccessToAllCollectionItems,
-                        FlexibleCollections = o.FlexibleCollections
+                        FlexibleCollections = o.FlexibleCollections,
+                        Skip2faForSso = o.Skip2faForSso,
+                        ForcePasswordReset = ou.ForcePasswordReset
                     };
         return query;
     }
