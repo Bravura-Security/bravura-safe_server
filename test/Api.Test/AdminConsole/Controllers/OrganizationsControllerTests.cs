@@ -90,7 +90,7 @@ public class OrganizationsControllerTests : IDisposable
             _globalSettings,
             _pushNotificationService,
             _providerRepository,
-            _providerBillingService,
+//            _providerBillingService,
             _orgDeleteTokenDataFactory);
     }
 

@@ -133,7 +133,7 @@ public class AcceptOrgUserCommand : IAcceptOrgUserCommand
         var org = await _organizationRepository.GetByIdAsync(organizationId);
         if (org == null)
         {
-            throw new BadRequestException("Bravura Safe invalid.");
+            throw new BadRequestException("Team invalid.");
         }
 
         var orgUser = await _organizationUserRepository.GetByOrganizationAsync(org.Id, user.Id);

@@ -19,6 +19,7 @@ using NSubstitute;
 using Xunit;
 using AdminConsoleFixtures = Bit.Core.Test.AdminConsole.AutoFixture;
 using GlobalSettings = Bit.Core.Settings.GlobalSettings;
+using Bit.Core.Billing.Enums;
 
 namespace Bit.Core.Test.AdminConsole.Services;
 
@@ -474,7 +475,7 @@ public class PolicyServiceTests
         var badRequestException = await Assert.ThrowsAsync<BadRequestException>(
             () => sutProvider.Sut.SaveAsync(policy, userService, organizationService, savingUserId));
 
-        Assert.Contains("Policy could not be enabled. Non-compliant members will lose access to their accounts. Identify members without two-step login from the policies column in the members page.", badRequestException.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("This team cannot use enterprise team policies.", badRequestException.Message, StringComparison.OrdinalIgnoreCase);
 
         await organizationService.DidNotReceiveWithAnyArgs()
             .DeleteUserAsync(organizationId: default, organizationUserId: default, deletingUserId: default);
@@ -590,7 +591,7 @@ public class PolicyServiceTests
                 Substitute.For<IOrganizationService>(),
                 Guid.NewGuid()));
 
-        Assert.Contains("Trusted device encryption is on and requires this policy.", badRequestException.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("This team cannot use enterprise team policies.", badRequestException.Message, StringComparison.OrdinalIgnoreCase);
 
         await sutProvider.GetDependency<IPolicyRepository>()
             .DidNotReceiveWithAnyArgs()
@@ -627,7 +628,7 @@ public class PolicyServiceTests
                 Substitute.For<IOrganizationService>(),
                 Guid.NewGuid()));
 
-        Assert.Contains("Trusted device encryption is on and requires this policy.", badRequestException.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("This team cannot use enterprise team policies.", badRequestException.Message, StringComparison.OrdinalIgnoreCase);
 
         await sutProvider.GetDependency<IPolicyRepository>()
             .DidNotReceiveWithAnyArgs()
@@ -661,7 +662,7 @@ public class PolicyServiceTests
                 Substitute.For<IOrganizationService>(),
                 Guid.NewGuid()));
 
-        Assert.Contains("Single Organization policy not enabled.", badRequestException.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("This team cannot use enterprise team policies.", badRequestException.Message, StringComparison.OrdinalIgnoreCase);
 
         await sutProvider.GetDependency<IPolicyRepository>()
             .DidNotReceiveWithAnyArgs()
@@ -695,7 +696,7 @@ public class PolicyServiceTests
                 Substitute.For<IOrganizationService>(),
                 Guid.NewGuid()));
 
-        Assert.Contains("Master password reset policy is enabled.", badRequestException.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("This team cannot use enterprise team policies.", badRequestException.Message, StringComparison.OrdinalIgnoreCase);
 
         await sutProvider.GetDependency<IPolicyRepository>()
             .DidNotReceiveWithAnyArgs()

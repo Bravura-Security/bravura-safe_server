@@ -587,9 +587,22 @@ public class CollectionsController : Controller
         // Filter collections to only return those where the user has Manage permission
         var manageableOrgCollections = allOrgCollections.Where(c => c.Manage).ToList();
 
+        if( manageableOrgCollections.Count > 0 ){
         return new ListResponseModel<CollectionAccessDetailsResponseModel>(manageableOrgCollections.Select(c =>
             new CollectionAccessDetailsResponseModel(c)
         ));
+        }
+
+        // Find which collections the current user is assigned to
+        var assignedOrgCollections =
+            await _collectionRepository.GetManyByUserIdWithAccessAsync(_currentContext.UserId.Value, orgId,
+                false);
+        return new ListResponseModel<CollectionAccessDetailsResponseModel>(assignedOrgCollections.Select(c =>
+            new CollectionAccessDetailsResponseModel(c.Item1, c.Item2.Groups, c.Item2.Users)
+            {
+                Assigned = true // Mapping from assignedOrgCollections implies they're all assigned
+            })
+        );
     }
 
     private async Task<ListResponseModel<CollectionResponseModel>> GetByOrgId_vNext(Guid orgId)

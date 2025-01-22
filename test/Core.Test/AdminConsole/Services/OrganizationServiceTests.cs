@@ -1593,7 +1593,7 @@ OrganizationUserInvite invite, SutProvider<OrganizationService> sutProvider)
 
         var exception = await Assert.ThrowsAsync<BadRequestException>(
             () => sutProvider.Sut.ConfirmUserAsync(orgUser.OrganizationId, orgUser.Id, key, confirmingUser.Id, userService));
-        Assert.Contains("Cannot confirm this member to the organization because they are in another organization which forbids it.", exception.Message);
+        Assert.Contains("Cannot confirm this member to the team because they are in another team which forbids it.", exception.Message);
     }
 
     [Theory]
