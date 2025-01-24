@@ -510,7 +510,7 @@ public static class ServiceCollectionExtensions
     public static void AddCustomDataProtectionServices(
         this IServiceCollection services, IWebHostEnvironment env, GlobalSettings globalSettings)
     {
-        var builder = services.AddDataProtection().SetApplicationName("Bravura Safe");
+        var builder = services.AddDataProtection().SetApplicationName("Bitwarden");
         if (env.IsDevelopment())
         {
             return;
@@ -697,7 +697,7 @@ public static class ServiceCollectionExtensions
         services.AddFido2(options =>
         {
             options.ServerDomain = new Uri(globalSettings.BaseServiceUri.Vault).Host;
-            options.ServerName = "Bravura Safe";
+            options.ServerName = "Bitwarden";
             options.Origins = new HashSet<string> { globalSettings.BaseServiceUri.Vault, };
             options.TimestampDriftTolerance = 300000;
         });

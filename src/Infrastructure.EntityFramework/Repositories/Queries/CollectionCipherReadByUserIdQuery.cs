@@ -52,7 +52,7 @@ public class CollectionCipherReadByUserIdQuery : IQuery<CollectionCipher>
                     from cg in cg_g.DefaultIfEmpty()
 
                     where ou.Status == OrganizationUserStatusType.Confirmed &&
-                        (cu.CollectionId != Guid.Empty || cg.CollectionId != Guid.Empty)
+                        (cu.CollectionId != null || cg.CollectionId != null)
                     select cc;
         return query;
     }
