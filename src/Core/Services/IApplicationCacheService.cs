@@ -8,9 +8,13 @@ namespace Bit.Core.Services;
 public interface IApplicationCacheService
 {
     Task<IDictionary<Guid, OrganizationAbility>> GetOrganizationAbilitiesAsync();
+#nullable enable
+    Task<OrganizationAbility?> GetOrganizationAbilityAsync(Guid orgId);
+#nullable disable
     Task<IDictionary<Guid, ProviderAbility>> GetProviderAbilitiesAsync();
     Task UpsertOrganizationAbilityAsync(Organization organization);
     Task UpsertProviderAbilityAsync(Provider provider);
     Task DeleteOrganizationAbilityAsync(Guid organizationId);
     Task VoidCaches(bool refreshNow = false);
+    Task DeleteProviderAbilityAsync(Guid providerId);
 }

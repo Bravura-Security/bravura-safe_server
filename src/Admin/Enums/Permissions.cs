@@ -48,7 +48,5 @@ public enum Permission
     Tools_GenerateLicenseFile,
     Tools_ManageTaxRates,
     Tools_ManageStripeSubscriptions,
-    Tools_CreateEditTransaction,
-
-    Logs_View
+    Tools_CreateEditTransaction
 }

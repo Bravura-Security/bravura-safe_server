@@ -19,7 +19,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NS = Newtonsoft.Json;
 using NSL = Newtonsoft.Json.Linq;
-using User = Bit.Core.Entities.User;
 
 namespace Bit.Infrastructure.EntityFramework.Vault.Repositories;
 
@@ -346,6 +345,17 @@ public class CipherRepository : Repository<Core.Vault.Entities.Cipher, Cipher, G
             var query = dbContext.Ciphers.Where(x => !x.UserId.HasValue && x.OrganizationId == organizationId);
             var data = await query.ToListAsync();
             return Mapper.Map<List<Core.Vault.Entities.Cipher>>(data);
+        }
+    }
+
+    public async Task<ICollection<CipherOrganizationDetails>> GetManyUnassignedOrganizationDetailsByOrganizationIdAsync(Guid organizationId)
+    {
+        using (var scope = ServiceScopeFactory.CreateScope())
+        {
+            var dbContext = GetDatabaseContext(scope);
+            var query = new CipherOrganizationDetailsReadByOrganizationIdQuery(organizationId, true);
+            var data = await query.Run(dbContext).ToListAsync();
+            return data;
         }
     }
 
@@ -852,23 +862,6 @@ public class CipherRepository : Repository<Core.Vault.Entities.Cipher, Cipher, G
 
             await dbContext.SaveChangesAsync();
         };
-    }
-
-
-    public async Task UpdateUserKeysAndCiphersAsync(User user, IEnumerable<Core.Vault.Entities.Cipher> ciphers, IEnumerable<Core.Vault.Entities.Folder> folders, IEnumerable<Core.Tools.Entities.Send> sends)
-    {
-        using (var scope = ServiceScopeFactory.CreateScope())
-        {
-            var dbContext = GetDatabaseContext(scope);
-            await UserUpdateKeys(user);
-            var cipherEntities = Mapper.Map<List<Cipher>>(ciphers);
-            await dbContext.BulkCopyAsync(base.DefaultBulkCopyOptions, cipherEntities);
-            var folderEntities = Mapper.Map<List<Folder>>(folders);
-            await dbContext.BulkCopyAsync(base.DefaultBulkCopyOptions, folderEntities);
-            var sendEntities = Mapper.Map<List<Send>>(sends);
-            await dbContext.BulkCopyAsync(base.DefaultBulkCopyOptions, sendEntities);
-            await dbContext.SaveChangesAsync();
-        }
     }
 
     public async Task UpsertAsync(CipherDetails cipher)

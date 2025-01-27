@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <UserSecretsId>bitwarden-Admin</UserSecretsId>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -38,7 +38,7 @@
   </Choose>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.29.0" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.39.1" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="7.0.2" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>

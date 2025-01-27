@@ -9,7 +9,10 @@ CREATE TABLE [dbo].[HubConnection](
     CONSTRAINT [PK_HubConnection] PRIMARY KEY CLUSTERED ([Id] ASC)
 );
 
+GO
+
 CREATE NONCLUSTERED INDEX [IX_HubConnection_Token] ON [dbo].[HubConnection]
 (
     [Token] ASC
 );
+GO

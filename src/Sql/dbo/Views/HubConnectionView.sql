@@ -1,7 +1,7 @@
-CREATE OR ALTER VIEW [dbo].[HubConnectionView]
+CREATE VIEW [dbo].[HubConnectionView]
 AS
 SELECT
     *
 FROM
-    [dbo].[HubConnection]
-GO
+    [dbo].[HubConnection];
+

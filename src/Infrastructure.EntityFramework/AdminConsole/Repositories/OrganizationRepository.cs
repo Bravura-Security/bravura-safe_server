@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Bit.Core.Billing.Enums;
 using Bit.Core.Enums;
 using Bit.Core.Models.Data.Organizations;
 using Bit.Core.Repositories;
@@ -50,9 +51,10 @@ public class OrganizationRepository : Repository<Core.AdminConsole.Entities.Orga
         {
             var dbContext = GetDatabaseContext(scope);
             var organizations = await GetDbSet(dbContext)
-                .Select(e => e.OrganizationUsers
-                    .Where(ou => ou.UserId == userId)
-                    .Select(ou => ou.Organization))
+                .SelectMany(e => e.OrganizationUsers
+                    .Where(ou => ou.UserId == userId))
+                .Include(ou => ou.Organization)
+                .Select(ou => ou.Organization)
                 .ToListAsync();
             return Mapper.Map<List<Core.AdminConsole.Entities.Organization>>(organizations);
         }
@@ -182,6 +184,8 @@ public class OrganizationRepository : Repository<Core.AdminConsole.Entities.Orga
                 .ExecuteDeleteAsync();
             await dbContext.UserServiceAccountAccessPolicy.Where(ap => ap.OrganizationUser.OrganizationId == organization.Id)
                 .ExecuteDeleteAsync();
+            await dbContext.UserSecretAccessPolicy.Where(ap => ap.OrganizationUser.OrganizationId == organization.Id)
+                .ExecuteDeleteAsync();
             await dbContext.OrganizationUsers.Where(ou => ou.OrganizationId == organization.Id)
                 .ExecuteDeleteAsync();
             await dbContext.ProviderOrganizations.Where(po => po.OrganizationId == organization.Id)
@@ -292,5 +296,10 @@ public class OrganizationRepository : Repository<Core.AdminConsole.Entities.Orga
             select grouped.Key;
 
         return await query.ToListAsync();
+    }
+
+    public Task EnableCollectionEnhancements(Guid organizationId)
+    {
+        throw new NotImplementedException("Collection enhancements migration is not yet supported for Entity Framework.");
     }
 }

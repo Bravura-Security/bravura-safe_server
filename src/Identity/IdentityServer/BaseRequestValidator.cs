@@ -37,6 +37,7 @@ public abstract class BaseRequestValidator<T> where T : class
     private readonly IDeviceService _deviceService;
     private readonly IEventService _eventService;
     private readonly IOrganizationDuoWebTokenProvider _organizationDuoWebTokenProvider;
+    private readonly ITemporaryDuoWebV4SDKService _duoWebV4SDKService;
     private readonly IOrganizationHyprWebTokenProvider _organizationHyprWebTokenProvider;
     private readonly IOrganizationRepository _organizationRepository;
     private readonly IOrganizationUserRepository _organizationUserRepository;
@@ -61,6 +62,7 @@ public abstract class BaseRequestValidator<T> where T : class
         IUserService userService,
         IEventService eventService,
         IOrganizationDuoWebTokenProvider organizationDuoWebTokenProvider,
+        ITemporaryDuoWebV4SDKService duoWebV4SDKService,
         IOrganizationHyprWebTokenProvider organizationHyprWebTokenProvider,
         IOrganizationRepository organizationRepository,
         IOrganizationUserRepository organizationUserRepository,
@@ -82,6 +84,7 @@ public abstract class BaseRequestValidator<T> where T : class
         _userService = userService;
         _eventService = eventService;
         _organizationDuoWebTokenProvider = organizationDuoWebTokenProvider;
+        _duoWebV4SDKService = duoWebV4SDKService;
         _organizationHyprWebTokenProvider = organizationHyprWebTokenProvider;
         _organizationRepository = organizationRepository;
         _organizationUserRepository = organizationUserRepository;
@@ -141,8 +144,7 @@ public abstract class BaseRequestValidator<T> where T : class
 
             var verified = await VerifyTwoFactor(user, twoFactorOrganization,
                 twoFactorProviderType, twoFactorToken);
-
-            if ((!verified || isBot) && twoFactorProviderType != TwoFactorProviderType.Remember)
+            if (!verified || isBot)
             {
                 await UpdateFailedAuthDetailsAsync(user, true, !validatorContext.KnownDevice);
                 await BuildErrorResultAsync("Two-step token is invalid. Try again.", true, context, user);
@@ -161,6 +163,17 @@ public abstract class BaseRequestValidator<T> where T : class
             twoFactorRequest = false;
             twoFactorRemember = false;
             twoFactorToken = null;
+        }
+
+
+        // Force legacy users to the web for migration
+        if (FeatureService.IsEnabled(FeatureFlagKeys.BlockLegacyUsers))
+        {
+            if (UserService.IsLegacyUser(user) && request.ClientId != "web")
+            {
+                await FailAuthForLegacyUserAsync(user, context);
+                return;
+            }
         }
 
         // Returns true if can finish validation process
@@ -183,6 +196,13 @@ public abstract class BaseRequestValidator<T> where T : class
                     { "ErrorModel", new ErrorResponseModel("SSO authentication is required.") }
                 });
         }
+    }
+
+    protected async Task FailAuthForLegacyUserAsync(User user, T context)
+    {
+        await BuildErrorResultAsync(
+            $"Encryption key migration is required. Please log in to the web vault at {_globalSettings.BaseServiceUri.VaultWithHash}",
+            false, context, user);
     }
 
     protected abstract Task<bool> ValidateContextAsync(T context, CustomValidatorRequestContext validatorContext);
@@ -417,9 +437,22 @@ public abstract class BaseRequestValidator<T> where T : class
             case TwoFactorProviderType.WebAuthn:
             case TwoFactorProviderType.Remember:
                 if (type != TwoFactorProviderType.Remember &&
-                    !(await _userService.TwoFactorProviderIsEnabledAsync(type, user)))
+                    !await _userService.TwoFactorProviderIsEnabledAsync(type, user))
                 {
                     return false;
+                }
+                // DUO SDK v4 Update: try to validate the token - PM-5156 addresses tech debt
+                if (FeatureService.IsEnabled(FeatureFlagKeys.DuoRedirect))
+                {
+                    if (type == TwoFactorProviderType.Duo)
+                    {
+                        if (!token.Contains(':'))
+                        {
+                            // We have to send the provider to the DuoWebV4SDKService to create the DuoClient
+                            var provider = user.GetTwoFactorProvider(TwoFactorProviderType.Duo);
+                            return await _duoWebV4SDKService.ValidateAsync(token, provider, user);
+                        }
+                    }
                 }
 
                 return await _userManager.VerifyTwoFactorTokenAsync(user,
@@ -428,6 +461,20 @@ public abstract class BaseRequestValidator<T> where T : class
                 if (!organization?.TwoFactorProviderIsEnabled(type) ?? true)
                 {
                     return false;
+                }
+
+                // DUO SDK v4 Update: try to validate the token - PM-5156 addresses tech debt
+                if (FeatureService.IsEnabled(FeatureFlagKeys.DuoRedirect))
+                {
+                    if (type == TwoFactorProviderType.OrganizationDuo)
+                    {
+                        if (!token.Contains(':'))
+                        {
+                            // We have to send the provider to the DuoWebV4SDKService to create the DuoClient
+                            var provider = organization.GetTwoFactorProvider(TwoFactorProviderType.OrganizationDuo);
+                            return await _duoWebV4SDKService.ValidateAsync(token, provider, user);
+                        }
+                    }
                 }
 
                 return await _organizationDuoWebTokenProvider.ValidateAsync(token, organization, user);
@@ -451,7 +498,7 @@ public abstract class BaseRequestValidator<T> where T : class
             case TwoFactorProviderType.WebAuthn:
             case TwoFactorProviderType.Email:
             case TwoFactorProviderType.YubiKey:
-                if (!(await _userService.TwoFactorProviderIsEnabledAsync(type, user)))
+                if (!await _userService.TwoFactorProviderIsEnabledAsync(type, user))
                 {
                     return null;
                 }
@@ -460,11 +507,13 @@ public abstract class BaseRequestValidator<T> where T : class
                     CoreHelpers.CustomProviderName(type));
                 if (type == TwoFactorProviderType.Duo)
                 {
-                    return new Dictionary<string, object>
+                    var duoResponse = new Dictionary<string, object>
                     {
                         ["Host"] = provider.MetaData["Host"],
-                        ["Signature"] = token
+                        ["AuthUrl"] = await _duoWebV4SDKService.GenerateAsync(provider, user),
                     };
+
+                    return duoResponse;
                 }
                 else if (type == TwoFactorProviderType.WebAuthn)
                 {
@@ -488,13 +537,14 @@ public abstract class BaseRequestValidator<T> where T : class
             case TwoFactorProviderType.OrganizationDuo:
                 if (await _organizationDuoWebTokenProvider.CanGenerateTwoFactorTokenAsync(organization))
                 {
-                    return new Dictionary<string, object>
+                    var duoResponse = new Dictionary<string, object>
                     {
                         ["Host"] = provider.MetaData["Host"],
-                        ["Signature"] = await _organizationDuoWebTokenProvider.GenerateAsync(organization, user)
+                        ["AuthUrl"] = await _duoWebV4SDKService.GenerateAsync(provider, user),
                     };
-                }
 
+                    return duoResponse;
+                }
                 return null;
             case TwoFactorProviderType.OrganizationHypr:
                 if (await _organizationHyprWebTokenProvider.CanGenerateTwoFactorTokenAsync(organization))

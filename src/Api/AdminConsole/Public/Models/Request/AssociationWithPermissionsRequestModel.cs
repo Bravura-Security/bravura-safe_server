@@ -6,11 +6,14 @@ public class AssociationWithPermissionsRequestModel : AssociationWithPermissions
 {
     public CollectionAccessSelection ToCollectionAccessSelection()
     {
-        return new CollectionAccessSelection
+        var collectionAccessSelection = new CollectionAccessSelection
         {
             Id = Id.Value,
             ReadOnly = ReadOnly.Value,
-            HidePasswords = HidePasswords.GetValueOrDefault()
+            HidePasswords = HidePasswords.GetValueOrDefault(),
+            Manage = Manage.GetValueOrDefault()
         };
+
+        return collectionAccessSelection;
     }
 }

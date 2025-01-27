@@ -31,7 +31,7 @@ public class UsersController : Controller
     private readonly IFeatureService _featureService;
 
     private bool UseFlexibleCollections =>
-        _featureService.IsEnabled(FeatureFlagKeys.FlexibleCollections, _currentContext);
+        _featureService.IsEnabled(FeatureFlagKeys.FlexibleCollections);
 
     public UsersController(
         IUserRepository userRepository,
@@ -101,8 +101,9 @@ public class UsersController : Controller
 
         var ciphers = await _cipherRepository.GetManyByUserIdAsync(id, useFlexibleCollections: UseFlexibleCollections);
         var billingInfo = await _paymentService.GetBillingAsync(user);
-        // Tempory disable users/edit page according to Ian requirement
-        // return View(new UserEditModel(user, ciphers, billingInfo, _globalSettings));
+        // Temporarily disable users edit page according to Ian's requirement
+        // var billingHistoryInfo = await _paymentService.GetBillingHistoryAsync(user);
+        // return View(new UserEditModel(user, ciphers, billingInfo, billingHistoryInfo, _globalSettings));
         return NotFound();
     }
 

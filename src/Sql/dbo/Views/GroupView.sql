@@ -1,6 +1,6 @@
-﻿CREATE VIEW [dbo].[GroupView]
+CREATE VIEW [dbo].[GroupView]
 AS
 SELECT
     *
 FROM
-    [dbo].[Group]
+    [dbo].[Group];

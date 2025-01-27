@@ -1,6 +1,7 @@
-﻿using Bit.Api.Models.Response;
+﻿using System.Text.Json.Serialization;
+using Bit.Api.Models.Response;
 using Bit.Core.AdminConsole.Entities;
-using Bit.Core.Enums;
+using Bit.Core.Billing.Enums;
 using Bit.Core.Models.Api;
 using Bit.Core.Models.Business;
 using Bit.Core.Utilities;
@@ -61,7 +62,9 @@ public class OrganizationResponseModel : ResponseModel
     }
 
     public Guid Id { get; set; }
+    [JsonConverter(typeof(HtmlEncodingStringConverter))]
     public string Name { get; set; }
+    [JsonConverter(typeof(HtmlEncodingStringConverter))]
     public string BusinessName { get; set; }
     public string BusinessAddress1 { get; set; }
     public string BusinessAddress2 { get; set; }
@@ -112,7 +115,6 @@ public class OrganizationSubscriptionResponseModel : OrganizationResponseModel
             CoreHelpers.ReadableBytesSize(organization.Storage.Value) : null;
         StorageGb = organization.Storage.HasValue ?
             Math.Round(organization.Storage.Value / 1073741824D, 2) : 0; // 1 GB
-        SecretsManagerBeta = organization.SecretsManagerBeta;
     }
 
     public OrganizationSubscriptionResponseModel(Organization organization, SubscriptionInfo subscription, bool hideSensitiveData)
@@ -126,11 +128,15 @@ public class OrganizationSubscriptionResponseModel : OrganizationResponseModel
         if (hideSensitiveData)
         {
             BillingEmail = null;
-            Subscription.Items = null;
-            UpcomingInvoice.Amount = null;
+            if (Subscription != null)
+            {
+                Subscription.Items = null;
+            }
+            if (UpcomingInvoice != null)
+            {
+                UpcomingInvoice.Amount = null;
+            }
         }
-
-        SecretsManagerBeta = organization.SecretsManagerBeta;
     }
 
     public OrganizationSubscriptionResponseModel(Organization organization, OrganizationLicense license) :
@@ -138,15 +144,14 @@ public class OrganizationSubscriptionResponseModel : OrganizationResponseModel
     {
         if (license != null)
         {
-            // License expiration should always include grace period - See OrganizationLicense.cs
+            // License expiration should always include grace period (unless it's in a Trial) - See OrganizationLicense.cs.
             Expiration = license.Expires;
-            // Use license.ExpirationWithoutGracePeriod if available, otherwise assume license expiration minus grace period
-            ExpirationWithoutGracePeriod = license.ExpirationWithoutGracePeriod ??
-                                             license.Expires?.AddDays(-Constants
-                                                 .OrganizationSelfHostSubscriptionGracePeriodDays);
-        }
 
-        SecretsManagerBeta = organization.SecretsManagerBeta;
+            // Use license.ExpirationWithoutGracePeriod if available, otherwise assume license expiration minus grace period unless it's in a Trial.
+            ExpirationWithoutGracePeriod = license.ExpirationWithoutGracePeriod ?? (license.Trial
+                ? license.Expires
+                : license.Expires?.AddDays(-Constants.OrganizationSelfHostSubscriptionGracePeriodDays));
+        }
     }
 
     public string StorageName { get; set; }
@@ -164,6 +169,4 @@ public class OrganizationSubscriptionResponseModel : OrganizationResponseModel
     /// Date when a self-hosted organization expires (includes grace period).
     /// </summary>
     public DateTime? Expiration { get; set; }
-
-    public bool SecretsManagerBeta { get; set; }
 }

@@ -30,10 +30,10 @@ public class CreateSponsorshipCommand : ICreateSponsorshipCommand
             throw new BadRequestException("Cannot offer a Families Team Sponsorship to yourself. Choose a different email.");
         }
 
-        var requiredSponsoringProductType = StaticStore.GetSponsoredPlan(sponsorshipType)?.SponsoringProductType;
+        var requiredSponsoringProductType = StaticStore.GetSponsoredPlan(sponsorshipType)?.SponsoringProductTierType;
         if (requiredSponsoringProductType == null ||
             sponsoringOrg == null ||
-            StaticStore.GetPlan(sponsoringOrg.PlanType).Product != requiredSponsoringProductType.Value)
+            StaticStore.GetPlan(sponsoringOrg.PlanType).ProductTier != requiredSponsoringProductType.Value)
         {
             throw new BadRequestException("Specified Team cannot sponsor other teams.");
         }

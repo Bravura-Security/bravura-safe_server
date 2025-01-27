@@ -59,7 +59,7 @@ public class ValidateSponsorshipCommand : CancelSponsorshipCommand, IValidateSpo
 
         var sponsoringOrgPlan = Utilities.StaticStore.GetPlan(sponsoringOrganization.PlanType);
         if (OrgDisabledForMoreThanGracePeriod(sponsoringOrganization) ||
-            sponsoredPlan.SponsoringProductType != sponsoringOrgPlan.Product ||
+            sponsoredPlan.SponsoringProductTierType != sponsoringOrgPlan.ProductTier ||
             existingSponsorship.ToDelete ||
             SponsorshipIsSelfHostedOutOfSync(existingSponsorship))
         {
@@ -88,7 +88,7 @@ public class ValidateSponsorshipCommand : CancelSponsorshipCommand, IValidateSpo
             }
             catch (Exception e)
             {
-                _logger.LogError("Error sending Family sponsorship removed email.", e);
+                _logger.LogError(e, "Error sending Family sponsorship removed email.");
             }
         }
         await base.DeleteSponsorshipAsync(sponsorship);
