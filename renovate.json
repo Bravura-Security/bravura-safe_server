@@ -59,7 +59,6 @@
         "DuoUniversal",
         "Fido2.AspNet",
         "IdentityServer4",
-        "IdentityServer4.AccessTokenValidation",
         "Microsoft.Azure.Cosmos",
         "Microsoft.Extensions.Caching.StackExchangeRedis",
         "Microsoft.Extensions.Identity.Stores",
