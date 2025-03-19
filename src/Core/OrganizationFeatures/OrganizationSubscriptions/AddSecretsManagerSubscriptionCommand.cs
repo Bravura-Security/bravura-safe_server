@@ -1,7 +1,7 @@
 ﻿using Bit.Core.AdminConsole.Entities;
 using Bit.Core.AdminConsole.Enums.Provider;
 using Bit.Core.AdminConsole.Repositories;
-using Bit.Core.Enums;
+using Bit.Core.Billing.Enums;
 using Bit.Core.Exceptions;
 using Bit.Core.Models.Business;
 using Bit.Core.OrganizationFeatures.OrganizationSubscriptions.Interface;
@@ -34,7 +34,7 @@ public class AddSecretsManagerSubscriptionCommand : IAddSecretsManagerSubscripti
         var signup = SetOrganizationUpgrade(organization, additionalSmSeats, additionalServiceAccounts);
         _organizationService.ValidateSecretsManagerPlan(plan, signup);
 
-        if (plan.Product != ProductType.Free)
+        if (plan.ProductTier != ProductTierType.Free)
         {
             await _paymentService.AddSecretsManagerToSubscription(organization, plan, additionalSmSeats, additionalServiceAccounts);
         }
@@ -68,24 +68,18 @@ public class AddSecretsManagerSubscriptionCommand : IAddSecretsManagerSubscripti
             throw new NotFoundException();
         }
 
-        if (organization.SecretsManagerBeta)
-        {
-            throw new BadRequestException("Organization is enrolled in Secrets Manager Beta. " +
-                                          "Please contact Customer Success to add Secrets Manager to your subscription.");
-        }
-
         if (organization.UseSecretsManager)
         {
             throw new BadRequestException("Organization already uses Secrets Manager.");
         }
 
         var plan = StaticStore.Plans.FirstOrDefault(p => p.Type == organization.PlanType && p.SupportsSecretsManager);
-        if (string.IsNullOrWhiteSpace(organization.GatewayCustomerId) && plan.Product != ProductType.Free)
+        if (string.IsNullOrWhiteSpace(organization.GatewayCustomerId) && plan.ProductTier != ProductTierType.Free)
         {
             throw new BadRequestException("No payment method found.");
         }
 
-        if (string.IsNullOrWhiteSpace(organization.GatewaySubscriptionId) && plan.Product != ProductType.Free)
+        if (string.IsNullOrWhiteSpace(organization.GatewaySubscriptionId) && plan.ProductTier != ProductTierType.Free)
         {
             throw new BadRequestException("No subscription found.");
         }

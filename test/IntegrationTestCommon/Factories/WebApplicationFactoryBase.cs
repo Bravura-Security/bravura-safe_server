@@ -139,11 +139,6 @@ public abstract class WebApplicationFactoryBase<T> : WebApplicationFactory<T>
             services.Remove(captchaValidationService);
             services.AddSingleton<ICaptchaValidationService, NoopCaptchaValidationService>();
 
-            // Disable blocking
-            var blockingService = services.First(sd => sd.ServiceType == typeof(IBlockIpService));
-            services.Remove(blockingService);
-            services.AddSingleton<IBlockIpService, NoopBlockIpService>();
-
             // TODO: Install and use azurite in CI pipeline
             var installationDeviceRepository =
                 services.First(sd => sd.ServiceType == typeof(IInstallationDeviceRepository));
@@ -171,6 +166,11 @@ public abstract class WebApplicationFactoryBase<T> : WebApplicationFactory<T>
 
             // Disable logs
             services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
+
+            // Noop StripePaymentService - this could be changed to integrate with our Stripe test account
+            var stripePaymentService = services.First(sd => sd.ServiceType == typeof(IPaymentService));
+            services.Remove(stripePaymentService);
+            services.AddSingleton(Substitute.For<IPaymentService>());
         });
 
         foreach (var configureTestService in _configureTestServices)

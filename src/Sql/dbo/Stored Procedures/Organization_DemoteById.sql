@@ -8,8 +8,8 @@ BEGIN
     UPDATE
         [dbo].[Organization]
     SET
-        [Plan] = 'Teams',
-        [PlanType] = 12,
+        [Plan] = 'Bravura Teams',
+        [PlanType] = 98,
         [Seats] = 32767,
         [Use2fa] = 0,
         [UseSso] = 0,

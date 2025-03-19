@@ -1,0 +1,173 @@
+@using Bit.Admin.Enums;
+@using Bit.Admin.Models
+@using Bit.Core.Billing.Enums
+@using Bit.Core.Enums
+@inject Bit.Admin.Services.IAccessControlService AccessControlService
+@model OrganizationEditModel
+@{
+    ViewData["Title"] = (Model.Provider != null ? "Client " : string.Empty) + "Team: " + Model.Name;
+
+    var canViewOrganizationInformation = AccessControlService.UserHasPermission(Permission.Org_OrgInformation_View);
+    var canViewBillingInformation = AccessControlService.UserHasPermission(Permission.Org_BillingInformation_View);
+    var canInitiateTrial = AccessControlService.UserHasPermission(Permission.Org_InitiateTrial);
+    var canDelete = AccessControlService.UserHasPermission(Permission.Org_Delete);
+    var canUnlinkFromProvider = AccessControlService.UserHasPermission(Permission.Provider_Edit);
+}
+
+@section Scripts {
+    @await Html.PartialAsync("~/AdminConsole/Views/Shared/_OrganizationFormScripts.cshtml")
+
+    <script>
+        (() => {
+            const treamsTrialButton = document.getElementById('teams-trial');
+            if (treamsTrialButton != null) {
+                treamsTrialButton.addEventListener('click', () => {
+                    if (document.getElementById('@(nameof(Model.PlanType))').value !== '@((byte)PlanType.Free)') {
+                        alert('Organization is not on a free plan.');
+                        return;
+                    }
+                    setTrialDefaults('@((byte)PlanType.TeamsAnnually)');
+                    togglePlanFeatures('@((byte)PlanType.TeamsAnnually)');
+                    document.getElementById('@(nameof(Model.Plan))').value = 'Teams (Trial)';
+                });
+            }
+
+            const entTrialButton = document.getElementById('enterprise-trial');
+            if (entTrialButton != null) {
+                entTrialButton.addEventListener('click', () => {
+                    if (document.getElementById('@(nameof(Model.PlanType))').value !== '@((byte)PlanType.Free)') {
+                        alert('Organization is not on a free plan.');
+                        return;
+                    }
+                    setTrialDefaults('@((byte)PlanType.EnterpriseAnnually)');
+                    togglePlanFeatures('@((byte)PlanType.EnterpriseAnnually)');
+                    document.getElementById('@(nameof(Model.Plan))').value = 'Enterprise (Trial)';
+                });
+            }
+
+            const initDeleteButton = document.getElementById('initiate-delete-form');
+            if (initDeleteButton != null) {
+                initDeleteButton.addEventListener('submit', (e) => {
+                    const email = prompt('Enter the email address of the owner/admin that your want to ' +
+                        'request the team delete verification process with.');
+                    document.getElementById('AdminEmail').value = email;
+                    if (email == null || email === '') {
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            function setTrialDefaults(planType) {
+                // Plan
+                document.getElementById('@(nameof(Model.PlanType))').value = planType;
+                // Password Manager
+                document.getElementById('@(nameof(Model.Seats))').value = '10';
+                document.getElementById('@(nameof(Model.MaxCollections))').value = '';
+                document.getElementById('@(nameof(Model.MaxStorageGb))').value = '1';
+                // Secret Manager
+                if (document.getElementById('@(nameof(Model.UseSecretsManager))').checked) {
+                    document.getElementById('@(nameof(Model.SmSeats))').value = '10';
+                    document.getElementById('@(nameof(Model.SmServiceAccounts))').value = getPlan(planType)?.baseServiceAccount;
+                }
+                // Licensing
+                document.getElementById('@(nameof(Model.LicenseKey))').value = '@Model.RandomLicenseKey';
+                document.getElementById('@(nameof(Model.ExpirationDate))').value = '@Model.FourteenDayExpirationDate';
+                document.getElementById('@(nameof(Model.SalesAssistedTrialStarted))').value = true;
+            }
+        })();
+    </script>
+}
+
+<h1>@(Model.Provider != null ? "Client " : string.Empty)Team <small>@Model.Name</small></h1>
+
+@if (Model.Provider != null)
+{
+    <h2>Provider Relationship</h2>
+    @await Html.PartialAsync("_ProviderInformation", Model.Provider)
+}
+
+@if (canViewOrganizationInformation)
+{
+    <h2>Team Information</h2>
+    @await Html.PartialAsync("_ViewInformation", Model)
+}
+
+<div class="d-none">
+@if (canViewBillingInformation)
+{
+    <h2>Billing Information</h2>
+    @await Html.PartialAsync("_BillingInformation",
+        new BillingInformationModel { BillingInfo = Model.BillingInfo, BillingHistoryInfo = Model.BillingHistoryInfo, OrganizationId = Model.Organization.Id, Entity = "Organization" })
+}
+</div>
+
+@await Html.PartialAsync("~/AdminConsole/Views/Shared/_OrganizationForm.cshtml", Model)
+
+<div class="d-flex mt-4">
+    <button type="submit" class="btn btn-primary" form="edit-form">Save</button>
+    &nbsp;
+    @if (Model.PlanType == PlanType.BravuraEnterprise)
+    {
+        <button id="demoteModalButton" type="button" class="btn btn-danger" data-toggle="modal" data-target="#demoteModal"
+            data-id="@Model.Organization.Id" data-type="team">
+            <i class="fa fa-fw fa-solid fa-thumbs-down" aria-hidden="true"></i>
+            Demote
+        </button>
+        <form asp-action="Demote" asp-route-id="@Model.Organization.Id" data-id="@Model.Organization.Id">
+            <button class="btn btn-danger d-none" type="submit"></button>
+        </form>
+        @await Html.PartialAsync("_DemoteModal")
+    }
+    else
+    {
+        <button id="promoteModalButton" type="button" class="btn btn-danger" data-toggle="modal" data-target="#promoteModal"
+            data-id="@Model.Organization.Id" data-type="team">
+            <i class="fa fa-fw fa-solid fa-thumbs-up" aria-hidden="true"></i>
+            Promote
+        </button>
+        <form asp-action="Promote" asp-route-id="@Model.Organization.Id" data-id="@Model.Organization.Id">
+            <button class="btn btn-danger d-none" type="submit"></button>
+        </form>
+        @await Html.PartialAsync("_PromoteModal")
+    }
+    <div class="ml-auto d-flex">
+        <div class="d-none">
+        @if (canInitiateTrial && Model.Provider is null)
+        {
+            <button class="btn btn-secondary mr-2" type="button" id="teams-trial">
+                Teams Trial
+            </button>
+            <button class="btn btn-secondary mr-2" type="button" id="enterprise-trial">
+                Enterprise Trial
+            </button>
+        }
+        </div>
+        @if (canUnlinkFromProvider && Model.Provider is not null)
+        {
+            <button class="btn btn-outline-danger mr-2"
+                    onclick="return unlinkProvider('@Model.Organization.Id');">
+                Unlink provider
+            </button>
+        }
+        @if (canDelete)
+        {
+<div class="d-none">
+            <form asp-action="DeleteInitiation" asp-route-id="@Model.Organization.Id" id="initiate-delete-form">
+                <input type="hidden" name="AdminEmail" id="AdminEmail" />
+                <button class="btn btn-danger mr-2" type="submit">Request Delete</button>
+            </form>
+</div>
+            <form asp-action="Delete" asp-route-id="@Model.Organization.Id"
+                  onsubmit="return confirm('Are you sure you want to hard delete this team?')">
+                <button class="btn btn-outline-danger" type="submit">Delete</button>
+            </form>
+        }
+    </div>
+</div>
+
+@if(TempData["message"] != null) 
+{
+    <h2 id="toast" class="d-none" data-status="@TempData["status"]" data-message="@TempData["message"]"></h2>
+}
+
+@await Html.PartialAsync("_DeleteModal")

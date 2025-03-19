@@ -11,6 +11,7 @@ using Bit.Core.Repositories;
 using Bit.Core.Services;
 using Bit.Core.Settings;
 using Bit.Core.Tokens;
+using HandlebarsDotNet;
 using IdentityModel;
 using IdentityServer4.Extensions;
 using IdentityServer4.Validation;
@@ -32,6 +33,7 @@ public class CustomTokenRequestValidator : BaseRequestValidator<CustomTokenReque
         IUserService userService,
         IEventService eventService,
         IOrganizationDuoWebTokenProvider organizationDuoWebTokenProvider,
+        ITemporaryDuoWebV4SDKService duoWebV4SDKService,
         IOrganizationHyprWebTokenProvider organizationHyprWebTokenProvider,
         IOrganizationRepository organizationRepository,
         IOrganizationUserRepository organizationUserRepository,
@@ -47,7 +49,7 @@ public class CustomTokenRequestValidator : BaseRequestValidator<CustomTokenReque
         IFeatureService featureService,
         IUserDecryptionOptionsBuilder userDecryptionOptionsBuilder)
         : base(userManager, deviceRepository, deviceService, userService, eventService,
-            organizationDuoWebTokenProvider, organizationHyprWebTokenProvider, organizationRepository, organizationUserRepository,
+            organizationDuoWebTokenProvider, duoWebV4SDKService, organizationHyprWebTokenProvider, organizationRepository, organizationUserRepository,
             applicationCacheService, mailService, logger, currentContext, globalSettings,
             userRepository, policyService, tokenDataFactory, featureService, ssoConfigRepository,
             userDecryptionOptionsBuilder)
@@ -57,6 +59,17 @@ public class CustomTokenRequestValidator : BaseRequestValidator<CustomTokenReque
 
     public async Task ValidateAsync(CustomTokenRequestValidationContext context)
     {
+        if (context.Result.ValidatedRequest.GrantType == "refresh_token")
+        {
+            // Force legacy users to the web for migration
+            if (await _userService.IsLegacyUser(GetSubject(context)?.GetSubjectId()) &&
+                context.Result.ValidatedRequest.ClientId != "web")
+            {
+                await FailAuthForLegacyUserAsync(null, context);
+                return;
+            }
+        }
+
         string[] allowedGrantTypes = { "authorization_code", "client_credentials" };
         if (!allowedGrantTypes.Contains(context.Result.ValidatedRequest.GrantType)
             || context.Result.ValidatedRequest.ClientId.StartsWith("organization")
@@ -69,6 +82,7 @@ public class CustomTokenRequestValidator : BaseRequestValidator<CustomTokenReque
             {
                 context.Result.CustomResponse = new Dictionary<string, object> { { "encrypted_payload", payload } };
             }
+
 
             return;
         }

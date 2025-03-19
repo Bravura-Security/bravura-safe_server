@@ -1,0 +1,41 @@
+﻿@inject Bit.Core.Settings.GlobalSettings GlobalSettings
+@model OrganizationViewModel
+@{
+    ViewData["Title"] = "Team: " + Model.Organization.DisplayName();
+}
+
+<div class="row">
+    <a class="nav-link" asp-controller="Organizations" asp-action="Index">
+        <i class="fa fa-fw fa-angle-double-left" aria-hidden="true"></i>
+        Back to Teams
+    </a>
+</div>
+
+<h1>Team <small>@Model.Organization.DisplayName()</small></h1>
+
+@if (Model.Provider != null)
+{
+    <h2>Provider Relationship</h2>
+    @await Html.PartialAsync("_ProviderInformation", Model.Provider)
+}
+<h2>Information</h2>
+@await Html.PartialAsync("_ViewInformation", Model)
+@if(GlobalSettings.SelfHosted)
+{
+    @await Html.PartialAsync("Connections", Model)
+}
+<a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Organization.Id">
+    <i class="fa fa-fw fa-pencil"></i>
+    Edit
+</a>
+<button id="deleteModalButton" type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal"
+    data-id="@Model.Organization.Id" data-type="team">
+    <i class="fa fa-fw fa-trash" aria-hidden="true"></i>
+    Delete
+</button>
+<form class="d-flex justify-content-between" asp-action="Delete" asp-route-id="@Model.Organization.Id"
+    data-id="@Model.Organization.Id">
+    <button class="btn btn-danger d-none" type="submit"></button>
+</form>
+
+@await Html.PartialAsync("_DeleteModal")

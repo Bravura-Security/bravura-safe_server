@@ -112,7 +112,21 @@ function checkOutputDirNotExists() {
     if [ -d "$OUTPUT/docker" ]
     then
         echo "Looks like Bravura Safe is already installed at $OUTPUT."
+        echo "Exiting script"
         exit 1
+    fi
+
+    volume_name="docker_postgres_data"
+
+    # Check if the volume exists
+    if docker volume inspect "$volume_name" &>/dev/null; then
+      echo "Volume $volume_name exists. Please remove."
+      echo "Remove volume with command: docker volume rm $volume_name"
+      echo "Exiting script"
+      exit 1
+    else
+      # Volume $volume_name does not exist.
+      echo ""
     fi
 }
 

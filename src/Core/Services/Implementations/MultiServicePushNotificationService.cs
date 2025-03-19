@@ -57,7 +57,8 @@ public class MultiServicePushNotificationService : IPushNotificationService
         else
         {
             Console.WriteLine("Debug:: Fatal Error MultiServicePushNotificationService:: we are self hosted, why are we here...");
-            if (CoreHelpers.SettingHasValue(globalSettings.NotificationHub.ConnectionString))
+            var generalHub = globalSettings.NotificationHubs?.FirstOrDefault(h => h.HubType == NotificationHubType.General);
+            if (CoreHelpers.SettingHasValue(generalHub?.ConnectionString))
             {
                 _services.Add(new NotificationHubPushNotificationService(installationDeviceRepository,
                     globalSettings, httpContextAccessor, hubLogger));
@@ -116,6 +117,12 @@ public class MultiServicePushNotificationService : IPushNotificationService
     public Task PushSyncVaultAsync(Guid userId)
     {
         PushToServices((s) => s.PushSyncVaultAsync(userId));
+        return Task.FromResult(0);
+    }
+
+    public Task PushSyncOrganizationsAsync(Guid userId)
+    {
+        PushToServices((s) => s.PushSyncOrganizationsAsync(userId));
         return Task.FromResult(0);
     }
 

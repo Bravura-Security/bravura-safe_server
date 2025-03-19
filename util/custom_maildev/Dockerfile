@@ -12,6 +12,9 @@ RUN npm install \
 
 # Prod
 FROM base as prod
+
+LABEL com.hitachi.product="bravura_vault"
+
 USER node
 WORKDIR /home/node
 COPY --chown=node:node . /home/node

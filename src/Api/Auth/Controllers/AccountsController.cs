@@ -21,6 +21,8 @@ using Bit.Core.Auth.Services;
 using Bit.Core.Auth.UserFeatures.UserKey;
 using Bit.Core.Auth.UserFeatures.UserMasterPassword.Interfaces;
 using Bit.Core.Auth.Utilities;
+using Bit.Core.Billing.Models;
+using Bit.Core.Billing.Services;
 using Bit.Core.Context;
 using Bit.Core.Entities;
 using Bit.Core.Enums;
@@ -32,13 +34,14 @@ using Bit.Core.Repositories;
 using Bit.Core.Services;
 using Bit.Core.Settings;
 using Bit.Core.Tools.Entities;
+using Bit.Core.Tools.Enums;
+using Bit.Core.Tools.Models.Business;
 using Bit.Core.Tools.Repositories;
 using Bit.Core.Tools.Services;
 using Bit.Core.Utilities;
 using Bit.Core.Vault.Entities;
 using Bit.Core.Vault.Repositories;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bit.Api.Auth.Controllers;
@@ -63,10 +66,12 @@ public class AccountsController : Controller
     private readonly ISetInitialMasterPasswordCommand _setInitialMasterPasswordCommand;
     private readonly IRotateUserKeyCommand _rotateUserKeyCommand;
     private readonly IFeatureService _featureService;
+    private readonly ISubscriberService _subscriberService;
+    private readonly IReferenceEventService _referenceEventService;
     private readonly ICurrentContext _currentContext;
 
     private bool UseFlexibleCollections =>
-        _featureService.IsEnabled(FeatureFlagKeys.FlexibleCollections, _currentContext);
+        _featureService.IsEnabled(FeatureFlagKeys.FlexibleCollections);
 
     private readonly IRotationValidator<IEnumerable<CipherWithIdRequestModel>, IEnumerable<Cipher>> _cipherValidator;
     private readonly IRotationValidator<IEnumerable<FolderWithIdRequestModel>, IEnumerable<Folder>> _folderValidator;
@@ -95,6 +100,8 @@ public class AccountsController : Controller
         ISetInitialMasterPasswordCommand setInitialMasterPasswordCommand,
         IRotateUserKeyCommand rotateUserKeyCommand,
         IFeatureService featureService,
+        ISubscriberService subscriberService,
+        IReferenceEventService referenceEventService,
         ICurrentContext currentContext,
         IRotationValidator<IEnumerable<CipherWithIdRequestModel>, IEnumerable<Cipher>> cipherValidator,
         IRotationValidator<IEnumerable<FolderWithIdRequestModel>, IEnumerable<Folder>> folderValidator,
@@ -121,6 +128,8 @@ public class AccountsController : Controller
         _setInitialMasterPasswordCommand = setInitialMasterPasswordCommand;
         _rotateUserKeyCommand = rotateUserKeyCommand;
         _featureService = featureService;
+        _subscriberService = subscriberService;
+        _referenceEventService = referenceEventService;
         _currentContext = currentContext;
         _cipherValidator = cipherValidator;
         _folderValidator = folderValidator;
@@ -424,59 +433,19 @@ public class AccountsController : Controller
             throw new UnauthorizedAccessException();
         }
 
-        IdentityResult result;
-        if (_featureService.IsEnabled(FeatureFlagKeys.KeyRotationImprovements, _currentContext))
+        var dataModel = new RotateUserKeyData
         {
-            var dataModel = new RotateUserKeyData
-            {
-                MasterPasswordHash = model.MasterPasswordHash,
-                Key = model.Key,
-                PrivateKey = model.PrivateKey,
-                Ciphers = await _cipherValidator.ValidateAsync(user, model.Ciphers),
-                Folders = await _folderValidator.ValidateAsync(user, model.Folders),
-                Sends = await _sendValidator.ValidateAsync(user, model.Sends),
-                EmergencyAccesses = await _emergencyAccessValidator.ValidateAsync(user, model.EmergencyAccessKeys),
-                OrganizationUsers = await _organizationUserValidator.ValidateAsync(user, model.ResetPasswordKeys)
-            };
+            MasterPasswordHash = model.MasterPasswordHash,
+            Key = model.Key,
+            PrivateKey = model.PrivateKey,
+            Ciphers = await _cipherValidator.ValidateAsync(user, model.Ciphers),
+            Folders = await _folderValidator.ValidateAsync(user, model.Folders),
+            Sends = await _sendValidator.ValidateAsync(user, model.Sends),
+            EmergencyAccesses = await _emergencyAccessValidator.ValidateAsync(user, model.EmergencyAccessKeys),
+            OrganizationUsers = await _organizationUserValidator.ValidateAsync(user, model.ResetPasswordKeys)
+        };
 
-            result = await _rotateUserKeyCommand.RotateUserKeyAsync(user, dataModel);
-        }
-        else
-        {
-            var ciphers = new List<Cipher>();
-            if (model.Ciphers.Any())
-            {
-                var existingCiphers = await _cipherRepository.GetManyByUserIdAsync(user.Id, useFlexibleCollections: UseFlexibleCollections);
-                ciphers.AddRange(existingCiphers
-                    .Join(model.Ciphers, c => c.Id, c => c.Id, (existing, c) => c.ToCipher(existing)));
-            }
-
-            var folders = new List<Folder>();
-            if (model.Folders.Any())
-            {
-                var existingFolders = await _folderRepository.GetManyByUserIdAsync(user.Id);
-                folders.AddRange(existingFolders
-                    .Join(model.Folders, f => f.Id, f => f.Id, (existing, f) => f.ToFolder(existing)));
-            }
-
-            var sends = new List<Send>();
-            if (model.Sends?.Any() == true)
-            {
-                var existingSends = await _sendRepository.GetManyByUserIdAsync(user.Id);
-                sends.AddRange(existingSends
-                    .Join(model.Sends, s => s.Id, s => s.Id, (existing, s) => s.ToSend(existing, _sendService)));
-            }
-
-            result = await _userService.UpdateKeyAsync(
-                user,
-                model.MasterPasswordHash,
-                model.Key,
-                model.PrivateKey,
-                ciphers,
-                folders,
-                sends);
-        }
-
+        var result = await _rotateUserKeyCommand.RotateUserKeyAsync(user, dataModel);
 
         if (result.Succeeded)
         {
@@ -602,6 +571,14 @@ public class AccountsController : Controller
         if (user == null)
         {
             throw new UnauthorizedAccessException();
+        }
+
+        if (_featureService.IsEnabled(FeatureFlagKeys.ReturnErrorOnExistingKeypair))
+        {
+            if (!string.IsNullOrWhiteSpace(user.PrivateKey) || !string.IsNullOrWhiteSpace(user.PublicKey))
+            {
+                throw new BadRequestException("User has existing keypair");
+            }
         }
 
         await _userService.SaveUserAsync(model.ToUser(user));
@@ -807,17 +784,32 @@ public class AccountsController : Controller
         await _userService.UpdateLicenseAsync(user, license);
     }
 
-    [HttpPost("cancel-premium")]
-    [SelfHosted(NotSelfHostedOnly = true)]
-    public async Task PostCancel()
+    [HttpPost("cancel")]
+    public async Task PostCancel([FromBody] SubscriptionCancellationRequestModel request)
     {
         var user = await _userService.GetUserByPrincipalAsync(User);
+
         if (user == null)
         {
             throw new UnauthorizedAccessException();
         }
 
-        await _userService.CancelPremiumAsync(user);
+        await _subscriberService.CancelSubscription(user,
+            new OffboardingSurveyResponse
+            {
+                UserId = user.Id,
+                Reason = request.Reason,
+                Feedback = request.Feedback
+            },
+            user.IsExpired());
+
+        await _referenceEventService.RaiseEventAsync(new ReferenceEvent(
+            ReferenceEventType.CancelSubscription,
+            user,
+            _currentContext)
+        {
+            EndOfPeriod = user.IsExpired()
+        });
     }
 
     [HttpPost("reinstate-premium")]

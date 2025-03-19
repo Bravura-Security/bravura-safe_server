@@ -76,7 +76,7 @@ public class AcceptOrgUserCommandTests
         var exception = await Assert.ThrowsAsync<BadRequestException>(() =>
             sutProvider.Sut.AcceptOrgUserAsync(orgUser, user, _userService));
 
-        Assert.Equal("Your organization access has been revoked.", exception.Message);
+        Assert.Equal("Your team access has been revoked.", exception.Message);
     }
 
     [Theory]
@@ -458,7 +458,7 @@ public class AcceptOrgUserCommandTests
         var exception = await Assert.ThrowsAsync<BadRequestException>(
             () => sutProvider.Sut.AcceptOrgUserByOrgSsoIdAsync(orgSsoIdentifier, user, _userService));
 
-        Assert.Equal("Organization invalid.", exception.Message);
+        Assert.Equal("Team invalid.", exception.Message);
     }
 
     [Theory]
@@ -479,7 +479,7 @@ public class AcceptOrgUserCommandTests
         var exception = await Assert.ThrowsAsync<BadRequestException>(
             () => sutProvider.Sut.AcceptOrgUserByOrgSsoIdAsync(org.Identifier, user, _userService));
 
-        Assert.Equal("User not found within organization.", exception.Message);
+        Assert.Equal("User not found within team.", exception.Message);
     }
 
     // AcceptOrgUserByOrgIdAsync ---------------------------------------------------------------------------------------
@@ -523,7 +523,7 @@ public class AcceptOrgUserCommandTests
         var exception = await Assert.ThrowsAsync<BadRequestException>(
             () => sutProvider.Sut.AcceptOrgUserByOrgIdAsync(orgId, user, _userService));
 
-        Assert.Equal("Organization invalid.", exception.Message);
+        Assert.Equal("Team invalid.", exception.Message);
     }
 
     [Theory]
@@ -544,7 +544,7 @@ public class AcceptOrgUserCommandTests
         var exception = await Assert.ThrowsAsync<BadRequestException>(
             () => sutProvider.Sut.AcceptOrgUserByOrgIdAsync(org.Id, user, _userService));
 
-        Assert.Equal("User not found within organization.", exception.Message);
+        Assert.Equal("User not found within team.", exception.Message);
     }
 
     // Private helpers -------------------------------------------------------------------------------------------------

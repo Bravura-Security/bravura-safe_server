@@ -172,6 +172,11 @@ public class AmazonSNSPushNotificationService : IPushNotificationService
         await SendPayloadToUserAsync(userId, type, message, excludeCurrentContext);
     }
 
+    public async Task PushSyncOrganizationsAsync(Guid userId)
+    {
+        await PushUserAsync(userId, PushType.SyncOrganizations);
+    }
+
     public async Task PushSyncSendCreateAsync(Send send)
     {
         await PushSendAsync(send, PushType.SyncSendCreate);

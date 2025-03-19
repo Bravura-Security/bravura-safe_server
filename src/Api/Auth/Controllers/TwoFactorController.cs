@@ -180,7 +180,16 @@ public class TwoFactorController : Controller
         var user = await CheckAsync(model, true);
         try
         {
-            var duoApi = new DuoApi(model.IntegrationKey, model.SecretKey, model.Host);
+            // for backwards compatibility - will be removed with PM-8107
+            DuoApi duoApi = null;
+            if (model.ClientId != null && model.ClientSecret != null)
+            {
+                duoApi = new DuoApi(model.ClientId, model.ClientSecret, model.Host);
+            }
+            else
+            {
+                duoApi = new DuoApi(model.IntegrationKey, model.SecretKey, model.Host);
+            }
             await duoApi.JSONApiCall("GET", "/auth/v2/check");
         }
         catch (DuoException)
@@ -199,7 +208,7 @@ public class TwoFactorController : Controller
     public async Task<TwoFactorDuoResponseModel> GetOrganizationDuo(string id,
         [FromBody] SecretVerificationRequestModel model)
     {
-        var user = await CheckAsync(model, false);
+        await CheckAsync(model, false);
 
         var orgIdGuid = new Guid(id);
         if (!await _currentContext.ManagePolicies(orgIdGuid))
@@ -207,12 +216,7 @@ public class TwoFactorController : Controller
             throw new NotFoundException();
         }
 
-        var organization = await _organizationRepository.GetByIdAsync(orgIdGuid);
-        if (organization == null)
-        {
-            throw new NotFoundException();
-        }
-
+        var organization = await _organizationRepository.GetByIdAsync(orgIdGuid) ?? throw new NotFoundException();
         var response = new TwoFactorDuoResponseModel(organization);
         return response;
     }
@@ -222,7 +226,7 @@ public class TwoFactorController : Controller
     public async Task<TwoFactorDuoResponseModel> PutOrganizationDuo(string id,
         [FromBody] UpdateTwoFactorDuoRequestModel model)
     {
-        var user = await CheckAsync(model, false);
+        await CheckAsync(model, false);
 
         var orgIdGuid = new Guid(id);
         if (!await _currentContext.ManagePolicies(orgIdGuid))
@@ -230,15 +234,19 @@ public class TwoFactorController : Controller
             throw new NotFoundException();
         }
 
-        var organization = await _organizationRepository.GetByIdAsync(orgIdGuid);
-        if (organization == null)
-        {
-            throw new NotFoundException();
-        }
-
+        var organization = await _organizationRepository.GetByIdAsync(orgIdGuid) ?? throw new NotFoundException();
         try
         {
-            var duoApi = new DuoApi(model.IntegrationKey, model.SecretKey, model.Host);
+            // for backwards compatibility - will be removed with PM-8107
+            DuoApi duoApi = null;
+            if (model.ClientId != null && model.ClientSecret != null)
+            {
+                duoApi = new DuoApi(model.ClientId, model.ClientSecret, model.Host);
+            }
+            else
+            {
+                duoApi = new DuoApi(model.IntegrationKey, model.SecretKey, model.Host);
+            }
             await duoApi.JSONApiCall("GET", "/auth/v2/check");
         }
         catch (DuoException)
@@ -835,7 +843,7 @@ public class TwoFactorController : Controller
             throw new BadRequestException(string.Empty, "User verification failed.");
         }
 
-        if (premium && !(await _userService.CanAccessPremium(user)))
+        if (premium && !await _userService.CanAccessPremium(user))
         {
             throw new BadRequestException("Premium status is required.");
         }

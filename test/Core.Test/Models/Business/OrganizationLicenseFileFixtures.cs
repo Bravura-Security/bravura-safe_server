@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Bit.Core.AdminConsole.Entities;
+using Bit.Core.Billing.Enums;
 using Bit.Core.Enums;
 using Bit.Core.Models.Business;
 
@@ -110,7 +111,6 @@ public static class OrganizationLicenseFileFixtures
             SmServiceAccounts = 8,
             MaxAutoscaleSmSeats = 101,
             MaxAutoscaleSmServiceAccounts = 102,
-            SecretsManagerBeta = true,
             LimitCollectionCreationDeletion = true,
             AllowAdminAccessToAllCollectionItems = true,
         };

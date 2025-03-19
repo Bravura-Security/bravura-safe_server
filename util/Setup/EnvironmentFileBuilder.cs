@@ -111,7 +111,7 @@ public class EnvironmentFileBuilder
             {
                 dbSource = Helpers.ReadInput("Enter your Database Server name. Default will use a local mssql docker. [tcp:mssql,1433]");
                 if (string.IsNullOrEmpty(dbSource))
-                    Helpers.WriteLine(_context, "Default local docker will be used. The Database User will be sa.");
+                    Helpers.WriteLine(_context, "Default local docker will be used. The Database User will be sa.\n");
                 else
                     dbUser = Helpers.ReadInput("Enter your Database User name [sa]");
                 
@@ -122,11 +122,11 @@ public class EnvironmentFileBuilder
                 dbSource = Helpers.ReadInput("Enter your Postgres Database Server name. Default will use a local postgresql docker. [postgres]");
                 if (string.IsNullOrEmpty(dbSource))
                 {
-                    Helpers.WriteLine(_context, "Default local docker will be used. The Database User will be postgres.");
+                    Helpers.WriteLine(_context, "Default local docker will be used. The Database User will be postgres.\n");
                 }
                 else
                 {
-                    dbPgSqlPort = Helpers.ReadInput("Enter your Postrges DB Server port to use [5432]");
+                    dbPgSqlPort = Helpers.ReadInput("Enter your Postgres DB Server port to use [5432]");
                     dbUser = Helpers.ReadInput("Enter your Database User name [postgres]");
                 }
 
@@ -135,6 +135,14 @@ public class EnvironmentFileBuilder
                     _context.Config.UsePostgresDocker = true;
                     dbUser = "postgres";
                     dbSource = "postgres";
+                    var tmp = Helpers.ReadInput("Use a docker volume for Postgres DB data [Y/n]");
+                    if (string.IsNullOrEmpty(tmp))
+                        tmp = "y";
+                    
+                    if (tmp.ToLower().StartsWith("n"))
+                        _context.Config.PostgresDataDockerVolume = false;
+                    else
+                        _context.Config.PostgresDataDockerVolume = true;
                 }
             }
             else
@@ -144,6 +152,8 @@ public class EnvironmentFileBuilder
 
             dbPassword = _context.Stub ? "RANDOM_DATABASE_PASSWORD" : Helpers.ReadInput("Enter your Database User password [<randomly generated>]");
             dbCatalog = Helpers.ReadInput("Enter your Database name [vault]");
+            if (string.IsNullOrEmpty(dbCatalog))
+                dbCatalog = "vault";
 
             var customMailDev = Helpers.ReadInput("Use custom maildev container? [Y/n]");
             if (string.IsNullOrEmpty(customMailDev))
@@ -307,8 +317,8 @@ public class EnvironmentFileBuilder
             _pgsqlOverrideValues = new Dictionary<string, string>
             {
                 ["POSTGRES_USER"] = dbUser,
-                ["POSTGRES_PASSWORD"] = dbPassword,
-                ["POSTGRES_DB"] = _context.Install?.Database ?? "vault"
+                ["POSTGRES_PASSWORD"] = dbPassword //,
+                //["POSTGRES_DB"] = _context.Install?.Database ?? "vault"
             };
         }
         else { }

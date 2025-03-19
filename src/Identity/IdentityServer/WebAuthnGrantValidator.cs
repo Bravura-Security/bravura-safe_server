@@ -35,6 +35,7 @@ public class WebAuthnGrantValidator : BaseRequestValidator<ExtensionGrantValidat
         IUserService userService,
         IEventService eventService,
         IOrganizationDuoWebTokenProvider organizationDuoWebTokenProvider,
+        ITemporaryDuoWebV4SDKService duoWebV4SDKService,
         IOrganizationHyprWebTokenProvider organizationHyprTokenProvider,
         IOrganizationRepository organizationRepository,
         IOrganizationUserRepository organizationUserRepository,
@@ -53,7 +54,7 @@ public class WebAuthnGrantValidator : BaseRequestValidator<ExtensionGrantValidat
         IAssertWebAuthnLoginCredentialCommand assertWebAuthnLoginCredentialCommand
         )
         : base(userManager, deviceRepository, deviceService, userService, eventService,
-            organizationDuoWebTokenProvider, organizationHyprTokenProvider, organizationRepository, organizationUserRepository,
+            organizationDuoWebTokenProvider, duoWebV4SDKService, organizationHyprTokenProvider, organizationRepository, organizationUserRepository,
             applicationCacheService, mailService, logger, currentContext, globalSettings,
             userRepository, policyService, tokenDataFactory, featureService, ssoConfigRepository, userDecryptionOptionsBuilder)
     {
@@ -65,12 +66,6 @@ public class WebAuthnGrantValidator : BaseRequestValidator<ExtensionGrantValidat
 
     public async Task ValidateAsync(ExtensionGrantValidationContext context)
     {
-        if (!FeatureService.IsEnabled(FeatureFlagKeys.PasswordlessLogin, CurrentContext))
-        {
-            context.Result = new GrantValidationResult(TokenRequestErrors.InvalidGrant);
-            return;
-        }
-
         var rawToken = context.Request.Raw.Get("token");
         var rawDeviceResponse = context.Request.Raw.Get("deviceResponse");
         if (string.IsNullOrWhiteSpace(rawToken) || string.IsNullOrWhiteSpace(rawDeviceResponse))

@@ -48,8 +48,7 @@ public static class RolePermissionMapping
                 Permission.Tools_PromoteAdmin,
                 Permission.Tools_GenerateLicenseFile,
                 Permission.Tools_ManageTaxRates,
-                Permission.Tools_ManageStripeSubscriptions,
-                Permission.Logs_View
+                Permission.Tools_ManageStripeSubscriptions
             }
         },
         { "admin", new List<Permission>
@@ -90,14 +89,14 @@ public static class RolePermissionMapping
                 Permission.Provider_List_View,
                 Permission.Provider_Create,
                 Permission.Provider_View,
+                Permission.Provider_Edit,
                 Permission.Provider_ResendEmailInvite,
                 Permission.Tools_ChargeBrainTreeCustomer,
                 Permission.Tools_PromoteAdmin,
                 Permission.Tools_GenerateLicenseFile,
                 Permission.Tools_ManageTaxRates,
                 Permission.Tools_ManageStripeSubscriptions,
-                Permission.Tools_CreateEditTransaction,
-                Permission.Logs_View
+                Permission.Tools_CreateEditTransaction
             }
         },
         { "cs", new List<Permission>
@@ -125,8 +124,7 @@ public static class RolePermissionMapping
                 Permission.Org_Billing_View,
                 Permission.Org_Billing_LaunchGateway,
                 Permission.Provider_List_View,
-                Permission.Provider_View,
-                Permission.Logs_View
+                Permission.Provider_View
             }
         },
         { "billing", new List<Permission>
@@ -165,8 +163,7 @@ public static class RolePermissionMapping
                 Permission.Tools_GenerateLicenseFile,
                 Permission.Tools_ManageTaxRates,
                 Permission.Tools_ManageStripeSubscriptions,
-                Permission.Tools_CreateEditTransaction,
-                Permission.Logs_View
+                Permission.Tools_CreateEditTransaction
             }
         },
         { "sales", new List<Permission>
@@ -195,8 +192,7 @@ public static class RolePermissionMapping
                 Permission.Provider_Create,
                 Permission.Provider_Edit,
                 Permission.Provider_View,
-                Permission.Provider_ResendEmailInvite,
-                Permission.Logs_View
+                Permission.Provider_ResendEmailInvite
             }
         },
     };

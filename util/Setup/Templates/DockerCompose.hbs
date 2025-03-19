@@ -13,8 +13,6 @@
 # ./bvdata/config.yml file for your installation.                       #
 #########################################################################
 
-version: '{{{ComposeVersion}}}'
-
 services:
 {{#if UseMssqlDocker}}
   mssql:
@@ -326,24 +324,6 @@ services:
       - default
       - public
 
-{{#if UseMssqlDocker}}
-{{#if MssqlDataDockerVolume}}
-volumes:
-  mssql_data:
-    labels:
-      com.bitwarden.product: bitwarden
-{{/if}}
-{{/if}}
-
-{{#if UsePostgresDocker}}
-{{#if PostgresDataDockerVolume}}
-volumes:
-  postgres_data:
-    labels:
-      com.bitwarden.product: bitwarden_psql
-{{/if}}
-{{/if}}
-
 {{#if UseGrafanaDocker}}
    # Grafana - Graphical data visualization
   grafana:
@@ -366,6 +346,24 @@ volumes:
       - ../env/uid.env
       - ../env/global.override.env
       - ../env/grafana.override.env
+{{/if}}
+
+{{#if UseMssqlDocker}}
+{{#if MssqlDataDockerVolume}}
+volumes:
+  mssql_data:
+    labels:
+      com.bitwarden.product: bitwarden
+{{/if}}
+{{/if}}
+
+{{#if UsePostgresDocker}}
+{{#if PostgresDataDockerVolume}}
+volumes:
+  postgres_data:
+    labels:
+      com.bitwarden.product: bitwarden_psql
+{{/if}}
 {{/if}}
 
 networks:

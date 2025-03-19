@@ -240,7 +240,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
         await _amazonSNSDeviceRepository.UpsertAsync(deviceRegistration);
     }
 
-    public async Task DeleteRegistrationAsync(string deviceId)
+    public async Task DeleteRegistrationAsync(string deviceId, DeviceType type)
     {
         var deviceGuid = new Guid(StripPrefix(deviceId));
         var snsDevice = await _amazonSNSDeviceRepository.GetByDeviceIDAsync(deviceGuid);
@@ -263,7 +263,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
         await _amazonSNSDeviceRepository.DeleteAsync(deviceGuid);
     }
 
-    public async Task AddUserRegistrationOrganizationAsync(IEnumerable<string> deviceIds, string organizationId)
+    public async Task AddUserRegistrationOrganizationAsync(IEnumerable<KeyValuePair<string, DeviceType>> devices, string organizationId)
     {
         if (_client==null)
         {
@@ -271,7 +271,8 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
             return; 
         }
 
-        organizationId = StripPrefix(organizationId);
+/*        organizationId = StripPrefix(organizationId);
+        var devicesTmp = deviceIds.Select(e => new string(e.key));
         foreach (var devicId in deviceIds)
         {
             var snsDevice = await _amazonSNSDeviceRepository.GetByDeviceIDAsync(new Guid(StripPrefix(devicId)));
@@ -305,14 +306,16 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
                     Console.WriteLine("AWS SNS: Failed to set the filter policy for the subscription.");
                 }
             }
-        }
-        if (deviceIds.Any() && InstallationDeviceEntity.IsInstallationDeviceId(deviceIds.First()))
+        }*/
+
+        if (devices.Any() && InstallationDeviceEntity.IsInstallationDeviceId(devices.First().Key))
         {
-            var entities = deviceIds.Select(e => new InstallationDeviceEntity(e));
+            var entities = devices.Select(e => new InstallationDeviceEntity(e.Key));
             await _installationDeviceRepository.UpsertManyAsync(entities.ToList());
         }
     }
-    public async Task DeleteUserRegistrationOrganizationAsync(IEnumerable<string> deviceIds, string organizationId)
+
+    public async Task DeleteUserRegistrationOrganizationAsync(IEnumerable<KeyValuePair<string, DeviceType>> devices, string organizationId)
     {
         if (_client==null)
         {
@@ -320,7 +323,7 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
             return; 
         }
 
-        organizationId = StripPrefix(organizationId);
+/*        organizationId = StripPrefix(organizationId);
         foreach (var devicId in deviceIds)
         {
             try
@@ -354,11 +357,11 @@ public class AmazonSNSPushRegistrationService : IPushRegistrationService
                 Console.WriteLine("AWS SNS: Something failed to DeleteUserRegistrationOrganizationAsync.");
                 Console.WriteLine(ex);
             }
-        }//foreach
+        }//foreach */
 
-        if (deviceIds.Any() && InstallationDeviceEntity.IsInstallationDeviceId(deviceIds.First()))
+        if (devices.Any() && InstallationDeviceEntity.IsInstallationDeviceId(devices.First().Key))
         {
-            var entities = deviceIds.Select(e => new InstallationDeviceEntity(e));
+            var entities = devices.Select(e => new InstallationDeviceEntity(e.Key));
             await _installationDeviceRepository.UpsertManyAsync(entities.ToList());
         }
     }

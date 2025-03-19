@@ -1,7 +1,6 @@
 ﻿using Bit.Core.Auth.UserFeatures.UserKey;
 using Bit.Core.Entities;
 using Bit.Core.Repositories;
-using Bit.Core.Tools.Entities;
 using Bit.Core.Vault.Entities;
 using Bit.Core.Vault.Models.Data;
 
@@ -15,6 +14,7 @@ public interface ICipherRepository : IRepository<Cipher, Guid>
     Task<bool> GetCanEditByIdAsync(Guid userId, Guid cipherId);
     Task<ICollection<CipherDetails>> GetManyByUserIdAsync(Guid userId, bool useFlexibleCollections, bool withOrganizations = true);
     Task<ICollection<Cipher>> GetManyByOrganizationIdAsync(Guid organizationId);
+    Task<ICollection<CipherOrganizationDetails>> GetManyUnassignedOrganizationDetailsByOrganizationIdAsync(Guid organizationId);
     Task CreateAsync(Cipher cipher, IEnumerable<Guid> collectionIds);
     Task CreateAsync(CipherDetails cipher);
     Task CreateAsync(CipherDetails cipher, IEnumerable<Guid> collectionIds);
@@ -29,7 +29,6 @@ public interface ICipherRepository : IRepository<Cipher, Guid>
     Task MoveAsync(IEnumerable<Guid> ids, Guid? folderId, Guid userId, bool useFlexibleCollections);
     Task DeleteByUserIdAsync(Guid userId);
     Task DeleteByOrganizationIdAsync(Guid organizationId);
-    Task UpdateUserKeysAndCiphersAsync(User user, IEnumerable<Cipher> ciphers, IEnumerable<Folder> folders, IEnumerable<Send> sends);
     Task UpdateCiphersAsync(Guid userId, IEnumerable<Cipher> ciphers);
     Task CreateAsync(IEnumerable<Cipher> ciphers, IEnumerable<Folder> folders);
     Task CreateAsync(IEnumerable<Cipher> ciphers, IEnumerable<Collection> collections,
